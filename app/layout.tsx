@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackingScripts } from "@/components/tracking-scripts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar">
-      <body>{children}</body>
+      <body>
+        {children}
+        <TrackingScripts />
+      </body>
     </html>
   );
 }
