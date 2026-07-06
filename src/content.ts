@@ -17,6 +17,7 @@ export type LandingContent = {
     whatsappCta: string;
     badge: string;
     note: string;
+    cardLabel: string;
   };
   why: {
     title: string;
@@ -41,7 +42,9 @@ export type LandingContent = {
   };
   delivery: {
     title: string;
+    onlineLabel: string;
     online: string;
+    branchLabel: string;
     branch: string;
     note: string;
   };
@@ -72,124 +75,132 @@ export type LandingContent = {
 export const content: Record<Locale, LandingContent> = {
   ar: {
     nav: {
-      why: "لماذا نحن",
+      why: "ليه بتفشل؟",
       assessment: "التقييم المجاني",
-      process: "الخطوات",
-      faq: "الأسئلة",
+      process: "هتبدأ إزاي؟",
+      faq: "أسئلة مهمة",
       language: "English",
-      book: "احجز تقييمك",
+      book: "اعرف مستواك",
     },
     hero: {
-      eyebrow: "Success Academy لتعلم الإنجليزية",
-      title: "مش مجرد كورس... اتجاه واضح لتطوير إنجليزيتك",
+      eyebrow: "Success Academy | Not Just A Course... A Direction",
+      title: "معظم الناس مش بتفشل في تعلم الإنجليزية... هي بتتعلمها بالطريقة الغلط.",
       subtitle:
-        "ابدأ بتقييم خارجي بسيط، ثم اختر موعد مناسب واحصل على ترشيح للمسار الأنسب حسب مستواك وهدفك.",
-      primaryCta: "احجز تقييمك المجاني",
-      whatsappCta: "تواصل واتساب",
+        "في Success Academy مش بندخلك كورس وخلاص. إحنا بنحدد مستواك، نفهم هدفك، ونبني لك طريق واضح تتعلم فيه الإنجليزية بطريقة عملية، مع متابعة حقيقية من Success Manager لحد ما تبدأ تستخدم اللغة بثقة.",
+      primaryCta: "اعرف مستواك مجانا",
+      whatsappCta: "تحدث مع Success Manager",
       badge: "تبدأ من 1750 جنيه",
-      note: "التقييم خارج الموقع. الموقع مخصص للحجز وجمع بيانات التواصل فقط.",
+      note: "سجل بياناتك واختار ميعاد التقييم المجاني. Success Manager هيتواصل معاك ويوضح لك الخطوة اللي بعدها.",
+      cardLabel: "Direction Plan",
     },
     why: {
-      title: "لماذا Success Academy؟",
+      title: "المشكلة غالبا مش فيك... المشكلة في الطريقة",
       subtitle:
-        "تجربة منظمة للطلاب الجادين: تقييم، توجيه، متابعة، وخطة تعلم واضحة بدون تعقيد.",
+        "ناس كتير بدأت قبل كده، حفظت كلمات، حضرت محاضرات، ودفعت فلوس. وبعد كل ده لسه بتتوتر لما تتكلم. السبب إن الطريق نفسه مكنش واضح.",
       items: [
         {
-          title: "مسار حسب مستواك",
+          title: "بتبدأ من غير تشخيص",
           description:
-            "نبدأ من مستواك الحقيقي، ثم نرشح المسار المناسب بدل اختيار كورس عشوائي.",
+            "لما تدخل مستوى غلط، بتضيع وقتك بين حاجات سهلة جدا أو صعبة جدا. البداية الصح لازم تكون بعد معرفة مستواك الحقيقي.",
         },
         {
-          title: "تعلم عملي",
+          title: "بتذاكر من غير استخدام",
           description:
-            "التركيز على الاستخدام اليومي، المحادثة، الثقة، والمهارات المطلوبة للدراسة والعمل.",
+            "الإنجليزي مش معلومات تتحفظ وبس. لازم ممارسة يومية، مواقف حقيقية، ومشاريع تخليك تستخدم اللغة مش تتفرج عليها.",
         },
         {
-          title: "متابعة مستمرة",
+          title: "بتسيب نفسك من غير متابعة",
           description:
-            "Success Manager يساعدك تتابع الحضور، الالتزام، والتقدم خطوة بخطوة.",
+            "أغلب الناس مش محتاجة كورس أكتر قد ما محتاجة حد يتابع، يفكرها، ويحاسبها على التقدم بخطوات واضحة.",
         },
       ],
     },
     assessment: {
-      title: "احجز تقييمك المجاني",
+      title: "ابدأ بتقييم مجاني يوضح لك الطريق",
       description:
-        "اختر موعد مناسب للتقييم الخارجي، واترك بياناتك ليتم التواصل معك وتأكيد الخطوة التالية.",
+        "التقييم خارجي، ومش جوه الموقع. دور الموقع إنك تسجل وتختار ميعاد مناسب، وبعدها Success Manager يتواصل معاك ويفهمك الخطوات بناء على مستواك وهدفك.",
       bullets: [
-        "لا يوجد امتحان داخل الموقع الآن",
-        "سنرشدك للتقييم الخارجي المناسب",
-        "بعد التقييم نساعدك تختار المسار والموعد",
+        "تسجل بياناتك وتختار ميعاد تقييم مجاني",
+        "Success Manager يتواصل معاك ويشرح الخطوات",
+        "بعد معرفة مستواك نرشح لك المسار الأنسب",
       ],
-      cta: "اختيار موعد التقييم",
+      cta: "اختار ميعاد التقييم المجاني",
     },
     steps: {
-      title: "كيف تبدأ؟",
+      title: "الطريق واضح من أول خطوة",
       items: [
         {
-          title: "اترك بياناتك",
-          description: "املأ نموذج الحجز أو تواصل معنا عبر واتساب.",
+          title: "سجل بياناتك",
+          description: "سيب لنا بيانات التواصل واختار الميعاد المناسب للتقييم المجاني.",
         },
         {
-          title: "اختار موعد تقييم",
-          description: "حدد الموعد الأنسب لك للتقييم الخارجي.",
+          title: "نتواصل معاك",
+          description: "Success Manager هيتكلم معاك، يفهم هدفك، ويوضح لك المطلوب قبل التقييم.",
         },
         {
-          title: "استلم ترشيح المسار",
-          description: "نساعدك تختار المجموعة أو الخطة المناسبة لهدفك.",
+          title: "نعرف مستواك",
+          description: "بعد التقييم الخارجي، نحدد نقطة البداية بدل ما تدخل مسار عشوائي.",
         },
         {
-          title: "ابدأ وتابع تقدمك",
-          description: "ابدأ الكورس مع متابعة من فريق Success Academy.",
+          title: "تبدأ بخطة ومتابعة",
+          description: "تتعلم عملي، تتمرن يوميا، وتتابع تقدمك مع Success Manager.",
         },
       ],
     },
     delivery: {
-      title: "أونلاين أو في فرع الدقي",
+      title: "تعلم أونلاين أو من فرع الدقي",
+      onlineLabel: "أونلاين",
       online:
-        "تعلم من أي مكان عبر مجموعات أونلاين منظمة ومناسبة لجدولك.",
+        "لو جدولك مزدحم، تقدر تبدأ أونلاين في مجموعات منظمة، بمتابعة وممارسة مش مجرد حضور محاضرات.",
+      branchLabel: "فرع الدقي",
       branch:
-        "لمن يفضل الحضور، يمكن اختيار مجموعات في فرع الدقي حسب المتاح.",
-      note: "اختيار طريقة الحضور يتم بعد التواصل وتأكيد المستوى والموعد.",
+        "ولو وجودك في مكان تعليمي بيفرق معاك، تقدر تختار الحضور في فرع الدقي حسب المواعيد المتاحة.",
+      note: "اختيار الأونلاين أو الفرع بيتم بعد التواصل ومعرفة مستواك والميعاد المناسب لك.",
     },
     successManager: {
-      title: "Success Manager يتابعك",
+      title: "Success Manager مش رفاهية... ده جزء من الطريقة",
       description:
-        "المتابعة جزء أساسي من التجربة، حتى لا تشعر أنك بدأت وحدك أو فقدت الاتجاه.",
+        "المتابعة اليومية هي اللي بتخلي الخطة تعيش بعد أول أسبوع. في Success Academy في شخص مسؤول يساعدك تفضل ماشي، فاهم المطلوب، وعارف الخطوة الجاية.",
       points: [
-        "تذكير بالمواعيد والخطوات المهمة",
-        "متابعة الالتزام والحضور",
-        "توجيه عند الحاجة لتعديل المسار",
+        "متابعة يومية للتدريب والالتزام",
+        "ممارسة عملية ومشاريع تخليك تستخدم اللغة",
+        "توجيه واضح لو مستواك أو هدفك محتاج تعديل",
       ],
     },
     cta: {
-      title: "جاهز تحدد اتجاهك؟",
+      title: "لو جربت قبل كده ومكملتش... ابدأ المرة دي بطريقة مختلفة",
       description:
-        "احجز تقييمك الآن، وسنساعدك تبدأ من المكان الصحيح بدون وعود مبالغ فيها أو تفاصيل معقدة.",
-      primary: "احجز موعد تقييم",
-      secondary: "اسأل عبر واتساب",
+        "مش مطلوب منك تشتري كورس دلوقتي. سجل، اعرف مستواك مجانا، وخلي Success Manager يشرح لك أنسب طريق قبل أي قرار.",
+      primary: "اعرف مستواك مجانا",
+      secondary: "تحدث مع Success Manager",
     },
     faq: {
-      title: "أسئلة شائعة",
+      title: "أسئلة قبل ما تبدأ",
       items: [
         {
-          question: "هل يوجد امتحان داخل الموقع؟",
+          question: "هل لازم أكون مستوايا كويس عشان أبدأ؟",
           answer:
-            "لا. التقييم خارجي في هذه المرحلة، والموقع مخصص للحجز وجمع بيانات المهتمين.",
+            "لا. الفكرة إننا نعرف مستواك الحقيقي الأول، وبعدها نرشح لك بداية مناسبة بدل ما تدخل في طريق مش معمول لك.",
         },
         {
-          question: "هل الأسعار موجودة بالتفصيل؟",
+          question: "هل التقييم موجود داخل الموقع؟",
           answer:
-            "لا نعرض جداول أسعار تفصيلية. الأسعار تبدأ من 1750 جنيه حسب المسار والتفاصيل المتاحة.",
+            "لا. التقييم خارجي. الموقع مخصص للتسجيل واختيار ميعاد التقييم المجاني، وبعدها Success Manager يتواصل معاك بالخطوات.",
         },
         {
-          question: "هل يوجد كورسات أونلاين؟",
+          question: "إيه المختلف عن الطرق التقليدية؟",
           answer:
-            "نعم، توجد خيارات أونلاين، بالإضافة إلى اختيارات حضور في فرع الدقي حسب المتاح.",
+            "الاختلاف في الاتجاه والمتابعة. عندك مسار واضح، ممارسة يومية، مشاريع عملية، وSuccess Manager يتابعك بدل ما تسيب نفسك بعد أول حماس.",
         },
         {
-          question: "هل يوجد بوابة طالب أو نظام إدارة داخل الموقع؟",
+          question: "هل في أونلاين وفرع؟",
           answer:
-            "لا. Success Academy تستخدم أنظمة خارجية مثل Tamkeen TMS، والموقع الحالي مخصص للتسويق والحجز.",
+            "نعم. Success Academy عندها تعلم أونلاين، وكمان حضور في فرع الدقي حسب المتاح والمناسب لمستواك وجدولك.",
+        },
+        {
+          question: "التكلفة تبدأ من كام؟",
+          answer:
+            "تبدأ من 1750 جنيه. التفاصيل بتتحدد حسب المسار المناسب بعد معرفة مستواك وهدفك.",
         },
       ],
     },
@@ -200,124 +211,132 @@ export const content: Record<Locale, LandingContent> = {
   },
   en: {
     nav: {
-      why: "Why us",
-      assessment: "Free assessment",
+      why: "Why people fail",
+      assessment: "Free level check",
       process: "How it works",
       faq: "FAQ",
       language: "العربية",
-      book: "Book assessment",
+      book: "Get your level",
     },
     hero: {
-      eyebrow: "Success Academy English Courses",
-      title: "Not just a course... a clear direction for your English",
+      eyebrow: "Success Academy | Not Just A Course... A Direction",
+      title: "Most people don’t fail at learning English... they learn it the wrong way.",
       subtitle:
-        "Start with a simple external assessment, choose a suitable appointment, and get guided toward the right learning path for your level and goal.",
-      primaryCta: "Book your free assessment",
-      whatsappCta: "WhatsApp us",
+        "At Success Academy, we don’t just place you in a course. We identify your level, understand your goal, and build a clear learning direction with real follow-up from a Success Manager until English becomes something you can actually use.",
+      primaryCta: "Get Your Free Level Check",
+      whatsappCta: "Talk to a Success Manager",
       badge: "starts from 1750 EGP",
-      note: "The assessment is external. This website is for booking and lead capture only.",
+      note: "Register and choose a free assessment appointment. A Success Manager will contact you and explain the next steps.",
+      cardLabel: "Direction Plan",
     },
     why: {
-      title: "Why Success Academy?",
+      title: "The problem is usually not you. It is the method.",
       subtitle:
-        "A focused experience for serious learners: assessment, guidance, follow-up, and a clear learning path without unnecessary complexity.",
+        "Many adults have tried before: memorized vocabulary, attended lessons, paid for courses, and still froze when it was time to speak. That happens when there is no clear path.",
       items: [
         {
-          title: "A path based on your level",
+          title: "No real starting point",
           description:
-            "We start from your real level, then recommend a suitable track instead of pushing a random course.",
+            "If you start at the wrong level, you waste time on material that is either too easy or too advanced. The right start begins with knowing where you actually are.",
         },
         {
-          title: "Practical learning",
+          title: "Studying without using",
           description:
-            "The focus is daily use, conversation, confidence, and skills needed for study and work.",
+            "English is not only information to memorize. You need daily practice, realistic situations, and projects that make you use the language.",
         },
         {
-          title: "Consistent follow-up",
+          title: "No accountability",
           description:
-            "A Success Manager helps you track attendance, commitment, and progress step by step.",
+            "Most learners do not need another random course. They need direction, follow-up, reminders, and someone tracking progress with them.",
         },
       ],
     },
     assessment: {
-      title: "Book your free assessment",
+      title: "Start with a free level check that gives you direction",
       description:
-        "Choose a suitable external assessment appointment and leave your details so our team can confirm the next step.",
+        "The assessment is external, not inside the website. Here, you register and select a suitable appointment. Then a Success Manager contacts you and explains the next steps based on your level and goal.",
       bullets: [
-        "No exam is built inside the website now",
-        "We guide you to the right external assessment",
-        "After assessment, we help you choose the path and schedule",
+        "Register and choose a free assessment appointment",
+        "A Success Manager contacts you and explains the process",
+        "After your level is clear, we recommend the right path",
       ],
-      cta: "Select assessment appointment",
+      cta: "Select your free assessment time",
     },
     steps: {
-      title: "How it works",
+      title: "A clear path from the first step",
       items: [
         {
-          title: "Leave your details",
-          description: "Submit the booking form or contact us on WhatsApp.",
+          title: "Register your details",
+          description: "Leave your contact information and choose a suitable free assessment appointment.",
         },
         {
-          title: "Choose assessment time",
-          description: "Pick the most suitable appointment for the external assessment.",
+          title: "We contact you",
+          description: "A Success Manager speaks with you, understands your goal, and explains what comes next.",
         },
         {
-          title: "Get a path recommendation",
-          description: "We help you choose the group or plan that fits your goal.",
+          title: "We identify your level",
+          description: "After the external assessment, we define your real starting point instead of guessing.",
         },
         {
-          title: "Start and follow progress",
-          description: "Begin your course with follow-up from the Success Academy team.",
+          title: "You start with follow-up",
+          description: "You learn practically, practice daily, and track progress with your Success Manager.",
         },
       ],
     },
     delivery: {
-      title: "Online or at the Dokki branch",
+      title: "Learn online or at the Dokki branch",
+      onlineLabel: "Online",
       online:
-        "Learn from anywhere through structured online groups that fit your schedule.",
+        "If your schedule is busy, you can start online in structured groups with follow-up and practice, not passive attendance.",
+      branchLabel: "Dokki branch",
       branch:
-        "If you prefer in-person learning, you can choose available groups at the Dokki branch.",
-      note: "Delivery format is confirmed after contact, level confirmation, and appointment selection.",
+        "If learning in person helps you stay committed, you can choose available sessions at the Dokki branch.",
+      note: "Online or branch options are confirmed after we contact you, understand your level, and match the right schedule.",
     },
     successManager: {
-      title: "A Success Manager follows up with you",
+      title: "A Success Manager is not an extra. It is part of the method.",
       description:
-        "Follow-up is part of the experience, so you do not feel like you started alone or lost direction.",
+        "Daily follow-up is what keeps the plan alive after the first week. At Success Academy, someone helps you stay on track, understand what to do, and know the next step.",
       points: [
-        "Reminders for appointments and key steps",
-        "Attendance and commitment follow-up",
-        "Guidance if your path needs adjustment",
+        "Daily follow-up for practice and commitment",
+        "Practical usage through exercises and projects",
+        "Clear guidance when your path needs adjustment",
       ],
     },
     cta: {
-      title: "Ready to choose your direction?",
+      title: "If you tried before and stopped, start differently this time",
       description:
-        "Book your assessment now, and we will help you start from the right place without exaggerated promises or complicated details.",
-      primary: "Book assessment time",
-      secondary: "Ask on WhatsApp",
+        "You do not need to buy a course now. Register, get your free level check, and let a Success Manager explain the right direction before you decide.",
+      primary: "Get Your Free Level Check",
+      secondary: "Talk to a Success Manager",
     },
     faq: {
-      title: "Frequently asked questions",
+      title: "Questions before you start",
       items: [
         {
-          question: "Is the exam inside the website?",
+          question: "Do I need to already be good at English?",
           answer:
-            "No. The assessment is external at this stage. This website is for booking and lead capture.",
+            "No. The point is to identify your real level first, then recommend a starting point that fits you.",
         },
         {
-          question: "Do you show detailed pricing?",
+          question: "Is the assessment inside the website?",
           answer:
-            "No detailed pricing tables are shown. Pricing starts from 1750 EGP depending on the path and available details.",
+            "No. The assessment is external. This website is for registration and selecting your free assessment appointment. A Success Manager will contact you afterward.",
         },
         {
-          question: "Are online courses available?",
+          question: "What makes this different from a normal English course?",
           answer:
-            "Yes. Online options are available, along with in-person options at the Dokki branch depending on availability.",
+            "The difference is direction and accountability: a clear path, daily practice, practical projects, and follow-up from a Success Manager.",
         },
         {
-          question: "Is there a student portal or admin system here?",
+          question: "Can I learn online or at the branch?",
           answer:
-            "No. Success Academy already uses external systems such as Tamkeen TMS. This website is only for marketing and booking.",
+            "Yes. Success Academy offers online learning and in-person options at the Dokki branch, depending on availability and your suitable path.",
+        },
+        {
+          question: "How much does it start from?",
+          answer:
+            "starts from 1750 EGP. Details depend on the recommended path after your level and goal are clear.",
         },
       ],
     },
