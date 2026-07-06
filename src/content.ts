@@ -1,5 +1,15 @@
 import type { Locale } from "@/lib/i18n";
 
+type Card = {
+  title: string;
+  description: string;
+};
+
+type Option = {
+  value: string;
+  label: string;
+};
+
 export type LandingContent = {
   nav: {
     why: string;
@@ -18,14 +28,12 @@ export type LandingContent = {
     badge: string;
     note: string;
     cardLabel: string;
+    floatingCards: string[];
   };
   why: {
     title: string;
     subtitle: string;
-    items: Array<{
-      title: string;
-      description: string;
-    }>;
+    items: Card[];
   };
   assessment: {
     title: string;
@@ -35,10 +43,7 @@ export type LandingContent = {
   };
   steps: {
     title: string;
-    items: Array<{
-      title: string;
-      description: string;
-    }>;
+    items: Card[];
   };
   delivery: {
     title: string;
@@ -66,6 +71,60 @@ export type LandingContent = {
       answer: string;
     }>;
   };
+  form: {
+    title: string;
+    subtitle: string;
+    stepOne: string;
+    stepTwo: string;
+    labels: {
+      fullName: string;
+      phone: string;
+      email: string;
+      learningGoal: string;
+      currentLevel: string;
+      preferredLearningMode: string;
+      preferredAssessmentTime: string;
+      notes: string;
+      consent: string;
+    };
+    placeholders: {
+      fullName: string;
+      phone: string;
+      email: string;
+      notes: string;
+    };
+    learningGoalOptions: Option[];
+    currentLevelOptions: Option[];
+    learningModeOptions: Option[];
+    assessmentTimeOptions: Option[];
+    errors: {
+      fullName: string;
+      phone: string;
+      learningGoal: string;
+      preferredAssessmentTime: string;
+      consent: string;
+      submit: string;
+    };
+    buttons: {
+      next: string;
+      back: string;
+      submit: string;
+      loading: string;
+      success: string;
+    };
+    fallback: string;
+  };
+  thankYou: {
+    title: string;
+    subtitle: string;
+    whatsapp: string;
+    requestCall: string;
+    note: string;
+  };
+  sticky: {
+    primary: string;
+    whatsapp: string;
+  };
   footer: {
     slogan: string;
     rights: string;
@@ -75,134 +134,216 @@ export type LandingContent = {
 export const content: Record<Locale, LandingContent> = {
   ar: {
     nav: {
-      why: "ليه بتفشل؟",
+      why: "المشكلة",
       assessment: "التقييم المجاني",
-      process: "هتبدأ إزاي؟",
-      faq: "أسئلة مهمة",
+      process: "الخطوات",
+      faq: "الأسئلة",
       language: "English",
       book: "اعرف مستواك",
     },
     hero: {
       eyebrow: "Success Academy | Not Just A Course... A Direction",
-      title: "معظم الناس مش بتفشل في تعلم الإنجليزية... هي بتتعلمها بالطريقة الغلط.",
+      title: "معظم الناس مش بتفشل في الإنجليزية...\nهي بتتعلمها بالطريقة الغلط.",
       subtitle:
-        "في Success Academy مش بندخلك كورس وخلاص. إحنا بنحدد مستواك، نفهم هدفك، ونبني لك طريق واضح تتعلم فيه الإنجليزية بطريقة عملية، مع متابعة حقيقية من Success Manager لحد ما تبدأ تستخدم اللغة بثقة.",
-      primaryCta: "اعرف مستواك مجانا",
+        "في Success Academy مش بندخلك برنامج وخلاص. بنفهم هدفك من اللغة، نشوف نقطة البداية المناسبة، ونمشيك في خطة عملية فيها ممارسة يومية ومهام قصيرة ومتابعة على الالتزام لحد ما الإنجليزي يبقى استخدام حقيقي.",
+      primaryCta: "اعرف مستواك مجانًا",
       whatsappCta: "تحدث مع Success Manager",
-      badge: "تبدأ من 1750 جنيه",
-      note: "سجل بياناتك واختار ميعاد التقييم المجاني. Success Manager هيتواصل معاك ويوضح لك الخطوة اللي بعدها.",
-      cardLabel: "Direction Plan",
+      badge: "البرامج تبدأ من 1750 جنيه",
+      note: "ابدأ بتقييم مجاني خارجي، وبعده فريق المتابعة يوضح لك الخطوة الأنسب.",
+      cardLabel: "خطة الطريق",
+      floatingCards: ["مستوى مبدئي", "خطة مناسبة", "متابعة حقيقية", "تقييم مجاني"],
     },
     why: {
-      title: "المشكلة غالبا مش فيك... المشكلة في الطريقة",
+      title: "المشكلة مش في قدرتك... المشكلة في النظام اللي بتتعلم بيه",
       subtitle:
-        "ناس كتير بدأت قبل كده، حفظت كلمات، حضرت محاضرات، ودفعت فلوس. وبعد كل ده لسه بتتوتر لما تتكلم. السبب إن الطريق نفسه مكنش واضح.",
+        "لو بدأت أكتر من مرة ووقفت، فده غالبًا لأنك كنت بتتحرك من غير تشخيص، من غير ممارسة كفاية، ومن غير حد يتابع التزامك.",
       items: [
         {
-          title: "بتبدأ من غير تشخيص",
+          title: "بداية عشوائية",
           description:
-            "لما تدخل مستوى غلط، بتضيع وقتك بين حاجات سهلة جدا أو صعبة جدا. البداية الصح لازم تكون بعد معرفة مستواك الحقيقي.",
+            "تدخل مستوى مش مناسب، فتلاقي نفسك يا بتعيد حاجات عارفها يا بتغرق في حاجات لسه بدري عليها.",
         },
         {
-          title: "بتذاكر من غير استخدام",
+          title: "مذاكرة من غير استخدام",
           description:
-            "الإنجليزي مش معلومات تتحفظ وبس. لازم ممارسة يومية، مواقف حقيقية، ومشاريع تخليك تستخدم اللغة مش تتفرج عليها.",
+            "اللغة محتاجة تدريب عملي، مواقف، مهام قصيرة، وممارسة يومية تخليك تستخدمها بدل ما تحفظها بس.",
         },
         {
-          title: "بتسيب نفسك من غير متابعة",
+          title: "حماس من غير متابعة",
           description:
-            "أغلب الناس مش محتاجة كورس أكتر قد ما محتاجة حد يتابع، يفكرها، ويحاسبها على التقدم بخطوات واضحة.",
+            "أول أسبوع بيكون سهل. اللي بيفرق بعده هو متابعة على الالتزام وخطوات صغيرة تكمل عليها.",
         },
       ],
     },
     assessment: {
-      title: "ابدأ بتقييم مجاني يوضح لك الطريق",
+      title: "التقييم المجاني هو نقطة البداية المنطقية",
       description:
-        "التقييم خارجي، ومش جوه الموقع. دور الموقع إنك تسجل وتختار ميعاد مناسب، وبعدها Success Manager يتواصل معاك ويفهمك الخطوات بناء على مستواك وهدفك.",
+        "التقييم نفسه خارجي، والموقع هنا علشان تسجل وتختار وقت مناسب. بعدها فريق المتابعة يتواصل معاك، يفهم هدفك، ويوضح لك أنسب خطوة بناءً على مستواك.",
       bullets: [
-        "تسجل بياناتك وتختار ميعاد تقييم مجاني",
-        "Success Manager يتواصل معاك ويشرح الخطوات",
-        "بعد معرفة مستواك نرشح لك المسار الأنسب",
+        "تسجيل سريع بدون دفع",
+        "اختيار وقت مناسب للتقييم",
+        "توضيح خطة مناسبة لمستواك وهدفك",
       ],
-      cta: "اختار ميعاد التقييم المجاني",
+      cta: "اختار ميعاد تقييمك المجاني",
     },
     steps: {
-      title: "الطريق واضح من أول خطوة",
+      title: "رحلة واضحة بدل قرارات عشوائية",
       items: [
         {
-          title: "سجل بياناتك",
-          description: "سيب لنا بيانات التواصل واختار الميعاد المناسب للتقييم المجاني.",
+          title: "اعرف مستواك",
+          description: "ابدأ بتقييم خارجي يوضح نقطة البداية بدل التخمين.",
         },
         {
-          title: "نتواصل معاك",
-          description: "Success Manager هيتكلم معاك، يفهم هدفك، ويوضح لك المطلوب قبل التقييم.",
+          title: "نفهم هدفك",
+          description: "شغل، سفر، دراسة، مقابلات، أو ثقة في المحادثة. الهدف يغير الخطة.",
         },
         {
-          title: "نعرف مستواك",
-          description: "بعد التقييم الخارجي، نحدد نقطة البداية بدل ما تدخل مسار عشوائي.",
+          title: "خطة مناسبة",
+          description: "برنامج عملي فيه تدريب ومهام وممارسة على استخدام حقيقي للغة.",
         },
         {
-          title: "تبدأ بخطة ومتابعة",
-          description: "تتعلم عملي، تتمرن يوميا، وتتابع تقدمك مع Success Manager.",
+          title: "متابعة وممارسة",
+          description: "فريق المتابعة يساعدك تفضل ملتزم وتعرف الخطوة اللي بعدها.",
         },
       ],
     },
     delivery: {
-      title: "تعلم أونلاين أو من فرع الدقي",
+      title: "أونلاين أو من فرع الدقي",
       onlineLabel: "أونلاين",
       online:
-        "لو جدولك مزدحم، تقدر تبدأ أونلاين في مجموعات منظمة، بمتابعة وممارسة مش مجرد حضور محاضرات.",
+        "مناسب لو جدولك مزدحم، مع تدريب منظم ومتابعة وممارسة مش مجرد مشاهدة محاضرات.",
       branchLabel: "فرع الدقي",
       branch:
-        "ولو وجودك في مكان تعليمي بيفرق معاك، تقدر تختار الحضور في فرع الدقي حسب المواعيد المتاحة.",
-      note: "اختيار الأونلاين أو الفرع بيتم بعد التواصل ومعرفة مستواك والميعاد المناسب لك.",
+        "اختيار مناسب لو الحضور بيساعدك تلتزم أكتر وتتعلم وسط بيئة تدريب واضحة.",
+      note: "الاختيار بين الأونلاين وفرع الدقي بيتم بعد معرفة مستواك وهدفك والمواعيد المتاحة.",
     },
     successManager: {
-      title: "Success Manager مش رفاهية... ده جزء من الطريقة",
+      title: "Success Manager يتابع الخطة معاك",
       description:
-        "المتابعة اليومية هي اللي بتخلي الخطة تعيش بعد أول أسبوع. في Success Academy في شخص مسؤول يساعدك تفضل ماشي، فاهم المطلوب، وعارف الخطوة الجاية.",
+        "الفكرة مش إنك تبدأ وخلاص. في متابعة تساعدك تعرف المطلوب، تلتزم بالتدريب، وتعدل الخطة لو احتجت.",
       points: [
-        "متابعة يومية للتدريب والالتزام",
-        "ممارسة عملية ومشاريع تخليك تستخدم اللغة",
-        "توجيه واضح لو مستواك أو هدفك محتاج تعديل",
+        "متابعة يومية على التدريب والالتزام",
+        "مهام ومشاريع قصيرة لاستخدام اللغة",
+        "تنبيه واضح للخطوة الجاية بدل التوهان",
       ],
     },
     cta: {
-      title: "لو جربت قبل كده ومكملتش... ابدأ المرة دي بطريقة مختلفة",
+      title: "ابدأ بتقييم مجاني قبل ما تختار أي برنامج",
       description:
-        "مش مطلوب منك تشتري كورس دلوقتي. سجل، اعرف مستواك مجانا، وخلي Success Manager يشرح لك أنسب طريق قبل أي قرار.",
-      primary: "اعرف مستواك مجانا",
+        "مش محتاج تاخد قرار كبير دلوقتي. سجل بياناتك، اختار وقت مناسب، وبعد التقييم هتعرف أنسب طريق ليك.",
+      primary: "ابدأ بتقييم مجاني",
       secondary: "تحدث مع Success Manager",
     },
     faq: {
-      title: "أسئلة قبل ما تبدأ",
+      title: "أسئلة مهمة قبل التسجيل",
       items: [
         {
-          question: "هل لازم أكون مستوايا كويس عشان أبدأ؟",
+          question: "هل التقييم جوه الموقع؟",
           answer:
-            "لا. الفكرة إننا نعرف مستواك الحقيقي الأول، وبعدها نرشح لك بداية مناسبة بدل ما تدخل في طريق مش معمول لك.",
+            "لا. التقييم خارجي. الموقع مخصص للتسجيل واختيار وقت مناسب، وبعدها فريق Success Academy يتواصل معاك.",
         },
         {
-          question: "هل التقييم موجود داخل الموقع؟",
+          question: "هل لازم أكون كويس في الإنجليزي؟",
           answer:
-            "لا. التقييم خارجي. الموقع مخصص للتسجيل واختيار ميعاد التقييم المجاني، وبعدها Success Manager يتواصل معاك بالخطوات.",
+            "لا. الهدف من البداية هو معرفة مستواك الحقيقي وبناء خطة مناسبة ليه.",
         },
         {
-          question: "إيه المختلف عن الطرق التقليدية؟",
+          question: "إيه المختلف في Success Academy؟",
           answer:
-            "الاختلاف في الاتجاه والمتابعة. عندك مسار واضح، ممارسة يومية، مشاريع عملية، وSuccess Manager يتابعك بدل ما تسيب نفسك بعد أول حماس.",
+            "الاختلاف في الاتجاه والمتابعة: تدريب عملي، ممارسة يومية، مهام قصيرة، وخطوة واضحة بعد كل مرحلة.",
         },
         {
-          question: "هل في أونلاين وفرع؟",
+          question: "هل في أونلاين وحضور؟",
           answer:
-            "نعم. Success Academy عندها تعلم أونلاين، وكمان حضور في فرع الدقي حسب المتاح والمناسب لمستواك وجدولك.",
+            "نعم. متاح تعلم أونلاين، ومتاح حضور في فرع الدقي حسب المناسب لمستواك والمواعيد المتاحة.",
         },
         {
           question: "التكلفة تبدأ من كام؟",
           answer:
-            "تبدأ من 1750 جنيه. التفاصيل بتتحدد حسب المسار المناسب بعد معرفة مستواك وهدفك.",
+            "البرامج تبدأ من 1750 جنيه. التفاصيل بتتحدد بعد معرفة مستواك وهدفك من اللغة.",
         },
       ],
+    },
+    form: {
+      title: "ابدأ بتقييم مجاني واعرف أنسب طريق ليك",
+      subtitle:
+        "سيب بياناتك واختار ميعاد مناسب، وفريق المتابعة هيتواصل معاك يشرح لك الخطوة الجاية.",
+      stepOne: "بيانات البداية",
+      stepTwo: "اختيار الميعاد",
+      labels: {
+        fullName: "الاسم بالكامل",
+        phone: "رقم الموبايل / واتساب",
+        email: "البريد الإلكتروني",
+        learningGoal: "هدفك من الإنجليزي",
+        currentLevel: "مستواك الحالي",
+        preferredLearningMode: "تفضل تتعلم إزاي؟",
+        preferredAssessmentTime: "اختار ميعاد مناسب للتقييم",
+        notes: "ملاحظات إضافية",
+        consent: "أوافق أن يتواصل معي فريق Success Academy بخصوص التقييم المجاني",
+      },
+      placeholders: {
+        fullName: "اكتب اسمك",
+        phone: "مثال: 01000000000",
+        email: "name@example.com",
+        notes: "أي تفاصيل تحب نعرفها قبل التواصل",
+      },
+      learningGoalOptions: [
+        { value: "work", label: "شغل" },
+        { value: "travel", label: "سفر" },
+        { value: "study", label: "دراسة" },
+        { value: "speaking", label: "محادثة وثقة" },
+        { value: "interviews", label: "مقابلات عمل" },
+        { value: "general", label: "تطوير عام" },
+        { value: "not_sure", label: "مش متأكد" },
+      ],
+      currentLevelOptions: [
+        { value: "beginner", label: "مبتدئ" },
+        { value: "basic", label: "عندي أساسيات" },
+        { value: "intermediate", label: "متوسط" },
+        { value: "understand_not_speak", label: "كويس بس مش بعرف أتكلم" },
+        { value: "unknown", label: "مش عارف مستوايا" },
+      ],
+      learningModeOptions: [
+        { value: "online", label: "أونلاين" },
+        { value: "dokki", label: "فرع الدقي" },
+        { value: "not_sure", label: "مش متأكد" },
+      ],
+      assessmentTimeOptions: [
+        { value: "earliest", label: "أقرب ميعاد متاح" },
+        { value: "morning", label: "صباحًا" },
+        { value: "afternoon", label: "بعد الظهر" },
+        { value: "evening", label: "مساءً" },
+        { value: "weekend", label: "ويك إند" },
+        { value: "suggest", label: "خلّي فريق المتابعة يرشحلي ميعاد" },
+      ],
+      errors: {
+        fullName: "اكتب اسمك بالكامل.",
+        phone: "اكتب رقم الموبايل أو واتساب.",
+        learningGoal: "اختار هدفك من الإنجليزي.",
+        preferredAssessmentTime: "اختار ميعاد مناسب للتقييم.",
+        consent: "لازم توافق على التواصل بخصوص التقييم المجاني.",
+        submit: "حصل خطأ أثناء التسجيل. جرّب مرة تانية أو تواصل معنا على واتساب.",
+      },
+      buttons: {
+        next: "كمل اختيار الميعاد",
+        back: "رجوع",
+        submit: "سجل للتقييم المجاني",
+        loading: "جاري تسجيل طلبك...",
+        success: "تم تسجيل طلبك بنجاح",
+      },
+      fallback: "لو واجهت مشكلة، تقدر تتواصل معنا مباشرة على واتساب.",
+    },
+    thankYou: {
+      title: "تم تسجيل طلبك بنجاح",
+      subtitle:
+        "وصلنا بياناتك. فريق Success Academy هيراجع طلبك ويتواصل معاك علشان يوضح لك ميعاد التقييم والخطوة المناسبة لمستواك وهدفك.",
+      whatsapp: "افتح واتساب",
+      requestCall: "اطلب مكالمة",
+      note: "مش محتاج تاخد قرار دلوقتي. ابدأ بالتقييم، وبعدها هنعرف أنسب طريق ليك.",
+    },
+    sticky: {
+      primary: "اعرف مستواك مجانًا",
+      whatsapp: "تواصل واتساب",
     },
     footer: {
       slogan: "Not Just A Course... A Direction",
@@ -211,7 +352,7 @@ export const content: Record<Locale, LandingContent> = {
   },
   en: {
     nav: {
-      why: "Why people fail",
+      why: "The problem",
       assessment: "Free level check",
       process: "How it works",
       faq: "FAQ",
@@ -220,66 +361,67 @@ export const content: Record<Locale, LandingContent> = {
     },
     hero: {
       eyebrow: "Success Academy | Not Just A Course... A Direction",
-      title: "Most people don’t fail at learning English... they learn it the wrong way.",
+      title: "Most people don’t fail at learning English...\nthey learn it the wrong way.",
       subtitle:
-        "At Success Academy, we don’t just place you in a course. We identify your level, understand your goal, and build a clear learning direction with real follow-up from a Success Manager until English becomes something you can actually use.",
+        "At Success Academy, we don’t just place you in a course. We understand your goal, identify the right starting point, and guide you through a practical plan with daily practice, short tasks, and real accountability until English becomes something you can use.",
       primaryCta: "Get Your Free Level Check",
       whatsappCta: "Talk to a Success Manager",
-      badge: "starts from 1750 EGP",
-      note: "Register and choose a free assessment appointment. A Success Manager will contact you and explain the next steps.",
-      cardLabel: "Direction Plan",
+      badge: "programs start from 1750 EGP",
+      note: "Start with an external free assessment, then our team will explain the right next step.",
+      cardLabel: "Direction plan",
+      floatingCards: ["Starting level", "Right plan", "Real follow-up", "Free assessment"],
     },
     why: {
-      title: "The problem is usually not you. It is the method.",
+      title: "The issue is usually not your ability. It is the system.",
       subtitle:
-        "Many adults have tried before: memorized vocabulary, attended lessons, paid for courses, and still froze when it was time to speak. That happens when there is no clear path.",
+        "If you started more than once and stopped, it probably was not about motivation. You were moving without diagnosis, enough practice, or accountability.",
       items: [
         {
-          title: "No real starting point",
+          title: "Random starting point",
           description:
-            "If you start at the wrong level, you waste time on material that is either too easy or too advanced. The right start begins with knowing where you actually are.",
+            "The wrong level wastes time: either repeating what you know or struggling with what you are not ready for.",
         },
         {
           title: "Studying without using",
           description:
-            "English is not only information to memorize. You need daily practice, realistic situations, and projects that make you use the language.",
+            "English needs practical training, real situations, short tasks, and daily practice that turns knowledge into use.",
         },
         {
-          title: "No accountability",
+          title: "Motivation without follow-up",
           description:
-            "Most learners do not need another random course. They need direction, follow-up, reminders, and someone tracking progress with them.",
+            "The first week is easy. What matters after that is accountability and small steps you can keep following.",
         },
       ],
     },
     assessment: {
-      title: "Start with a free level check that gives you direction",
+      title: "The free level check is the logical first step",
       description:
-        "The assessment is external, not inside the website. Here, you register and select a suitable appointment. Then a Success Manager contacts you and explains the next steps based on your level and goal.",
+        "The assessment is external. This page lets you register and choose a suitable time. Then our follow-up team contacts you, understands your goal, and explains the right next step.",
       bullets: [
-        "Register and choose a free assessment appointment",
-        "A Success Manager contacts you and explains the process",
-        "After your level is clear, we recommend the right path",
+        "Quick registration with no payment",
+        "Choose a suitable assessment time",
+        "Get a plan that fits your level and goal",
       ],
-      cta: "Select your free assessment time",
+      cta: "Choose your free assessment time",
     },
     steps: {
-      title: "A clear path from the first step",
+      title: "A clear journey instead of random decisions",
       items: [
         {
-          title: "Register your details",
-          description: "Leave your contact information and choose a suitable free assessment appointment.",
+          title: "Know your level",
+          description: "Start with an external assessment that gives you a real starting point.",
         },
         {
-          title: "We contact you",
-          description: "A Success Manager speaks with you, understands your goal, and explains what comes next.",
+          title: "Define your goal",
+          description: "Work, travel, study, interviews, or speaking confidence. The goal shapes the plan.",
         },
         {
-          title: "We identify your level",
-          description: "After the external assessment, we define your real starting point instead of guessing.",
+          title: "Get the right plan",
+          description: "A practical program with training, tasks, and real use of English.",
         },
         {
-          title: "You start with follow-up",
-          description: "You learn practically, practice daily, and track progress with your Success Manager.",
+          title: "Follow up and practice",
+          description: "The team helps you stay committed and know what comes next.",
         },
       ],
     },
@@ -287,58 +429,139 @@ export const content: Record<Locale, LandingContent> = {
       title: "Learn online or at the Dokki branch",
       onlineLabel: "Online",
       online:
-        "If your schedule is busy, you can start online in structured groups with follow-up and practice, not passive attendance.",
+        "Built for busy schedules, with structured training, follow-up, and practice instead of passive lessons.",
       branchLabel: "Dokki branch",
       branch:
-        "If learning in person helps you stay committed, you can choose available sessions at the Dokki branch.",
-      note: "Online or branch options are confirmed after we contact you, understand your level, and match the right schedule.",
+        "A good option if learning in person helps you stay committed in a clear training environment.",
+      note: "Online or Dokki branch options are confirmed after your level, goal, and available times are clear.",
     },
     successManager: {
-      title: "A Success Manager is not an extra. It is part of the method.",
+      title: "A Success Manager follows the plan with you",
       description:
-        "Daily follow-up is what keeps the plan alive after the first week. At Success Academy, someone helps you stay on track, understand what to do, and know the next step.",
+        "The point is not just to start. It is to keep moving with someone helping you understand what to do, stay committed, and adjust when needed.",
       points: [
-        "Daily follow-up for practice and commitment",
-        "Practical usage through exercises and projects",
-        "Clear guidance when your path needs adjustment",
+        "Daily follow-up on practice and commitment",
+        "Short tasks and projects for real language use",
+        "Clear next steps instead of confusion",
       ],
     },
     cta: {
-      title: "If you tried before and stopped, start differently this time",
+      title: "Start with a free level check before choosing any program",
       description:
-        "You do not need to buy a course now. Register, get your free level check, and let a Success Manager explain the right direction before you decide.",
-      primary: "Get Your Free Level Check",
+        "You do not need to make a big decision now. Register, choose a suitable time, and after the assessment we will guide you toward the right path.",
+      primary: "Start with a free level check",
       secondary: "Talk to a Success Manager",
     },
     faq: {
-      title: "Questions before you start",
+      title: "Questions before you register",
       items: [
-        {
-          question: "Do I need to already be good at English?",
-          answer:
-            "No. The point is to identify your real level first, then recommend a starting point that fits you.",
-        },
         {
           question: "Is the assessment inside the website?",
           answer:
-            "No. The assessment is external. This website is for registration and selecting your free assessment appointment. A Success Manager will contact you afterward.",
+            "No. The assessment is external. This website is for registration and selecting a suitable time, then the Success Academy team contacts you.",
         },
         {
-          question: "What makes this different from a normal English course?",
+          question: "Do I need to be good at English already?",
           answer:
-            "The difference is direction and accountability: a clear path, daily practice, practical projects, and follow-up from a Success Manager.",
+            "No. The point is to understand your current level first, then build the right plan around it.",
         },
         {
-          question: "Can I learn online or at the branch?",
+          question: "What makes Success Academy different?",
           answer:
-            "Yes. Success Academy offers online learning and in-person options at the Dokki branch, depending on availability and your suitable path.",
+            "Direction and accountability: practical training, daily practice, short tasks, and a clear next step after each stage.",
         },
         {
-          question: "How much does it start from?",
+          question: "Can I learn online or in person?",
           answer:
-            "starts from 1750 EGP. Details depend on the recommended path after your level and goal are clear.",
+            "Yes. Online learning is available, and in-person learning is available at the Dokki branch depending on your suitable path and available times.",
+        },
+        {
+          question: "How much do programs start from?",
+          answer:
+            "programs start from 1750 EGP. Details are confirmed after your level and English goal are clear.",
         },
       ],
+    },
+    form: {
+      title: "Start with a free level check",
+      subtitle:
+        "Leave your details, choose a suitable assessment time, and our team will contact you with the next step.",
+      stepOne: "Your details",
+      stepTwo: "Assessment time",
+      labels: {
+        fullName: "Full name",
+        phone: "Mobile / WhatsApp number",
+        email: "Email address",
+        learningGoal: "Your English goal",
+        currentLevel: "Current level",
+        preferredLearningMode: "Preferred learning mode",
+        preferredAssessmentTime: "Preferred assessment time",
+        notes: "Additional notes",
+        consent: "I agree that Success Academy may contact me about the free assessment",
+      },
+      placeholders: {
+        fullName: "Your name",
+        phone: "Example: 01000000000",
+        email: "name@example.com",
+        notes: "Anything you want us to know before contacting you",
+      },
+      learningGoalOptions: [
+        { value: "work", label: "Work" },
+        { value: "travel", label: "Travel" },
+        { value: "study", label: "Study" },
+        { value: "speaking", label: "Speaking confidence" },
+        { value: "interviews", label: "Job interviews" },
+        { value: "general", label: "General improvement" },
+        { value: "not_sure", label: "Not sure yet" },
+      ],
+      currentLevelOptions: [
+        { value: "beginner", label: "Beginner" },
+        { value: "basic", label: "Basic knowledge" },
+        { value: "intermediate", label: "Intermediate" },
+        { value: "understand_not_speak", label: "I understand but cannot speak confidently" },
+        { value: "unknown", label: "I do not know my level" },
+      ],
+      learningModeOptions: [
+        { value: "online", label: "Online" },
+        { value: "dokki", label: "Dokki branch" },
+        { value: "not_sure", label: "Not sure yet" },
+      ],
+      assessmentTimeOptions: [
+        { value: "earliest", label: "Earliest available" },
+        { value: "morning", label: "Morning" },
+        { value: "afternoon", label: "Afternoon" },
+        { value: "evening", label: "Evening" },
+        { value: "weekend", label: "Weekend" },
+        { value: "suggest", label: "Let the follow-up team suggest a time" },
+      ],
+      errors: {
+        fullName: "Please enter your full name.",
+        phone: "Please enter your mobile or WhatsApp number.",
+        learningGoal: "Please choose your English goal.",
+        preferredAssessmentTime: "Please choose a suitable assessment time.",
+        consent: "Please agree to be contacted about the free assessment.",
+        submit: "Something went wrong. Please try again or contact us on WhatsApp.",
+      },
+      buttons: {
+        next: "Continue to time selection",
+        back: "Back",
+        submit: "Register for the free level check",
+        loading: "Submitting your request...",
+        success: "Your request has been submitted",
+      },
+      fallback: "If something goes wrong, you can contact us directly on WhatsApp.",
+    },
+    thankYou: {
+      title: "Your request has been received",
+      subtitle:
+        "We received your details. The Success Academy team will contact you to explain your assessment appointment and the right next step for your level and goal.",
+      whatsapp: "Open WhatsApp",
+      requestCall: "Request a call",
+      note: "You do not need to decide now. Start with the level check, then we will guide you toward the right path.",
+    },
+    sticky: {
+      primary: "Free Level Check",
+      whatsapp: "WhatsApp",
     },
     footer: {
       slogan: "Not Just A Course... A Direction",
