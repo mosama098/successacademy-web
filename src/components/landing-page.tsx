@@ -94,7 +94,7 @@ export function LandingPage({ locale }: LandingPageProps) {
                 <span className="rounded-full bg-[#E32F54] px-4 py-2 text-sm font-black text-white">
                   {t.hero.badge}
                 </span>
-                <span className="text-sm font-bold text-[#391B68]">English Courses</span>
+                <span className="text-sm font-bold text-[#391B68]">{t.hero.cardLabel}</span>
               </div>
               <div className="mt-8 space-y-4">
                 {t.steps.items.slice(0, 3).map((item, index) => (
@@ -170,8 +170,8 @@ export function LandingPage({ locale }: LandingPageProps) {
           <div className="md:col-span-1">
             <h2 className="text-3xl font-black sm:text-4xl">{t.delivery.title}</h2>
           </div>
-          <InfoBlock title="Online" text={t.delivery.online} />
-          <InfoBlock title={locale === "ar" ? "فرع الدقي" : "Dokki branch"} text={t.delivery.branch} />
+          <InfoBlock title={t.delivery.onlineLabel} text={t.delivery.online} />
+          <InfoBlock title={t.delivery.branchLabel} text={t.delivery.branch} />
           <p className="text-sm leading-6 text-white/70 md:col-start-2 md:col-span-2">{t.delivery.note}</p>
         </div>
       </section>
