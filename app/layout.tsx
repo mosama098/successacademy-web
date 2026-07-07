@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { StyleRuntime } from "@/components/style-runtime";
 import { TrackingScripts } from "@/components/tracking-scripts";
 import "./globals.css";
 
@@ -15,7 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar">
+      <head>
+        <link rel="stylesheet" href="/funnel.css" />
+      </head>
       <body>
+        <StyleRuntime />
         {children}
         <TrackingScripts />
       </body>
