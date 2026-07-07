@@ -52,6 +52,12 @@ export const arContent: LandingContent = {
     bullets: ["تسجيل سريع من غير تعقيد", "اختيار وقت مناسب للتقييم", "خطة مبدئية حسب مستواك وهدفك"],
     cta: "اختار ميعاد تقييمك المجاني",
   },
+  videoPreview: {
+    title: "شوف الرحلة في دقيقة",
+    subtitle: "من أول تقييم مجاني لحد ما تبدأ خطة مناسبة لمستواك وهدفك.",
+    cta: "ابدأ بتقييم مجاني",
+    placeholder: "قريبًا: فيديو يشرح رحلة الطالب مع Success Academy",
+  },
   steps: {
     title: "Success Academy بتشتغل كطريق... مش كورس وخلاص",
     subtitle: "إحنا بنبدأ من مستواك وهدفك، وبعدها نبني لك طريقة تعلم عملية تقدر تكمل فيها.",
@@ -60,6 +66,26 @@ export const arContent: LandingContent = {
       { title: "نفهم هدفك", description: "شغل، سفر، دراسة، مقابلات، أو ثقة في المحادثة." },
       { title: "نبني خطة مناسبة", description: "تدريب عملي ومهام قصيرة حسب مستواك." },
       { title: "تبدأ وتتابع", description: "متابعة على الالتزام واستخدام حقيقي للغة." },
+    ],
+  },
+  experienceVideos: {
+    title: "التجربة مش محاضرات وبس",
+    items: [
+      {
+        title: "تجربة التعلم الأونلاين",
+        description: "تدريب منظم ومتابعة تساعدك تلتزم حتى لو جدولك مزدحم.",
+        placeholder: "قريبًا: فيديو يوضح تجربة التعلم الأونلاين",
+      },
+      {
+        title: "التدريب العملي والمهام",
+        description: "مهام قصيرة ومواقف واقعية تخليك تستخدم اللغة بدل ما تحفظها بس.",
+        placeholder: "قريبًا: فيديو يوضح التدريب العملي والمهام",
+      },
+      {
+        title: "المتابعة مع Success Manager",
+        description: "متابعة على الالتزام وتعديل الخطة حسب مستواك وهدفك.",
+        placeholder: "قريبًا: فيديو يوضح دور Success Manager",
+      },
     ],
   },
   delivery: {
@@ -214,5 +240,6 @@ export const arContent: LandingContent = {
   footer: {
     slogan: "Not Just A Course... A Direction",
     rights: "Success Academy. جميع الحقوق محفوظة.",
+    whatsapp: "تواصل واتساب",
   },
 };
