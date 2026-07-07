@@ -43,6 +43,7 @@ export type LandingContent = {
   };
   steps: {
     title: string;
+    subtitle: string;
     items: Card[];
   };
   delivery: {
@@ -56,6 +57,7 @@ export type LandingContent = {
     title: string;
     description: string;
     points: string[];
+    cards: Card[];
   };
   cta: {
     title: string;
@@ -73,6 +75,8 @@ export type LandingContent = {
   form: {
     title: string;
     subtitle: string;
+    benefitTitle: string;
+    benefitItems: string[];
     stepOne: string;
     stepTwo: string;
     labels: {
