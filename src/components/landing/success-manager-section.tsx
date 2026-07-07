@@ -3,43 +3,6 @@ import type { LandingSectionProps } from "./types";
 
 export function SuccessManagerSection({ locale, copy }: LandingSectionProps) {
   const isArabic = locale === "ar";
-  const cards = isArabic
-    ? [
-        {
-          title: "متابعة على الالتزام",
-          description: "حد يتابع تقدمك ويخليك عارف المطلوب منك كل يوم.",
-        },
-        {
-          title: "مهام قصيرة",
-          description: "تطبيقات بسيطة ومستمرة علشان التدريب يبقى عملي.",
-        },
-        {
-          title: "استخدام حقيقي للغة",
-          description: "مواقف وممارسة تخليك تستخدم الإنجليزي بدل ما تحفظه بس.",
-        },
-        {
-          title: "تعديل الخطة عند الحاجة",
-          description: "لو احتجت تغيير في السرعة أو التركيز، الخطة بتتظبط معاك.",
-        },
-      ]
-    : [
-        {
-          title: "Accountability follow-up",
-          description: "Someone keeps your next step clear and helps you stay consistent.",
-        },
-        {
-          title: "Short tasks",
-          description: "Simple practical tasks that turn training into a daily habit.",
-        },
-        {
-          title: "Real language use",
-          description: "Practice built around situations where you actually need English.",
-        },
-        {
-          title: "Plan adjustments",
-          description: "Your pace and focus can be adjusted when your progress needs it.",
-        },
-      ];
 
   return (
     <section className="bg-[#391B68] px-6 py-16 text-white lg:px-10 lg:py-24">
@@ -51,7 +14,7 @@ export function SuccessManagerSection({ locale, copy }: LandingSectionProps) {
         </AnimatedSection>
 
         <div className={`grid gap-4 ${isArabic ? "lg:col-start-1 lg:row-start-1" : ""}`}>
-          {cards.map((card, index) => (
+          {copy.successManager.cards.map((card, index) => (
             <AnimatedSection key={card.title} delay={index * 70}>
               <div className="strong-card bg-white p-5 text-slate-950 hover:border-[#EC911F]/60 hover:bg-white">
                 <div className="flex items-start gap-4">
