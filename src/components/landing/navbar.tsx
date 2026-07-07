@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CtaLink } from "@/components/ui/cta-link";
 import { alternateLocale, type Locale } from "@/lib/i18n";
 import type { LandingContent } from "@/content";
+import { BrandMark } from "./brand-mark";
 import { bookingHref } from "./types";
 
 export function Navbar({ locale, copy }: { locale: Locale; copy: LandingContent }) {
@@ -11,13 +12,7 @@ export function Navbar({ locale, copy }: { locale: Locale; copy: LandingContent 
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-6 py-4 lg:px-10">
         <Link href={`/${locale}`} className="flex items-center gap-3" aria-label="Success Academy">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#EC911F] to-[#E32F54] text-base font-black text-white shadow-xl shadow-[#391B68]/15">
-            SA
-          </span>
-          <span>
-            <span className="block text-lg font-black text-[#391B68]">Success Academy</span>
-            <span className="hidden text-[13px] font-black text-[#EC911F] sm:block">{copy.footer.slogan}</span>
-          </span>
+          <BrandMark slogan={copy.footer.slogan} />
         </Link>
 
         <div className="hidden items-center gap-7 text-[15px] font-black text-slate-700 md:flex">
