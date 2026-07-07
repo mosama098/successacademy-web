@@ -52,6 +52,12 @@ export const enContent: LandingContent = {
     bullets: ["Quick registration without complexity", "Choose a suitable assessment time", "Get an initial plan for your level and goal"],
     cta: "Choose Your Free Assessment Time",
   },
+  videoPreview: {
+    title: "See the journey in one minute",
+    subtitle: "From the free level check to starting a plan that fits your level and goal.",
+    cta: "Start with a Free Level Check",
+    placeholder: "Coming soon: a video explaining the learner journey with Success Academy",
+  },
   steps: {
     title: "Success Academy works as a path, not just a course",
     subtitle: "We start from your level and goal, then build a practical learning direction you can continue.",
@@ -60,6 +66,26 @@ export const enContent: LandingContent = {
       { title: "Understand your goal", description: "Work, travel, study, interviews, or confidence in conversation." },
       { title: "Build the right plan", description: "Practical training and short tasks based on your level." },
       { title: "Train with follow-up", description: "Accountability and real language use keep you moving." },
+    ],
+  },
+  experienceVideos: {
+    title: "The experience is more than lessons",
+    items: [
+      {
+        title: "Online learning experience",
+        description: "Structured training and follow-up that help you stay consistent with a busy schedule.",
+        placeholder: "Coming soon: a video showing the online learning experience",
+      },
+      {
+        title: "Practical training and tasks",
+        description: "Short tasks and realistic situations that help you use English, not just memorize it.",
+        placeholder: "Coming soon: a video showing practical training and tasks",
+      },
+      {
+        title: "Follow-up with a Success Manager",
+        description: "Accountability and plan adjustments based on your level and goal.",
+        placeholder: "Coming soon: a video showing the Success Manager role",
+      },
     ],
   },
   delivery: {
@@ -210,5 +236,6 @@ export const enContent: LandingContent = {
   footer: {
     slogan: "Not Just A Course... A Direction",
     rights: "Success Academy. All rights reserved.",
+    whatsapp: "WhatsApp",
   },
 };
