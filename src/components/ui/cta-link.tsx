@@ -37,19 +37,24 @@ export function CtaLink({
     else trackCTAClick(payload);
   }
 
+  const content = (
+    <>
+      <span>{children}</span>
+      {variant !== "ghost" ? <span className="button-arrow">→</span> : null}
+    </>
+  );
+
   if (href.startsWith("/")) {
     return (
       <Link href={href} onClick={handleClick} className={`${classes} ${className}`}>
-        <span>{children}</span>
-        {variant !== "ghost" ? <span className="button-arrow">→</span> : null}
+        {content}
       </Link>
     );
   }
 
   return (
     <a href={href} onClick={handleClick} className={`${classes} ${className}`}>
-      <span>{children}</span>
-      {variant !== "ghost" ? <span className="button-arrow">→</span> : null}
+      {content}
     </a>
   );
 }
