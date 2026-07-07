@@ -5,6 +5,10 @@ type Card = {
   description: string;
 };
 
+type VideoCard = Card & {
+  placeholder: string;
+};
+
 type Option = {
   value: string;
   label: string;
@@ -41,10 +45,20 @@ export type LandingContent = {
     bullets: string[];
     cta: string;
   };
+  videoPreview: {
+    title: string;
+    subtitle: string;
+    cta: string;
+    placeholder: string;
+  };
   steps: {
     title: string;
     subtitle: string;
     items: Card[];
+  };
+  experienceVideos: {
+    title: string;
+    items: VideoCard[];
   };
   delivery: {
     title: string;
@@ -131,6 +145,7 @@ export type LandingContent = {
   footer: {
     slogan: string;
     rights: string;
+    whatsapp: string;
   };
 };
 
