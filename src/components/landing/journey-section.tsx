@@ -7,6 +7,7 @@ export function JourneySection({ copy }: LandingSectionProps) {
       <div className="mx-auto max-w-[1180px]">
         <AnimatedSection className="mx-auto mb-12 max-w-[760px] text-center">
           <h2 className="text-3xl font-black leading-tight text-[#391B68] lg:text-5xl">{copy.steps.title}</h2>
+          <p className="mx-auto mt-5 max-w-[680px] text-[17px] font-bold leading-8 text-slate-600">{copy.steps.subtitle}</p>
         </AnimatedSection>
         <div className="relative grid gap-6 lg:grid-cols-4">
           <div className="absolute left-[10%] right-[10%] top-10 hidden h-1 rounded-full bg-gradient-to-r from-[#EC911F] via-[#E32F54] to-[#391B68] lg:block" />
