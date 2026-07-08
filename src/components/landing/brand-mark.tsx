@@ -15,17 +15,24 @@ function resolveLogo() {
   return logoCandidates.find((src) => existsSync(join(process.cwd(), "public", src)));
 }
 
+export function hasLogoAsset() {
+  return Boolean(resolveLogo());
+}
+
 export function BrandMark({ slogan, compact = false }: { slogan: string; compact?: boolean }) {
   const logoSrc = resolveLogo();
 
   if (logoSrc) {
     return (
-      <span className="flex items-center gap-3">
-        <Image src={logoSrc} alt="Success Academy logo" width={compact ? 44 : 52} height={compact ? 44 : 52} className="h-11 w-auto object-contain" priority={!compact} />
-        <span>
-          <span className="block text-lg font-black text-[#391B68]">Success Academy</span>
-          <span className="hidden text-[13px] font-black text-[#EC911F] sm:block">{slogan}</span>
-        </span>
+      <span className={`inline-flex items-center justify-center rounded-[18px] bg-[#391B68] shadow-xl shadow-[#391B68]/15 ${compact ? "px-3 py-2" : "px-4 py-3"}`}>
+        <Image
+          src={logoSrc}
+          alt="Success Academy logo"
+          width={compact ? 140 : 170}
+          height={compact ? 44 : 54}
+          className={`${compact ? "h-9 max-w-[140px]" : "h-11 max-w-[170px]"} w-auto object-contain`}
+          priority={!compact}
+        />
       </span>
     );
   }
