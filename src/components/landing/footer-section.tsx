@@ -147,7 +147,7 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
               source="footer_request_call"
               event="request_call"
               variant="secondary"
-              className="h-[50px] border-[#391B68] bg-white px-6 text-[#391B68] shadow-sm shadow-[#391B68]/10 hover:bg-[#391B68]/5 hover:text-[#391B68]"
+              className="h-[50px] !border-[#391B68] !bg-white px-6 !text-[#391B68] !opacity-100 shadow-sm shadow-[#391B68]/10 hover:!border-[#391B68] hover:!bg-[#391B68]/5 hover:!text-[#391B68]"
             >
               {labels.requestCall}
             </CtaLink>
