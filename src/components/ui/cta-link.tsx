@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
-import { trackCTAClick, trackLanguageSwitch, trackWhatsAppClick } from "@/lib/tracking";
+import { trackCTAClick, trackLanguageSwitch, trackRequestCallClick, trackWhatsAppClick } from "@/lib/tracking";
 
 type CtaLinkProps = {
   href: string;
@@ -10,7 +10,7 @@ type CtaLinkProps = {
   locale: Locale;
   variant?: "primary" | "secondary" | "ghost";
   source: string;
-  event?: "cta" | "whatsapp" | "language";
+  event?: "cta" | "whatsapp" | "language" | "request_call";
   className?: string;
 };
 
@@ -34,6 +34,7 @@ export function CtaLink({
     const payload = { locale, source };
     if (event === "whatsapp") trackWhatsAppClick(payload);
     else if (event === "language") trackLanguageSwitch(payload);
+    else if (event === "request_call") trackRequestCallClick(payload);
     else trackCTAClick(payload);
   }
 
