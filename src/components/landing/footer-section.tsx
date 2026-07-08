@@ -14,7 +14,7 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
     <footer className="border-t border-slate-200 bg-white px-6 py-8 pb-24 lg:px-10 md:pb-8">
       <div className="mx-auto grid max-w-[1180px] gap-6 text-[15px] font-bold text-slate-600 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="grid gap-3">
-          <BrandMark slogan={copy.footer.slogan} compact />
+          <BrandMark slogan={copy.footer.slogan} compact placement="footer" />
           {hasLogo ? <p className="font-black text-[#391B68]">{copy.footer.slogan}</p> : null}
           <p>{copy.footer.rights}</p>
         </div>
