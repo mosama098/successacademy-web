@@ -50,12 +50,12 @@ export function BrandMark({
     <Image
       src={logoSrc}
       alt="Success Academy logo"
-      width={placement === "navbar" ? 180 : 170}
-      height={placement === "navbar" ? 58 : 60}
+      width={placement === "navbar" ? 210 : 180}
+      height={placement === "navbar" ? 64 : 60}
       className={
         placement === "navbar"
-          ? "h-[46px] max-h-[46px] w-auto max-w-[180px] object-contain md:h-[58px] md:max-h-[58px]"
-          : "h-12 max-h-[60px] w-auto max-w-[170px] object-contain md:h-[60px]"
+          ? "h-[46px] max-h-[46px] w-auto max-w-[145px] object-contain md:h-[64px] md:max-h-[64px] md:max-w-[210px]"
+          : "h-12 max-h-[60px] w-auto max-w-[180px] object-contain md:h-[60px]"
       }
       priority={placement === "navbar"}
     />
