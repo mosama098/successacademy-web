@@ -77,28 +77,18 @@ function SocialIcon({ label }: { label: string }) {
 }
 
 function SocialItem({ social }: { social: { label: string; env: string | undefined } }) {
-  const className =
-    "inline-flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-xs font-black transition";
-
-  if (social.env) {
-    return (
-      <a
-        href={social.env}
-        target="_blank"
-        rel="noreferrer"
-        className={`${className} border-[#391B68]/15 bg-white text-[#391B68] shadow-sm shadow-[#391B68]/5 hover:-translate-y-0.5 hover:border-[#EC911F]/60 hover:bg-[#fff7ed] hover:text-[#E32F54]`}
-      >
-        <SocialIcon label={social.label} />
-        <span>{social.label}</span>
-      </a>
-    );
-  }
+  if (!social.env) return null;
 
   return (
-    <span className={`${className} border-slate-200 bg-slate-50 text-slate-500`}>
+    <a
+      href={social.env}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={social.label}
+      className="grid h-11 w-11 place-items-center rounded-2xl border border-[#391B68]/15 bg-white text-[#391B68] shadow-sm shadow-[#391B68]/5 transition hover:-translate-y-0.5 hover:border-[#EC911F]/60 hover:bg-[#fff7ed] hover:text-[#E32F54] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]"
+    >
       <SocialIcon label={social.label} />
-      <span>{social.label}</span>
-    </span>
+    </a>
   );
 }
 
@@ -108,6 +98,7 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
   const callHref = getCallHref();
   const hasLogo = hasLogoAsset();
   const labels = footerLabels[locale];
+  const visibleSocialLinks = socialLinks.filter((social) => Boolean(social.env));
   const quickLinks = [
     { href: "#why", label: copy.nav.why },
     { href: "#process", label: copy.nav.process },
@@ -155,14 +146,16 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
         </div>
 
         <div className="grid content-start gap-7">
-          <div>
-            <h3 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.socialTitle}</h3>
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-              {socialLinks.map((social) => (
-                <SocialItem key={social.label} social={social} />
-              ))}
+          {visibleSocialLinks.length > 0 ? (
+            <div>
+              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.socialTitle}</h3>
+              <div className="flex flex-wrap gap-2.5">
+                {visibleSocialLinks.map((social) => (
+                  <SocialItem key={social.label} social={social} />
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div>
             <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.languageTitle}</h3>
