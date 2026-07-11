@@ -6,11 +6,31 @@ import { BrandMark, hasLogoAsset } from "./brand-mark";
 import type { LandingSectionProps } from "./types";
 
 const socialLinks = [
-  { label: "Facebook", env: process.env.NEXT_PUBLIC_FACEBOOK_URL },
-  { label: "Instagram", env: process.env.NEXT_PUBLIC_INSTAGRAM_URL },
-  { label: "TikTok", env: process.env.NEXT_PUBLIC_TIKTOK_URL },
-  { label: "YouTube", env: process.env.NEXT_PUBLIC_YOUTUBE_URL },
-  { label: "LinkedIn", env: process.env.NEXT_PUBLIC_LINKEDIN_URL },
+  {
+    label: "Facebook",
+    env: process.env.NEXT_PUBLIC_FACEBOOK_URL,
+    className: "text-[#1877F2] hover:border-[#1877F2]/55 hover:bg-[#1877F2]/5 hover:shadow-[#1877F2]/15",
+  },
+  {
+    label: "Instagram",
+    env: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
+    className: "text-[#E4405F] hover:border-[#E4405F]/55 hover:bg-[#E4405F]/5 hover:shadow-[#E4405F]/15",
+  },
+  {
+    label: "TikTok",
+    env: process.env.NEXT_PUBLIC_TIKTOK_URL,
+    className: "text-black hover:border-black/40 hover:bg-black/[0.03] hover:shadow-black/10",
+  },
+  {
+    label: "YouTube",
+    env: process.env.NEXT_PUBLIC_YOUTUBE_URL,
+    className: "text-[#FF0000] hover:border-[#FF0000]/55 hover:bg-[#FF0000]/5 hover:shadow-[#FF0000]/15",
+  },
+  {
+    label: "LinkedIn",
+    env: process.env.NEXT_PUBLIC_LINKEDIN_URL,
+    className: "text-[#0A66C2] hover:border-[#0A66C2]/55 hover:bg-[#0A66C2]/5 hover:shadow-[#0A66C2]/15",
+  },
 ];
 
 const footerLabels = {
@@ -76,7 +96,7 @@ function SocialIcon({ label }: { label: string }) {
   );
 }
 
-function SocialItem({ social }: { social: { label: string; env: string | undefined } }) {
+function SocialItem({ social }: { social: { label: string; env: string | undefined; className: string } }) {
   if (!social.env) return null;
 
   return (
@@ -85,7 +105,7 @@ function SocialItem({ social }: { social: { label: string; env: string | undefin
       target="_blank"
       rel="noopener noreferrer"
       aria-label={social.label}
-      className="grid h-11 w-11 place-items-center rounded-2xl border border-[#391B68]/15 bg-white text-[#391B68] shadow-sm shadow-[#391B68]/5 transition hover:-translate-y-0.5 hover:border-[#EC911F]/60 hover:bg-[#fff7ed] hover:text-[#E32F54] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]"
+      className={`grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white shadow-sm shadow-[#391B68]/5 transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] ${social.className}`}
     >
       <SocialIcon label={social.label} />
     </a>
@@ -159,11 +179,18 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
 
           <div>
             <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.languageTitle}</h3>
-            <div className="flex flex-wrap gap-2">
-              <Link href={`/${locale}`} className="rounded-full bg-[#391B68] px-4 py-2 font-black text-white">
+            <div className="inline-flex rounded-full border border-[#391B68]/15 bg-white p-1 shadow-sm shadow-[#391B68]/5">
+              <Link href={`/${locale}`} className="inline-flex h-10 items-center justify-center rounded-full bg-[#391B68] px-4 text-sm font-black text-white shadow-sm shadow-[#391B68]/15">
                 {locale === "ar" ? labels.languages.ar : labels.languages.en}
               </Link>
-              <CtaLink href={`/${alt}`} locale={locale} source="footer_language" event="language" variant="ghost">
+              <CtaLink
+                href={`/${alt}`}
+                locale={locale}
+                source="footer_language"
+                event="language"
+                variant="ghost"
+                className="inline-flex h-10 items-center justify-center !border-transparent !bg-white px-4 !text-sm !font-black !text-[#391B68] !opacity-100 hover:!bg-[#391B68]/5 hover:!text-[#391B68]"
+              >
                 {alt === "ar" ? labels.languages.ar : labels.languages.en}
               </CtaLink>
             </div>
