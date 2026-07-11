@@ -6,7 +6,7 @@ import { bookingHref, type LandingSectionProps } from "./types";
 const arHero = {
   titleStart: "معظم الناس مش بتفشل في تعلّم الإنجليزية...",
   titleSecond: "هي بتتعلمها",
-  titleAccent: "بالطريقة الغلط.",
+  titleAccent: "بالطريقة الغلط",
   subtitle:
     "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك. المشكلة إنك بتبدأ من غير تشخيص، من غير هدف واضح، ومن غير متابعة تخليك تستخدم اللغة فعلًا.",
   note: "التقييم مجاني وخارجي، وبعده فريق المتابعة يوضح لك أنسب خطوة جاية.",
@@ -98,14 +98,11 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
 
   return (
     <>
-      <span className="block">{arHero.titleStart}</span>
-      <span className="block">
-        {arHero.titleSecond}{" "}
-        <span className="relative inline-block whitespace-nowrap pb-1">
-          <span className="relative z-10">{arHero.titleAccent}</span>
-          <span className="absolute inset-x-0 bottom-0 h-2 rounded-full bg-gradient-to-r from-[#EC911F] to-[#E32F54] opacity-85 shadow-[0_0_22px_rgba(236,145,31,0.22)]" />
-        </span>
-      </span>
+      {arHero.titleStart} {arHero.titleSecond}{" "}
+      <span className="relative inline-block whitespace-nowrap pb-1">
+        <span className="relative z-10">{arHero.titleAccent}</span>
+        <span className="absolute inset-x-0 bottom-0 h-2 rounded-full bg-gradient-to-r from-[#EC911F] to-[#E32F54] opacity-85 shadow-[0_0_22px_rgba(236,145,31,0.22)]" />
+      </span>.
     </>
   );
 }
@@ -208,10 +205,10 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
       <div className="absolute left-1/2 top-12 h-72 w-72 -translate-x-1/2 rounded-full bg-white/8 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.09)_1px,transparent_0)] bg-[length:30px_30px] opacity-55" />
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-10 px-6 py-16 sm:py-20 lg:min-h-[690px] lg:grid-cols-2 lg:items-center lg:gap-14 lg:px-10">
+      <div className="relative mx-auto grid max-w-[1180px] gap-9 px-6 py-16 [direction:ltr] sm:py-20 lg:min-h-[690px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-12 lg:px-10">
         <AnimatedSection
           delay={60}
-          className={`order-1 max-w-[620px] ${isArabic ? "text-right lg:col-start-2 lg:justify-self-end" : "lg:col-start-1"}`}
+          className={`order-1 max-w-[620px] ${isArabic ? "[direction:rtl] text-right lg:col-start-2 lg:justify-self-end" : "lg:col-start-1"}`}
         >
           <div className={`hero-enter flex flex-wrap items-center gap-3 ${isArabic ? "justify-end" : ""}`} style={{ animationDelay: "80ms" }}>
             <span className="hero-badge-glow relative z-0 inline-flex rounded-full border border-white/20 bg-white/10 px-5 py-3 text-[13px] font-black text-white shadow-xl backdrop-blur-md">
@@ -223,7 +220,7 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
           </div>
 
           <h1
-            className={`hero-enter mt-7 max-w-[620px] text-[38px] font-black leading-[1.08] tracking-[-0.01em] text-white sm:text-[48px] lg:text-[62px] ${isArabic ? "ml-auto text-right" : ""}`}
+            className={`hero-enter mt-7 max-w-[620px] text-[34px] font-black leading-[1.12] tracking-[-0.01em] text-white sm:text-[44px] lg:text-[56px] ${isArabic ? "ml-auto text-right" : ""}`}
             style={{ animationDelay: "170ms" }}
           >
             <HeroTitle isArabic={isArabic} fallbackTitle={copy.hero.title} />
@@ -250,7 +247,7 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
           </p>
         </AnimatedSection>
 
-        <AnimatedSection delay={120} className={`order-2 ${isArabic ? "lg:col-start-1 lg:row-start-1" : "lg:col-start-2"}`}>
+        <AnimatedSection delay={120} className={`order-2 ${isArabic ? "[direction:rtl] lg:col-start-1 lg:row-start-1" : "lg:col-start-2"}`}>
           <HeroVisual isArabic={isArabic} />
         </AnimatedSection>
       </div>
