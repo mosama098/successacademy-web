@@ -9,13 +9,17 @@ const arHero = {
   titleAccent: "المكان الغلط",
   subtitle:
     "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك.\nالمشكلة إنك محتاج تعرف مستواك الحقيقي، هدفك من اللغة، والطريق المناسب ليك.",
-  visualTitle: "تقييم مجاني",
-  visualSubtitle: "ابدأ من نقطة واضحة",
+  visualTitle: "ابدأ بتقييم مجاني",
+  visualSubtitle: "اعرف مستواك الحقيقي قبل اختيار البرنامج",
+  visualStops: ["تقييم", "هدف", "خطة"],
+  visualPills: ["تقييم مجاني", "هدف واضح", "خطة مناسبة"],
 };
 
 const enHero = {
-  visualTitle: "Free Level Check",
-  visualSubtitle: "Start from a clear point",
+  visualTitle: "Start with a free level check",
+  visualSubtitle: "Know your real level before choosing a program",
+  visualStops: ["Check", "Goal", "Plan"],
+  visualPills: ["Free check", "Clear goal", "Right plan"],
 };
 
 function HeroMotionStyles() {
@@ -35,9 +39,9 @@ function HeroMotionStyles() {
         to { stroke-dashoffset: -72; }
       }
 
-      @keyframes hero-ring {
-        from { stroke-dashoffset: 120; }
-        to { stroke-dashoffset: 44; }
+      @keyframes hero-path-dot {
+        0%, 100% { transform: translateX(0); opacity: 0.7; }
+        50% { transform: translateX(94px); opacity: 1; }
       }
 
       @keyframes hero-glow {
@@ -63,9 +67,8 @@ function HeroMotionStyles() {
         animation: hero-line-dash 6.5s linear infinite;
       }
 
-      .hero-progress-ring {
-        stroke-dasharray: 160;
-        animation: hero-ring 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      .hero-path-dot {
+        animation: hero-path-dot 4.8s ease-in-out infinite;
       }
 
       .hero-glow {
@@ -86,7 +89,7 @@ function HeroMotionStyles() {
         .hero-enter,
         .hero-visual-float,
         .hero-route-line,
-        .hero-progress-ring,
+        .hero-path-dot,
         .hero-glow,
         .hero-badge-glow::after {
           animation: none !important;
@@ -123,18 +126,16 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
       <div className="hero-glow absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl" />
       <div className="absolute bottom-12 left-8 h-48 w-48 rounded-full bg-[#E32F54]/16 blur-3xl" />
 
-      <svg className="absolute inset-0 h-full w-full opacity-75" viewBox="0 0 430 440" fill="none" aria-hidden="true">
+      <svg className="absolute inset-0 h-full w-full opacity-65" viewBox="0 0 430 440" fill="none" aria-hidden="true">
         <path
           className="hero-route-line"
-          d="M82 304 C134 232 172 258 214 190 C254 126 304 132 354 86"
+          d="M82 310 C130 236 174 260 216 190 C254 128 304 132 354 88"
           stroke="url(#heroRoute)"
           strokeWidth="3"
           strokeLinecap="round"
         />
-        <circle cx="82" cy="304" r="5" fill="#EC911F" />
-        <circle cx="354" cy="86" r="5" fill="#E32F54" />
         <defs>
-          <linearGradient id="heroRoute" x1="82" y1="304" x2="354" y2="86" gradientUnits="userSpaceOnUse">
+          <linearGradient id="heroRoute" x1="82" y1="310" x2="354" y2="88" gradientUnits="userSpaceOnUse">
             <stop stopColor="#EC911F" />
             <stop offset="0.58" stopColor="#E32F54" />
             <stop offset="1" stopColor="#ffffff" stopOpacity="0.86" />
@@ -142,42 +143,50 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
         </defs>
       </svg>
 
-      <div className="absolute left-1/2 top-1/2 w-[min(86vw,365px)] -translate-x-1/2 -translate-y-1/2 rounded-[34px] border border-white/22 bg-white/12 p-6 shadow-2xl shadow-black/20 backdrop-blur-2xl">
-        <div className={`rounded-[28px] border border-white/22 bg-white/92 p-7 text-[#391B68] shadow-xl shadow-black/10 ${isArabic ? "text-right" : ""}`}>
-          <div className={`mb-7 flex items-start justify-between gap-5 ${isArabic ? "flex-row-reverse" : ""}`}>
-            <div>
-              <h2 className="text-2xl font-black">{visualCopy.visualTitle}</h2>
-              <p className="mt-2 text-sm font-bold text-slate-500">{visualCopy.visualSubtitle}</p>
-            </div>
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#391B68]/8 text-[#391B68] ring-1 ring-[#391B68]/10">
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M9 4h6l1 2h3v14H5V6h3l1-2Z" />
-                <path d="m9 13 2 2 4-5" />
-              </svg>
-            </span>
+      <div className="absolute left-1/2 top-1/2 w-[min(88vw,390px)] -translate-x-1/2 -translate-y-1/2 rounded-[34px] border border-white/18 bg-[#2f1558]/55 p-4 shadow-2xl shadow-black/22 backdrop-blur-2xl">
+        <div className={`relative overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white via-white to-[#fff8f0] p-7 text-[#391B68] shadow-xl shadow-black/10 ${isArabic ? "text-right" : ""}`}>
+          <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#EC911F]/12 blur-3xl" />
+          <div className="absolute -bottom-24 -left-20 h-48 w-48 rounded-full bg-[#E32F54]/10 blur-3xl" />
+          <span className={`absolute top-6 grid h-9 w-9 place-items-center rounded-full border border-[#EC911F]/20 bg-[#EC911F]/10 text-[#EC911F] ${isArabic ? "left-6" : "right-6"}`} aria-hidden="true">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <path d="m8 12 3 3 5-7" />
+            </svg>
+          </span>
+
+          <div className="relative max-w-[280px]">
+            <h2 className="text-2xl font-black">{visualCopy.visualTitle}</h2>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{visualCopy.visualSubtitle}</p>
           </div>
 
-          <div className="mx-auto grid h-40 w-40 place-items-center">
-            <svg className="absolute h-40 w-40" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-              <circle cx="60" cy="60" r="48" stroke="#391B68" strokeOpacity="0.1" strokeWidth="9" />
-              <circle
-                className="hero-progress-ring"
-                cx="60"
-                cy="60"
-                r="48"
-                stroke="url(#heroProgress)"
-                strokeWidth="9"
-                strokeLinecap="round"
-                transform="rotate(-90 60 60)"
-              />
-              <defs>
-                <linearGradient id="heroProgress" x1="18" y1="24" x2="98" y2="96" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#EC911F" />
-                  <stop offset="1" stopColor="#E32F54" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <span className="h-4 w-4 rounded-full bg-[#391B68] shadow-[0_0_28px_rgba(57,27,104,0.32)]" />
+          <div className="relative mt-10 px-1 pb-1 pt-5">
+            <div className="absolute left-6 right-6 top-[38px] h-1 rounded-full bg-[#391B68]/10" />
+            <div className="absolute left-6 right-1/2 top-[38px] h-1 rounded-full bg-gradient-to-r from-[#EC911F] to-[#E32F54]" />
+            <div className="hero-path-dot absolute left-6 top-[31px] z-20 h-4 w-4 rounded-full bg-white ring-[5px] ring-[#EC911F] shadow-[0_0_26px_rgba(236,145,31,0.48)]" />
+
+            <div className="relative z-10 grid grid-cols-3 gap-4 text-center">
+              {visualCopy.visualStops.map((stop, index) => (
+                <div key={stop} className="grid justify-items-center gap-3">
+                  <span className={`grid h-8 w-8 place-items-center rounded-full border ${
+                    index === 0
+                      ? "border-[#EC911F]/35 bg-[#EC911F]/12 text-[#EC911F]"
+                      : index === 1
+                        ? "border-[#E32F54]/28 bg-[#E32F54]/10 text-[#E32F54]"
+                        : "border-[#391B68]/18 bg-[#391B68]/8 text-[#391B68]"
+                  }`}>
+                    <span className="h-2.5 w-2.5 rounded-full bg-current" />
+                  </span>
+                  <span className="text-sm font-black text-[#391B68]">{stop}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative mt-8 grid grid-cols-3 gap-2">
+            {visualCopy.visualPills.map((pill) => (
+              <span key={pill} className="rounded-2xl border border-[#391B68]/10 bg-[#391B68]/[0.04] px-2 py-3 text-center text-[12px] font-black text-[#391B68]">
+                {pill}
+              </span>
+            ))}
           </div>
         </div>
       </div>
