@@ -24,16 +24,6 @@ function HeroMotionStyles() {
         50% { transform: translateY(-8px); }
       }
 
-      @keyframes hero-orbit-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-
-      @keyframes hero-orbit-reverse {
-        from { transform: rotate(360deg); }
-        to { transform: rotate(0deg); }
-      }
-
       @keyframes hero-path-dot {
         0% { offset-distance: 0%; opacity: 0; }
         12% { opacity: 1; }
@@ -59,18 +49,8 @@ function HeroMotionStyles() {
         animation: hero-soft-float 7s ease-in-out infinite;
       }
 
-      .hero-orbit-slow {
-        transform-origin: 50% 50%;
-        animation: hero-orbit-slow 24s linear infinite;
-      }
-
-      .hero-orbit-reverse {
-        transform-origin: 50% 50%;
-        animation: hero-orbit-reverse 32s linear infinite;
-      }
-
       .hero-path-dot {
-        offset-path: path("M 84 306 C 138 222 190 246 226 176 C 260 110 318 118 366 72");
+        offset-path: path("M 92 330 C 144 282 177 306 218 248 C 260 188 306 196 376 138");
         animation: hero-path-dot 5.8s ease-in-out infinite;
       }
 
@@ -91,8 +71,6 @@ function HeroMotionStyles() {
       @media (prefers-reduced-motion: reduce) {
         .hero-enter,
         .hero-visual-float,
-        .hero-orbit-slow,
-        .hero-orbit-reverse,
         .hero-path-dot,
         .hero-glow,
         .hero-badge-glow::after {
@@ -131,57 +109,56 @@ function HeroVisual() {
 
       <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 480 480" fill="none">
         <defs>
-          <radialGradient id="heroOrb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(240 240) rotate(90) scale(142)">
+          <radialGradient id="heroOrb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(242 238) rotate(90) scale(142)">
             <stop stopColor="#ffffff" stopOpacity="0.9" />
             <stop offset="0.36" stopColor="#EC911F" stopOpacity="0.62" />
             <stop offset="0.72" stopColor="#E32F54" stopOpacity="0.38" />
             <stop offset="1" stopColor="#391B68" stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="heroOrbit" x1="96" y1="92" x2="386" y2="384" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#ffffff" stopOpacity="0.76" />
-            <stop offset="0.52" stopColor="#EC911F" stopOpacity="0.85" />
-            <stop offset="1" stopColor="#E32F54" stopOpacity="0.72" />
-          </linearGradient>
-          <linearGradient id="heroArrow" x1="174" y1="294" x2="314" y2="170" gradientUnits="userSpaceOnUse">
+          <linearGradient id="heroArrow" x1="156" y1="320" x2="334" y2="118" gradientUnits="userSpaceOnUse">
             <stop stopColor="#EC911F" />
             <stop offset="1" stopColor="#E32F54" />
+          </linearGradient>
+          <linearGradient id="heroCompassRing" x1="120" y1="116" x2="356" y2="356" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#ffffff" stopOpacity="0.72" />
+            <stop offset="0.52" stopColor="#EC911F" stopOpacity="0.78" />
+            <stop offset="1" stopColor="#E32F54" stopOpacity="0.7" />
           </linearGradient>
           <filter id="heroSoftShadow" x="64" y="56" width="352" height="360" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
             <feDropShadow dx="0" dy="28" stdDeviation="24" floodColor="#120720" floodOpacity="0.28" />
           </filter>
         </defs>
 
-        <circle cx="240" cy="240" r="146" fill="url(#heroOrb)" opacity="0.88" />
-        <circle cx="240" cy="240" r="118" fill="#ffffff" opacity="0.06" />
-
-        <g className="hero-orbit-slow">
-          <ellipse cx="240" cy="240" rx="176" ry="86" stroke="url(#heroOrbit)" strokeWidth="1.6" opacity="0.72" />
-          <circle cx="414" cy="240" r="5" fill="#EC911F" />
-          <circle cx="66" cy="240" r="3.8" fill="#ffffff" opacity="0.86" />
-        </g>
-
-        <g className="hero-orbit-reverse">
-          <ellipse cx="240" cy="240" rx="96" ry="182" stroke="#ffffff" strokeWidth="1.2" opacity="0.28" />
-          <circle cx="240" cy="58" r="4.5" fill="#E32F54" />
-        </g>
+        <circle cx="242" cy="238" r="148" fill="url(#heroOrb)" opacity="0.8" />
+        <circle cx="242" cy="238" r="126" stroke="url(#heroCompassRing)" strokeWidth="1.8" opacity="0.78" />
+        <circle cx="242" cy="238" r="92" stroke="#ffffff" strokeWidth="1.2" strokeDasharray="5 16" opacity="0.24" />
+        <path d="M242 94v26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.62" />
+        <path d="M242 356v26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.38" />
+        <path d="M98 238h26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
+        <path d="M360 238h26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
 
         <path
-          d="M84 306 C138 222 190 246 226 176 C260 110 318 118 366 72"
+          d="M92 330 C144 282 177 306 218 248 C260 188 306 196 376 138"
           stroke="url(#heroArrow)"
           strokeWidth="3"
           strokeLinecap="round"
-          opacity="0.88"
+          opacity="0.82"
         />
+        <circle cx="92" cy="330" r="6" fill="#EC911F" opacity="0.94" />
+        <circle cx="218" cy="248" r="5" fill="#ffffff" opacity="0.78" />
+        <circle cx="376" cy="138" r="6" fill="#E32F54" opacity="0.9" />
 
         <g filter="url(#heroSoftShadow)">
-          <path d="M174 294 L258 142 L306 226 L246 212 Z" fill="url(#heroArrow)" opacity="0.95" />
-          <path d="M204 268 L258 170 L286 220 L246 212 Z" fill="#ffffff" opacity="0.24" />
-          <path d="M174 294 L246 212" stroke="#ffffff" strokeOpacity="0.42" strokeWidth="2" strokeLinecap="round" />
+          <path d="M168 318 L278 116 L326 256 L254 226 Z" fill="url(#heroArrow)" opacity="0.96" />
+          <path d="M204 286 L278 154 L304 246 L254 226 Z" fill="#ffffff" opacity="0.23" />
+          <path d="M168 318 L254 226" stroke="#ffffff" strokeOpacity="0.38" strokeWidth="2" strokeLinecap="round" />
         </g>
 
-        <circle cx="160" cy="150" r="8" fill="#ffffff" opacity="0.62" />
-        <circle cx="338" cy="318" r="7" fill="#EC911F" opacity="0.78" />
-        <circle cx="124" cy="330" r="4" fill="#E32F54" opacity="0.8" />
+        <g transform="translate(326 312)" opacity="0.92">
+          <circle cx="0" cy="0" r="17" fill="#391B68" fillOpacity="0.28" />
+          <circle cx="0" cy="0" r="13" fill="#ffffff" fillOpacity="0.1" />
+          <path d="m-6 0 4 4 8-9" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
       </svg>
       <span className="hero-path-dot absolute left-0 top-0 h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_26px_rgba(236,145,31,0.7)] ring-[5px] ring-[#EC911F]/70" />
     </div>
