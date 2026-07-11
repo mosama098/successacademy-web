@@ -4,15 +4,14 @@ import { getWhatsAppHref } from "@/lib/utm";
 import { bookingHref, type LandingSectionProps } from "./types";
 
 const arHero = {
-  titleStart: "معظم الناس مش بتفشل في تعلّم الإنجليزية...",
+  titleStart: "معظم الناس مش بتفشل في الإنجليزية",
   titleSecond: "هي بتتعلمها",
   titleAccent: "بالطريقة الغلط",
   subtitle:
-    "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك. المشكلة إنك بتبدأ من غير تشخيص، من غير هدف واضح، ومن غير متابعة تخليك تستخدم اللغة فعلًا.",
-  note: "التقييم مجاني وخارجي، وبعده فريق المتابعة يوضح لك أنسب خطوة جاية.",
+    "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك.\nالمشكلة إنك بتبدأ من غير تشخيص، من غير هدف واضح،\nومن غير متابعة تخليك تستخدم اللغة فعلًا.",
   visualTitle: "تقييم مجاني",
   visualSubtitle: "نقطة بداية أوضح",
-  progressLabel: "اتجاه التعلم",
+  progressLabel: "نقطة البداية",
   labels: ["تقييم مجاني", "خطة مناسبة", "متابعة حقيقية"],
 };
 
@@ -98,11 +97,14 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
 
   return (
     <>
-      {arHero.titleStart} {arHero.titleSecond}{" "}
-      <span className="relative inline-block whitespace-nowrap pb-1">
-        <span className="relative z-10">{arHero.titleAccent}</span>
-        <span className="absolute inset-x-0 bottom-0 h-2 rounded-full bg-gradient-to-r from-[#EC911F] to-[#E32F54] opacity-85 shadow-[0_0_22px_rgba(236,145,31,0.22)]" />
-      </span>.
+      <span className="block">{arHero.titleStart}</span>
+      <span className="mt-3 block text-[0.82em] leading-[1.18] text-white/95">
+        {arHero.titleSecond}{" "}
+        <span className="relative inline-block whitespace-nowrap pb-1">
+          <span className="relative z-10">{arHero.titleAccent}</span>
+          <span className="absolute inset-x-0 bottom-0 h-2 rounded-full bg-gradient-to-r from-[#EC911F] to-[#E32F54] opacity-85 shadow-[0_0_22px_rgba(236,145,31,0.22)]" />
+        </span>.
+      </span>
     </>
   );
 }
@@ -195,7 +197,6 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
   const isArabic = locale === "ar";
   const whatsappHref = getWhatsAppHref(locale);
   const subtitle = isArabic ? arHero.subtitle : copy.hero.subtitle;
-  const note = isArabic ? arHero.note : copy.hero.note;
 
   return (
     <section className="relative overflow-hidden bg-[#391B68] text-white">
@@ -227,7 +228,7 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
           </h1>
 
           <p
-            className={`hero-enter mt-6 max-w-[590px] text-[16px] font-bold leading-8 text-white/82 lg:text-[19px] ${isArabic ? "ml-auto text-right" : ""}`}
+            className={`hero-enter mt-6 max-w-[560px] whitespace-pre-line text-[16px] font-semibold leading-8 text-white/80 lg:text-[18px] ${isArabic ? "ml-auto text-right" : ""}`}
             style={{ animationDelay: "260ms" }}
           >
             {subtitle}
@@ -241,10 +242,6 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
               {copy.hero.whatsappCta}
             </CtaLink>
           </div>
-
-          <p className={`hero-enter mt-5 max-w-[560px] text-[15px] font-bold leading-7 text-white/70 ${isArabic ? "ml-auto text-right" : ""}`} style={{ animationDelay: "440ms" }}>
-            {note}
-          </p>
         </AnimatedSection>
 
         <AnimatedSection delay={120} className={`order-2 ${isArabic ? "[direction:rtl] lg:col-start-1 lg:row-start-1" : "lg:col-start-2"}`}>
