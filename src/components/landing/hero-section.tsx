@@ -119,8 +119,8 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
   const visualCopy = isArabic ? arHero : enHero;
 
   return (
-    <div className="hero-visual-float relative mx-auto h-[390px] max-w-[430px] sm:h-[440px]">
-      <div className="hero-glow absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl" />
+    <div className="hero-visual-float relative mx-auto h-[420px] max-w-[470px] sm:h-[470px]">
+      <div className="hero-glow absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl" />
       <div className="absolute bottom-12 left-8 h-48 w-48 rounded-full bg-[#E32F54]/16 blur-3xl" />
 
       <svg className="absolute inset-0 h-full w-full opacity-75" viewBox="0 0 430 440" fill="none" aria-hidden="true">
@@ -142,24 +142,23 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
         </defs>
       </svg>
 
-      <div className="absolute left-1/2 top-1/2 w-[min(84vw,330px)] -translate-x-1/2 -translate-y-1/2 rounded-[32px] border border-white/22 bg-white/12 p-5 shadow-2xl shadow-black/20 backdrop-blur-2xl">
-        <div className={`rounded-[26px] border border-white/22 bg-white/92 p-6 text-[#391B68] shadow-xl shadow-black/10 ${isArabic ? "text-right" : ""}`}>
+      <div className="absolute left-1/2 top-1/2 w-[min(86vw,365px)] -translate-x-1/2 -translate-y-1/2 rounded-[34px] border border-white/22 bg-white/12 p-6 shadow-2xl shadow-black/20 backdrop-blur-2xl">
+        <div className={`rounded-[28px] border border-white/22 bg-white/92 p-7 text-[#391B68] shadow-xl shadow-black/10 ${isArabic ? "text-right" : ""}`}>
           <div className={`mb-7 flex items-start justify-between gap-5 ${isArabic ? "flex-row-reverse" : ""}`}>
             <div>
               <h2 className="text-2xl font-black">{visualCopy.visualTitle}</h2>
               <p className="mt-2 text-sm font-bold text-slate-500">{visualCopy.visualSubtitle}</p>
             </div>
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#EC911F] to-[#E32F54] text-white shadow-lg shadow-[#E32F54]/18">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#391B68]/8 text-[#391B68] ring-1 ring-[#391B68]/10">
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M5 12h14" />
-                <path d="m13 6 6 6-6 6" />
-                <circle cx="6" cy="12" r="2" fill="currentColor" stroke="none" />
+                <path d="M9 4h6l1 2h3v14H5V6h3l1-2Z" />
+                <path d="m9 13 2 2 4-5" />
               </svg>
             </span>
           </div>
 
-          <div className="mx-auto grid h-36 w-36 place-items-center">
-            <svg className="absolute h-36 w-36" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <div className="mx-auto grid h-40 w-40 place-items-center">
+            <svg className="absolute h-40 w-40" viewBox="0 0 120 120" fill="none" aria-hidden="true">
               <circle cx="60" cy="60" r="48" stroke="#391B68" strokeOpacity="0.1" strokeWidth="9" />
               <circle
                 className="hero-progress-ring"
@@ -199,7 +198,7 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
       <div className="absolute left-1/2 top-12 h-72 w-72 -translate-x-1/2 rounded-full bg-white/7 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-[length:32px_32px] opacity-50" />
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-9 px-6 py-16 [direction:ltr] sm:py-20 lg:min-h-[660px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-12 lg:px-10">
+      <div className="relative mx-auto grid max-w-[1180px] gap-9 px-6 py-16 [direction:ltr] sm:py-20 lg:min-h-[660px] lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-8 lg:px-10">
         <AnimatedSection
           delay={60}
           className={`order-1 max-w-[620px] ${isArabic ? "[direction:rtl] text-right lg:col-start-2 lg:justify-self-end" : "lg:col-start-1"}`}
