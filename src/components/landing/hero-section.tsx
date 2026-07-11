@@ -215,9 +215,6 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
             <span className="hero-badge-glow relative z-0 inline-flex rounded-full border border-white/20 bg-white/10 px-5 py-3 text-[13px] font-black text-white shadow-xl backdrop-blur-md">
               {copy.hero.eyebrow}
             </span>
-            <span className="inline-flex rounded-full border border-[#EC911F]/30 bg-[#EC911F]/15 px-5 py-3 text-[13px] font-black text-white shadow-xl shadow-[#EC911F]/10">
-              {copy.hero.badge}
-            </span>
           </div>
 
           <h1
@@ -241,6 +238,12 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
             <CtaLink href={whatsappHref} locale={locale} source="hero_secondary" event="whatsapp" variant="secondary" className="h-[56px] px-8">
               {copy.hero.whatsappCta}
             </CtaLink>
+          </div>
+
+          <div className={`hero-enter mt-4 flex ${isArabic ? "justify-end" : ""}`} style={{ animationDelay: "430ms" }}>
+            <span className="inline-flex rounded-full border border-white/18 bg-white/10 px-4 py-2 text-[13px] font-black text-white/86 backdrop-blur-md">
+              {copy.hero.badge}
+            </span>
           </div>
         </AnimatedSection>
 
