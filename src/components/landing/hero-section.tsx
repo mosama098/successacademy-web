@@ -97,12 +97,17 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
   );
 }
 
-function HeroVisual() {
+function HeroVisual({ isArabic }: { isArabic: boolean }) {
   return (
-    <div className="hero-visual-float relative mx-auto h-[430px] w-full max-w-[500px] sm:h-[540px]" aria-hidden="true">
-      <div className="hero-glow absolute left-1/2 top-[48%] h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl" />
-      <div className="absolute left-[18%] top-[16%] h-[66%] w-[66%] rounded-full bg-[#E32F54]/10 blur-3xl" />
-      <div className="absolute inset-x-12 bottom-2 h-24 rounded-full bg-[#120720]/32 blur-3xl" />
+    <div
+      className={`hero-visual-float relative mx-auto h-[460px] w-full max-w-[580px] sm:h-[600px] lg:h-[610px] ${
+        isArabic ? "lg:translate-x-8" : "lg:-translate-x-8"
+      }`}
+      aria-hidden="true"
+    >
+      <div className="hero-glow absolute left-1/2 top-[48%] h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/20 blur-3xl" />
+      <div className="absolute left-[17%] top-[14%] h-[70%] w-[70%] rounded-full bg-[#E32F54]/12 blur-3xl" />
+      <div className="absolute inset-x-8 bottom-0 h-28 rounded-full bg-[#120720]/38 blur-3xl" />
 
       <span className="hero-star absolute left-[18%] top-[16%] h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.75)]" />
       <span className="hero-star absolute right-[20%] top-[22%] h-2 w-2 rounded-full bg-[#EC911F]/80 shadow-[0_0_22px_rgba(236,145,31,0.75)]" style={{ animationDelay: "900ms" }} />
@@ -112,7 +117,7 @@ function HeroVisual() {
       <img
         src="/hero-model.png"
         alt=""
-        className="absolute inset-x-0 bottom-0 mx-auto h-full w-auto max-w-full object-contain object-bottom drop-shadow-[0_34px_42px_rgba(13,5,28,0.42)]"
+        className="absolute inset-x-0 -bottom-5 mx-auto h-[112%] w-auto max-w-none object-contain object-bottom drop-shadow-[0_38px_46px_rgba(13,5,28,0.46)] sm:h-[116%] lg:h-[118%]"
       />
     </div>
   );
@@ -126,10 +131,8 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
   return (
     <section className="relative overflow-hidden bg-[#391B68] text-white">
       <HeroMotionStyles />
-      <div className="absolute -left-24 top-24 h-96 w-96 rounded-full bg-[#E32F54]/10 blur-3xl" />
-      <div className="absolute -right-28 bottom-8 h-80 w-80 rounded-full bg-[#EC911F]/12 blur-3xl" />
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-9 px-6 py-16 [direction:ltr] sm:py-20 lg:min-h-[660px] lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-8 lg:px-10">
+      <div className="relative mx-auto grid max-w-[1180px] gap-8 px-6 py-14 [direction:ltr] sm:py-16 lg:min-h-[620px] lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-6 lg:px-10">
         <AnimatedSection
           delay={60}
           className={`order-1 max-w-[620px] ${isArabic ? "[direction:rtl] text-right lg:col-start-2 lg:justify-self-end" : "lg:col-start-1"}`}
@@ -165,7 +168,7 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
         </AnimatedSection>
 
         <AnimatedSection delay={120} className={`order-2 ${isArabic ? "[direction:rtl] lg:col-start-1 lg:row-start-1" : "lg:col-start-2"}`}>
-          <HeroVisual />
+          <HeroVisual isArabic={isArabic} />
         </AnimatedSection>
       </div>
     </section>
