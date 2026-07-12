@@ -31,6 +31,20 @@ function HeroMotionStyles() {
         100% { offset-distance: 100%; opacity: 0; }
       }
 
+      @keyframes hero-growth-path {
+        to { stroke-dashoffset: -96; }
+      }
+
+      @keyframes hero-node-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.78; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+
+      @keyframes hero-fragment-drift {
+        0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.34; }
+        50% { transform: translate3d(6px, -8px, 0); opacity: 0.66; }
+      }
+
       @keyframes hero-glow {
         0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.72; }
         50% { transform: translate3d(18px, -12px, 0) scale(1.04); opacity: 0.95; }
@@ -50,8 +64,23 @@ function HeroMotionStyles() {
       }
 
       .hero-path-dot {
-        offset-path: path("M 92 330 C 144 282 177 306 218 248 C 260 188 306 196 376 138");
+        offset-path: path("M 82 330 C 138 302 162 266 210 250 C 270 230 292 176 370 126");
         animation: hero-path-dot 5.8s ease-in-out infinite;
+      }
+
+      .hero-growth-path {
+        stroke-dasharray: 18 18;
+        animation: hero-growth-path 7s linear infinite;
+      }
+
+      .hero-node-pulse {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: hero-node-pulse 4.8s ease-in-out infinite;
+      }
+
+      .hero-fragment-drift {
+        animation: hero-fragment-drift 6.5s ease-in-out infinite;
       }
 
       .hero-glow {
@@ -72,6 +101,9 @@ function HeroMotionStyles() {
         .hero-enter,
         .hero-visual-float,
         .hero-path-dot,
+        .hero-growth-path,
+        .hero-node-pulse,
+        .hero-fragment-drift,
         .hero-glow,
         .hero-badge-glow::after {
           animation: none !important;
@@ -109,55 +141,87 @@ function HeroVisual() {
 
       <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 480 480" fill="none">
         <defs>
-          <radialGradient id="heroOrb" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(242 238) rotate(90) scale(142)">
+          <radialGradient id="heroGrowthGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(306 178) rotate(90) scale(176)">
             <stop stopColor="#ffffff" stopOpacity="0.9" />
-            <stop offset="0.36" stopColor="#EC911F" stopOpacity="0.62" />
-            <stop offset="0.72" stopColor="#E32F54" stopOpacity="0.38" />
+            <stop offset="0.3" stopColor="#EC911F" stopOpacity="0.54" />
+            <stop offset="0.68" stopColor="#E32F54" stopOpacity="0.34" />
             <stop offset="1" stopColor="#391B68" stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="heroArrow" x1="156" y1="320" x2="334" y2="118" gradientUnits="userSpaceOnUse">
+          <linearGradient id="heroRibbon" x1="82" y1="330" x2="370" y2="126" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#ffffff" stopOpacity="0.18" />
+            <stop offset="0.24" stopColor="#EC911F" stopOpacity="0.7" />
+            <stop offset="0.67" stopColor="#E32F54" stopOpacity="0.82" />
+            <stop offset="1" stopColor="#ffffff" stopOpacity="0.86" />
+          </linearGradient>
+          <linearGradient id="heroRibbonCore" x1="82" y1="330" x2="370" y2="126" gradientUnits="userSpaceOnUse">
             <stop stopColor="#EC911F" />
-            <stop offset="1" stopColor="#E32F54" />
+            <stop offset="0.5" stopColor="#E32F54" />
+            <stop offset="1" stopColor="#ffffff" />
           </linearGradient>
-          <linearGradient id="heroCompassRing" x1="120" y1="116" x2="356" y2="356" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#ffffff" stopOpacity="0.72" />
-            <stop offset="0.52" stopColor="#EC911F" stopOpacity="0.78" />
-            <stop offset="1" stopColor="#E32F54" stopOpacity="0.7" />
-          </linearGradient>
-          <filter id="heroSoftShadow" x="64" y="56" width="352" height="360" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-            <feDropShadow dx="0" dy="28" stdDeviation="24" floodColor="#120720" floodOpacity="0.28" />
+          <radialGradient id="heroFinalGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(370 126) rotate(90) scale(74)">
+            <stop stopColor="#ffffff" stopOpacity="0.94" />
+            <stop offset="0.34" stopColor="#EC911F" stopOpacity="0.58" />
+            <stop offset="0.82" stopColor="#E32F54" stopOpacity="0.14" />
+            <stop offset="1" stopColor="#E32F54" stopOpacity="0" />
+          </radialGradient>
+          <filter id="heroSoftShadow" x="36" y="44" width="408" height="396" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+            <feDropShadow dx="0" dy="26" stdDeviation="26" floodColor="#120720" floodOpacity="0.3" />
           </filter>
         </defs>
 
-        <circle cx="242" cy="238" r="148" fill="url(#heroOrb)" opacity="0.8" />
-        <circle cx="242" cy="238" r="126" stroke="url(#heroCompassRing)" strokeWidth="1.8" opacity="0.78" />
-        <circle cx="242" cy="238" r="92" stroke="#ffffff" strokeWidth="1.2" strokeDasharray="5 16" opacity="0.24" />
-        <path d="M242 94v26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.62" />
-        <path d="M242 356v26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.38" />
-        <path d="M98 238h26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
-        <path d="M360 238h26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
+        <circle cx="306" cy="178" r="178" fill="url(#heroGrowthGlow)" opacity="0.78" />
 
-        <path
-          d="M92 330 C144 282 177 306 218 248 C260 188 306 196 376 138"
-          stroke="url(#heroArrow)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          opacity="0.82"
-        />
-        <circle cx="92" cy="330" r="6" fill="#EC911F" opacity="0.94" />
-        <circle cx="218" cy="248" r="5" fill="#ffffff" opacity="0.78" />
-        <circle cx="376" cy="138" r="6" fill="#E32F54" opacity="0.9" />
-
-        <g filter="url(#heroSoftShadow)">
-          <path d="M168 318 L278 116 L326 256 L254 226 Z" fill="url(#heroArrow)" opacity="0.96" />
-          <path d="M204 286 L278 154 L304 246 L254 226 Z" fill="#ffffff" opacity="0.23" />
-          <path d="M168 318 L254 226" stroke="#ffffff" strokeOpacity="0.38" strokeWidth="2" strokeLinecap="round" />
+        <g className="hero-fragment-drift">
+          <path d="M80 322h28" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.34" />
+          <path d="M104 350h42" stroke="#EC911F" strokeWidth="3" strokeLinecap="round" opacity="0.42" />
+          <path d="M64 374h24" stroke="#E32F54" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
+          <circle cx="126" cy="306" r="4" fill="#ffffff" opacity="0.38" />
+          <circle cx="92" cy="288" r="3.5" fill="#EC911F" opacity="0.52" />
+          <circle cx="146" cy="378" r="3" fill="#E32F54" opacity="0.58" />
         </g>
 
-        <g transform="translate(326 312)" opacity="0.92">
-          <circle cx="0" cy="0" r="17" fill="#391B68" fillOpacity="0.28" />
-          <circle cx="0" cy="0" r="13" fill="#ffffff" fillOpacity="0.1" />
-          <path d="m-6 0 4 4 8-9" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M82 330 C138 302 162 266 210 250 C270 230 292 176 370 126"
+          stroke="url(#heroRibbon)"
+          strokeWidth="32"
+          strokeLinecap="round"
+          opacity="0.22"
+          filter="url(#heroSoftShadow)"
+        />
+        <path
+          d="M82 330 C138 302 162 266 210 250 C270 230 292 176 370 126"
+          stroke="url(#heroRibbon)"
+          strokeWidth="16"
+          strokeLinecap="round"
+          opacity="0.78"
+        />
+        <path
+          className="hero-growth-path"
+          d="M82 330 C138 302 162 266 210 250 C270 230 292 176 370 126"
+          stroke="url(#heroRibbonCore)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          opacity="0.9"
+        />
+
+        <g className="hero-node-pulse">
+          <circle cx="82" cy="330" r="10" fill="#391B68" fillOpacity="0.26" />
+          <circle cx="82" cy="330" r="5" fill="#EC911F" />
+        </g>
+        <g className="hero-node-pulse" style={{ animationDelay: "700ms" }}>
+          <circle cx="210" cy="250" r="12" fill="#391B68" fillOpacity="0.22" />
+          <circle cx="210" cy="250" r="6" fill="#ffffff" fillOpacity="0.9" />
+        </g>
+        <g className="hero-node-pulse" style={{ animationDelay: "1300ms" }}>
+          <circle cx="370" cy="126" r="24" fill="url(#heroFinalGlow)" />
+          <circle cx="370" cy="126" r="10" fill="#ffffff" />
+          <circle cx="370" cy="126" r="5" fill="#E32F54" />
+        </g>
+
+        <g opacity="0.76">
+          <path d="M336 156 C354 166 378 164 396 148" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" opacity="0.58" />
+          <path d="M328 180 C356 196 392 188 414 162" stroke="#EC911F" strokeWidth="2" strokeLinecap="round" opacity="0.58" />
+          <path d="M318 204 C354 226 408 210 432 174" stroke="#E32F54" strokeWidth="1.8" strokeLinecap="round" opacity="0.48" />
         </g>
       </svg>
       <span className="hero-path-dot absolute left-0 top-0 h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_26px_rgba(236,145,31,0.7)] ring-[5px] ring-[#EC911F]/70" />
