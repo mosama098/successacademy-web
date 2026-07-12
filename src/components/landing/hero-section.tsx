@@ -100,14 +100,14 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
 function HeroVisual({ isArabic }: { isArabic: boolean }) {
   return (
     <div
-      className={`hero-visual-float relative mx-auto h-[360px] w-full max-w-[420px] sm:h-[500px] sm:max-w-[520px] lg:h-[590px] lg:max-w-[620px] ${
-        isArabic ? "lg:translate-x-16 lg:translate-y-8" : "lg:-translate-x-16 lg:translate-y-8"
+      className={`hero-visual-float relative mx-auto h-[365px] w-full max-w-[430px] sm:h-[520px] sm:max-w-[540px] lg:h-[600px] lg:max-w-[690px] ${
+        isArabic ? "lg:translate-x-32 lg:-translate-y-1" : "lg:-translate-x-32 lg:-translate-y-1"
       }`}
       aria-hidden="true"
     >
-      <div className="hero-glow absolute left-[54%] top-[52%] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl sm:h-[390px] sm:w-[390px] lg:h-[440px] lg:w-[440px]" />
-      <div className="absolute left-[24%] top-[20%] h-[58%] w-[62%] rounded-full bg-[#E32F54]/10 blur-3xl lg:left-[30%]" />
-      <div className="absolute inset-x-14 bottom-0 h-20 rounded-full bg-[#120720]/34 blur-3xl sm:h-24 lg:h-28" />
+      <div className="hero-glow absolute left-[57%] top-[47%] h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl sm:h-[420px] sm:w-[420px] lg:h-[520px] lg:w-[520px]" />
+      <div className="absolute left-[28%] top-[14%] h-[64%] w-[68%] rounded-full bg-[#E32F54]/10 blur-3xl lg:left-[34%]" />
+      <div className="absolute inset-x-10 bottom-0 h-20 rounded-full bg-[#120720]/34 blur-3xl sm:h-24 lg:h-32" />
 
       <span className="hero-star absolute left-[18%] top-[16%] h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.75)]" />
       <span className="hero-star absolute right-[20%] top-[22%] h-2 w-2 rounded-full bg-[#EC911F]/80 shadow-[0_0_22px_rgba(236,145,31,0.75)]" style={{ animationDelay: "900ms" }} />
@@ -117,7 +117,7 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
       <img
         src="/hero-model.png"
         alt=""
-        className="absolute inset-x-0 -bottom-2 mx-auto h-[103%] w-auto max-w-[96%] object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:-bottom-5 sm:h-[110%] sm:max-w-[104%] lg:-bottom-12 lg:h-[116%] lg:max-w-[112%]"
+        className="absolute inset-x-0 -bottom-1 mx-auto h-[108%] w-auto max-w-[98%] object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:-bottom-8 sm:h-[120%] sm:max-w-[112%] lg:-bottom-24 lg:h-[138%] lg:max-w-[145%]"
       />
     </div>
   );
