@@ -97,17 +97,15 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
   );
 }
 
-function HeroVisual({ isArabic }: { isArabic: boolean }) {
+function HeroVisual() {
   return (
     <div
-      className={`hero-visual-float relative mx-auto h-[365px] w-full max-w-[430px] sm:h-[520px] sm:max-w-[540px] lg:h-[600px] lg:max-w-[690px] ${
-        isArabic ? "lg:translate-x-32 lg:-translate-y-1" : "lg:-translate-x-32 lg:-translate-y-1"
-      }`}
+      className="hero-visual-float relative mx-auto h-[clamp(300px,58vw,420px)] w-full max-w-[430px] sm:h-[520px] sm:max-w-[560px] lg:mx-0 lg:h-[clamp(560px,72vh,760px)] lg:max-w-none lg:self-end"
       aria-hidden="true"
     >
-      <div className="hero-glow absolute left-[57%] top-[47%] h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl sm:h-[420px] sm:w-[420px] lg:h-[520px] lg:w-[520px]" />
-      <div className="absolute left-[28%] top-[14%] h-[64%] w-[68%] rounded-full bg-[#E32F54]/10 blur-3xl lg:left-[34%]" />
-      <div className="absolute inset-x-10 bottom-0 h-20 rounded-full bg-[#120720]/34 blur-3xl sm:h-24 lg:h-32" />
+      <div className="hero-glow absolute bottom-[8%] left-1/2 h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-[#EC911F]/18 blur-3xl sm:h-[420px] sm:w-[420px] lg:left-[clamp(80px,8vw,150px)] lg:h-[520px] lg:w-[520px] lg:-translate-x-0" />
+      <div className="absolute bottom-[18%] left-[28%] h-[64%] w-[68%] rounded-full bg-[#E32F54]/10 blur-3xl lg:left-[clamp(120px,12vw,210px)]" />
+      <div className="absolute inset-x-10 bottom-0 h-20 rounded-full bg-[#120720]/34 blur-3xl sm:h-24 lg:left-[clamp(60px,7vw,130px)] lg:right-auto lg:h-32 lg:w-[520px]" />
 
       <span className="hero-star absolute left-[18%] top-[16%] h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.75)]" />
       <span className="hero-star absolute right-[20%] top-[22%] h-2 w-2 rounded-full bg-[#EC911F]/80 shadow-[0_0_22px_rgba(236,145,31,0.75)]" style={{ animationDelay: "900ms" }} />
@@ -117,7 +115,7 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
       <img
         src="/hero-model.png"
         alt=""
-        className="absolute inset-x-0 -bottom-1 mx-auto h-[108%] w-auto max-w-[98%] object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:-bottom-8 sm:h-[120%] sm:max-w-[112%] lg:-bottom-24 lg:h-[138%] lg:max-w-[145%]"
+        className="absolute bottom-0 left-1/2 h-[clamp(300px,58vw,420px)] w-auto max-w-[96%] -translate-x-1/2 object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:h-[520px] sm:max-w-[108%] lg:bottom-[-8px] lg:left-[clamp(80px,8vw,150px)] lg:h-[clamp(560px,72vh,760px)] lg:max-w-none lg:translate-x-0"
       />
     </div>
   );
@@ -132,10 +130,10 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
     <section className="relative overflow-hidden bg-[#391B68] text-white">
       <HeroMotionStyles />
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-8 px-6 py-14 [direction:ltr] sm:py-16 lg:min-h-[620px] lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-6 lg:px-10">
+      <div className="relative mx-auto grid max-w-[1440px] gap-8 px-6 py-14 [direction:ltr] sm:py-16 lg:min-h-[600px] lg:grid-cols-[44%_56%] lg:items-center lg:gap-0 lg:px-12 lg:py-0">
         <AnimatedSection
           delay={60}
-          className={`order-1 max-w-[620px] ${isArabic ? "[direction:rtl] text-right lg:col-start-2 lg:justify-self-end" : "lg:col-start-1"}`}
+          className={`order-1 max-w-[640px] ${isArabic ? "[direction:rtl] text-right lg:col-start-2 lg:justify-self-start" : "lg:col-start-1"}`}
         >
           <div className={`hero-enter flex flex-wrap items-center gap-3 ${isArabic ? "justify-end" : ""}`} style={{ animationDelay: "80ms" }}>
             <span className="hero-badge-glow relative z-0 inline-flex rounded-full border border-white/20 bg-white/10 px-5 py-3 text-[13px] font-black text-white shadow-xl backdrop-blur-md">
@@ -168,7 +166,7 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
         </AnimatedSection>
 
         <AnimatedSection delay={120} className={`order-2 ${isArabic ? "[direction:rtl] lg:col-start-1 lg:row-start-1" : "lg:col-start-2"}`}>
-          <HeroVisual isArabic={isArabic} />
+          <HeroVisual />
         </AnimatedSection>
       </div>
     </section>
