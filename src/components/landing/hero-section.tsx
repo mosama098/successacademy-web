@@ -4,11 +4,11 @@ import { getWhatsAppHref } from "@/lib/utm";
 import { bookingHref, type LandingSectionProps } from "./types";
 
 const arHero = {
-  titleStart: "معظم الناس مش بتفشل في الإنجليزية...",
+  titleStart: "معظم الناس مش بتفشل في تعلّم الإنجليزية...",
   titleSecond: "هي بس بتبدأ من",
   titleAccent: "المكان الغلط",
   subtitle:
-    "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك.\nالمشكلة إنك محتاج تعرف مستواك الحقيقي، هدفك من اللغة، والطريق المناسب ليك.",
+    "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك.\nالمشكلة إنك محتاج تعرف مستواك الحقيقي، وهدفك من اللغة، والطريق المناسب ليك.",
 };
 
 function HeroMotionStyles() {
@@ -91,7 +91,7 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
         <span className="relative inline-block whitespace-nowrap pb-1">
           <span className="relative z-10">{arHero.titleAccent}</span>
           <span className="absolute inset-x-0 bottom-0 h-2 rounded-full bg-gradient-to-r from-[#EC911F] to-[#E32F54] opacity-80 shadow-[0_0_20px_rgba(236,145,31,0.18)]" />
-        </span>.
+        </span>
       </span>
     </>
   );
@@ -99,25 +99,21 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
 
 function HeroVisual() {
   return (
-    <div className="hero-visual-float relative mx-auto h-[440px] w-full max-w-[500px] sm:h-[520px]" aria-hidden="true">
-      <div className="hero-glow absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl" />
-      <div className="absolute inset-x-8 bottom-4 h-24 rounded-full bg-[#120720]/30 blur-3xl" />
-      <div className="absolute left-[12%] top-[12%] h-[72%] w-[72%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.2)_0%,rgba(236,145,31,0.16)_34%,rgba(227,47,84,0.08)_58%,transparent_72%)]" />
+    <div className="hero-visual-float relative mx-auto h-[430px] w-full max-w-[500px] sm:h-[540px]" aria-hidden="true">
+      <div className="hero-glow absolute left-1/2 top-[48%] h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl" />
+      <div className="absolute left-[18%] top-[16%] h-[66%] w-[66%] rounded-full bg-[#E32F54]/10 blur-3xl" />
+      <div className="absolute inset-x-12 bottom-2 h-24 rounded-full bg-[#120720]/32 blur-3xl" />
 
       <span className="hero-star absolute left-[18%] top-[16%] h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.75)]" />
       <span className="hero-star absolute right-[20%] top-[22%] h-2 w-2 rounded-full bg-[#EC911F]/80 shadow-[0_0_22px_rgba(236,145,31,0.75)]" style={{ animationDelay: "900ms" }} />
       <span className="hero-star absolute bottom-[24%] left-[10%] h-2 w-2 rounded-full bg-[#E32F54]/80 shadow-[0_0_22px_rgba(227,47,84,0.72)]" style={{ animationDelay: "1600ms" }} />
       <span className="hero-star absolute bottom-[34%] right-[8%] h-1.5 w-1.5 rounded-full bg-white/70 shadow-[0_0_18px_rgba(255,255,255,0.65)]" style={{ animationDelay: "2400ms" }} />
 
-      <div className="absolute inset-x-6 bottom-0 top-2 overflow-hidden rounded-[40px] border border-white/12 bg-[#391B68] shadow-[0_36px_90px_rgba(13,5,28,0.42)]">
-        <img
-          src="/hero-model.svg"
-          alt=""
-          className="h-full w-full object-cover object-[44%_50%]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#391B68]/58 via-transparent to-[#EC911F]/18 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_22%,rgba(236,145,31,0.22),transparent_34%),linear-gradient(180deg,transparent_48%,rgba(57,27,104,0.34)_100%)]" />
-      </div>
+      <img
+        src="/hero-model.png"
+        alt=""
+        className="absolute inset-x-0 bottom-0 mx-auto h-full w-auto max-w-full object-contain object-bottom drop-shadow-[0_34px_42px_rgba(13,5,28,0.42)]"
+      />
     </div>
   );
 }
