@@ -100,14 +100,14 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
 function HeroVisual({ isArabic }: { isArabic: boolean }) {
   return (
     <div
-      className={`hero-visual-float relative mx-auto h-[460px] w-full max-w-[580px] sm:h-[600px] lg:h-[610px] ${
-        isArabic ? "lg:translate-x-8" : "lg:-translate-x-8"
+      className={`hero-visual-float relative mx-auto h-[360px] w-full max-w-[420px] sm:h-[500px] sm:max-w-[520px] lg:h-[590px] lg:max-w-[620px] ${
+        isArabic ? "lg:translate-x-16 lg:translate-y-8" : "lg:-translate-x-16 lg:translate-y-8"
       }`}
       aria-hidden="true"
     >
-      <div className="hero-glow absolute left-1/2 top-[48%] h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/20 blur-3xl" />
-      <div className="absolute left-[17%] top-[14%] h-[70%] w-[70%] rounded-full bg-[#E32F54]/12 blur-3xl" />
-      <div className="absolute inset-x-8 bottom-0 h-28 rounded-full bg-[#120720]/38 blur-3xl" />
+      <div className="hero-glow absolute left-[54%] top-[52%] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EC911F]/18 blur-3xl sm:h-[390px] sm:w-[390px] lg:h-[440px] lg:w-[440px]" />
+      <div className="absolute left-[24%] top-[20%] h-[58%] w-[62%] rounded-full bg-[#E32F54]/10 blur-3xl lg:left-[30%]" />
+      <div className="absolute inset-x-14 bottom-0 h-20 rounded-full bg-[#120720]/34 blur-3xl sm:h-24 lg:h-28" />
 
       <span className="hero-star absolute left-[18%] top-[16%] h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.75)]" />
       <span className="hero-star absolute right-[20%] top-[22%] h-2 w-2 rounded-full bg-[#EC911F]/80 shadow-[0_0_22px_rgba(236,145,31,0.75)]" style={{ animationDelay: "900ms" }} />
@@ -117,7 +117,7 @@ function HeroVisual({ isArabic }: { isArabic: boolean }) {
       <img
         src="/hero-model.png"
         alt=""
-        className="absolute inset-x-0 -bottom-5 mx-auto h-[112%] w-auto max-w-none object-contain object-bottom drop-shadow-[0_38px_46px_rgba(13,5,28,0.46)] sm:h-[116%] lg:h-[118%]"
+        className="absolute inset-x-0 -bottom-2 mx-auto h-[103%] w-auto max-w-[96%] object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:-bottom-5 sm:h-[110%] sm:max-w-[104%] lg:-bottom-12 lg:h-[116%] lg:max-w-[112%]"
       />
     </div>
   );
