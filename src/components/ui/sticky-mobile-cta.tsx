@@ -19,7 +19,7 @@ export function StickyMobileCta({ locale, copy }: { locale: Locale; copy: Landin
 
   return (
     <div
-      className={`fixed inset-x-3 bottom-3 z-50 grid grid-cols-2 gap-2 rounded-2xl border border-white/40 bg-white/92 p-2 shadow-2xl shadow-[#391B68]/20 backdrop-blur transition md:hidden ${
+      className={`fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-2 gap-2 rounded-2xl border border-white/40 bg-white/92 p-2 shadow-2xl shadow-[#391B68]/20 backdrop-blur transition md:hidden ${
         show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"
       }`}
     >
@@ -40,3 +40,4 @@ export function StickyMobileCta({ locale, copy }: { locale: Locale; copy: Landin
     </div>
   );
 }
+
