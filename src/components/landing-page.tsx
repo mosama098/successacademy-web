@@ -25,7 +25,11 @@ export function LandingPage({ locale }: LandingPageProps) {
   const copy = content[locale];
 
   return (
-    <main lang={locale} dir={localeDirection[locale]} className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+    <main
+      lang={locale}
+      dir={localeDirection[locale]}
+      className="min-h-screen overflow-x-hidden bg-white pb-[calc(88px+env(safe-area-inset-bottom))] text-slate-950 md:pb-0"
+    >
       <PageTracker locale={locale} page="landing" />
       <Navbar locale={locale} copy={copy} />
       <HeroSection locale={locale} copy={copy} />
@@ -46,3 +50,4 @@ export function LandingPage({ locale }: LandingPageProps) {
     </main>
   );
 }
+
