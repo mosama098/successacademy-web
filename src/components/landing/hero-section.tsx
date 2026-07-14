@@ -136,7 +136,10 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
           className={`order-1 max-w-[640px] ${isArabic ? "[direction:rtl] text-center lg:col-start-2 lg:justify-self-start lg:text-right" : "text-center lg:col-start-1 lg:text-left"}`}
         >
           <div className={`hero-enter flex flex-wrap items-center justify-center gap-3 ${isArabic ? "lg:justify-end" : "lg:justify-start"}`} style={{ animationDelay: "80ms" }}>
-            <span className="hero-badge-glow relative z-0 inline-flex max-w-[85%] whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-2.5 py-2 text-center text-[11px] font-black leading-none text-white shadow-xl backdrop-blur-md sm:max-w-[90%] sm:px-5 sm:py-3 sm:text-[13px] sm:leading-snug">
+            <span className="inline-flex w-fit max-w-[86%] items-center justify-center whitespace-nowrap rounded-full border border-white/15 bg-white/[0.08] px-2.5 py-2 text-center text-[11px] font-black leading-none text-white backdrop-blur-md sm:hidden">
+              Not Just A Course... A Direction
+            </span>
+            <span className="hero-badge-glow relative z-0 hidden max-w-[90%] whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-5 py-3 text-center text-[13px] font-black leading-snug text-white shadow-xl backdrop-blur-md sm:inline-flex">
               {copy.hero.eyebrow}
             </span>
           </div>
