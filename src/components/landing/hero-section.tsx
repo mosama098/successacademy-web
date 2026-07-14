@@ -100,7 +100,7 @@ function HeroTitle({ isArabic, fallbackTitle }: { isArabic: boolean; fallbackTit
 function HeroVisual() {
   return (
     <div
-      className="hero-visual-float relative mx-auto h-[clamp(300px,58vw,400px)] w-full max-w-[430px] sm:h-[500px] sm:max-w-[560px] lg:mx-0 lg:h-[clamp(430px,56vh,620px)] lg:max-w-none lg:self-end"
+      className="hero-visual-float relative mx-auto h-[clamp(280px,54vw,360px)] w-full max-w-[400px] sm:h-[500px] sm:max-w-[560px] lg:mx-0 lg:h-[clamp(430px,56vh,620px)] lg:max-w-none lg:self-end"
       aria-hidden="true"
     >
       <div className="hero-glow absolute bottom-[8%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[#EC911F]/18 blur-3xl sm:h-[390px] sm:w-[390px] lg:left-[clamp(16px,3vw,64px)] lg:h-[430px] lg:w-[430px] lg:-translate-x-0" />
@@ -115,7 +115,7 @@ function HeroVisual() {
       <img
         src="/hero-model.png"
         alt=""
-        className="absolute bottom-0 left-1/2 h-[clamp(300px,58vw,400px)] w-auto max-w-[96%] -translate-x-1/2 object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:h-[500px] sm:max-w-[108%] lg:bottom-[-4px] lg:left-[clamp(16px,3vw,64px)] lg:h-[clamp(430px,56vh,620px)] lg:max-w-[calc(100%-clamp(16px,3vw,64px))] lg:translate-x-0"
+        className="absolute bottom-0 left-1/2 h-[clamp(280px,54vw,360px)] w-auto max-w-[94%] -translate-x-1/2 object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:h-[500px] sm:max-w-[108%] lg:bottom-[-4px] lg:left-[clamp(16px,3vw,64px)] lg:h-[clamp(430px,56vh,620px)] lg:max-w-[calc(100%-clamp(16px,3vw,64px))] lg:translate-x-0"
       />
     </div>
   );
@@ -130,36 +130,36 @@ export function HeroSection({ locale, copy }: LandingSectionProps) {
     <section className="relative overflow-hidden bg-[#391B68] text-white">
       <HeroMotionStyles />
 
-      <div className="relative mx-auto grid max-w-[1440px] gap-8 px-6 py-14 [direction:ltr] sm:py-16 lg:min-h-[600px] lg:grid-cols-[44%_56%] lg:items-center lg:gap-0 lg:px-12 lg:py-0">
+      <div className="relative mx-auto grid max-w-[1440px] gap-6 px-6 py-12 [direction:ltr] sm:gap-8 sm:py-16 lg:min-h-[600px] lg:grid-cols-[44%_56%] lg:items-center lg:gap-0 lg:px-12 lg:py-0">
         <AnimatedSection
           delay={60}
-          className={`order-1 max-w-[640px] ${isArabic ? "[direction:rtl] text-right lg:col-start-2 lg:justify-self-start" : "lg:col-start-1"}`}
+          className={`order-1 max-w-[640px] ${isArabic ? "[direction:rtl] text-center lg:col-start-2 lg:justify-self-start lg:text-right" : "text-center lg:col-start-1 lg:text-left"}`}
         >
-          <div className={`hero-enter flex flex-wrap items-center gap-3 ${isArabic ? "justify-end" : ""}`} style={{ animationDelay: "80ms" }}>
-            <span className="hero-badge-glow relative z-0 inline-flex rounded-full border border-white/20 bg-white/10 px-5 py-3 text-[13px] font-black text-white shadow-xl backdrop-blur-md">
+          <div className={`hero-enter flex flex-wrap items-center justify-center gap-3 ${isArabic ? "lg:justify-end" : "lg:justify-start"}`} style={{ animationDelay: "80ms" }}>
+            <span className="hero-badge-glow relative z-0 inline-flex max-w-[90%] whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-3 py-2 text-center text-[9px] font-black leading-none text-white shadow-xl backdrop-blur-md sm:px-5 sm:py-3 sm:text-[13px] sm:leading-snug">
               {copy.hero.eyebrow}
             </span>
           </div>
 
           <h1
-            className={`hero-enter mt-7 max-w-[610px] text-[33px] font-black leading-[1.14] tracking-[-0.01em] text-white sm:text-[43px] lg:text-[54px] ${isArabic ? "ml-auto text-right" : ""}`}
+            className={`hero-enter mx-auto mt-6 max-w-[610px] text-[29px] font-black leading-[1.18] tracking-[-0.01em] text-white sm:mt-7 sm:text-[43px] lg:text-[54px] ${isArabic ? "lg:ml-auto lg:text-right" : "lg:mx-0 lg:text-left"}`}
             style={{ animationDelay: "170ms" }}
           >
             <HeroTitle isArabic={isArabic} fallbackTitle={copy.hero.title} />
           </h1>
 
           <p
-            className={`hero-enter mt-6 max-w-[550px] whitespace-pre-line text-[16px] font-semibold leading-8 text-white/80 lg:text-[18px] ${isArabic ? "ml-auto text-right" : ""}`}
+            className={`hero-enter mx-auto mt-5 max-w-[340px] whitespace-pre-line text-[15px] font-semibold leading-7 text-white/78 sm:mt-6 sm:max-w-[550px] sm:text-[16px] sm:leading-8 lg:text-[18px] ${isArabic ? "lg:ml-auto lg:text-right" : "lg:mx-0 lg:text-left"}`}
             style={{ animationDelay: "260ms" }}
           >
             {subtitle}
           </p>
 
-          <div className={`hero-enter mt-8 flex flex-col gap-4 sm:flex-row ${isArabic ? "lg:justify-end" : ""}`} style={{ animationDelay: "350ms" }}>
-            <CtaLink href={bookingHref} locale={locale} source="hero_primary" className="h-[56px] px-8 hover:shadow-2xl hover:shadow-[#EC911F]/25">
+          <div className={`hero-enter mx-auto mt-7 flex w-full max-w-[340px] flex-col gap-3 sm:mt-8 sm:max-w-none sm:flex-row sm:gap-4 ${isArabic ? "lg:mx-0 lg:justify-end" : "lg:mx-0"}`} style={{ animationDelay: "350ms" }}>
+            <CtaLink href={bookingHref} locale={locale} source="hero_primary" className="h-[54px] w-full justify-center px-6 hover:shadow-2xl hover:shadow-[#EC911F]/25 sm:h-[56px] sm:w-auto sm:px-8">
               {copy.hero.primaryCta}
             </CtaLink>
-            <CtaLink href={whatsappHref} locale={locale} source="hero_secondary" event="whatsapp" variant="secondary" className="h-[56px] px-8">
+            <CtaLink href={whatsappHref} locale={locale} source="hero_secondary" event="whatsapp" variant="secondary" className="h-[54px] w-full justify-center px-6 sm:h-[56px] sm:w-auto sm:px-8">
               {copy.hero.whatsappCta}
             </CtaLink>
           </div>
