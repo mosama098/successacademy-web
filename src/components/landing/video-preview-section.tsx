@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
 import { bookingHref, type LandingSectionProps } from "./types";
 
@@ -70,6 +70,7 @@ export function VideoPreviewSection({ locale, copy }: LandingSectionProps) {
   const slides = journeySlides[locale];
   const [activeSlide, setActiveSlide] = useState(0);
   const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const isArabic = locale === "ar";
 
   useEffect(() => {
@@ -85,9 +86,20 @@ export function VideoPreviewSection({ locale, copy }: LandingSectionProps) {
   const showPrevious = () => setActiveSlide((current) => (current - 1 + slides.length) % slides.length);
   const showNext = () => setActiveSlide((current) => (current + 1) % slides.length);
 
+  const handleTouchEnd = (endX: number) => {
+    if (touchStartX.current === null) return;
+
+    const distance = endX - touchStartX.current;
+    touchStartX.current = null;
+
+    if (Math.abs(distance) < 40) return;
+    if (distance > 0) showPrevious();
+    else showNext();
+  };
+
   return (
     <section className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf8fd_100%)] px-5 py-14 sm:px-6 lg:px-10 lg:py-24">
-      <div className="mx-auto grid max-w-[1240px] gap-10 [direction:ltr] lg:grid-cols-[1.12fr_0.88fr] lg:items-center lg:gap-16">
+      <div className="mx-auto grid max-w-[1220px] gap-9 [direction:ltr] lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-10">
         <div
           className={`order-1 text-center lg:row-start-1 lg:text-start ${isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"}`}
         >
@@ -96,20 +108,22 @@ export function VideoPreviewSection({ locale, copy }: LandingSectionProps) {
           </span>
 
           <h2 className="mt-5 text-[32px] font-black leading-[1.2] text-[#391B68] sm:text-4xl lg:text-[48px]">
-            {copy.videoPreview.title}
+            {isArabic ? "شوف رحلتك خطوة بخطوة" : copy.videoPreview.title}
           </h2>
           <p className="mx-auto mt-4 max-w-[520px] text-[16px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[18px]">
             {copy.videoPreview.subtitle}
           </p>
 
-          <div className="mx-auto mt-6 flex max-w-[430px] items-center justify-center gap-2 lg:mx-0 lg:justify-start" aria-label={isArabic ? "مراحل الرحلة" : "Journey stages"}>
+          <div className="mx-auto mt-6 flex w-fit items-center justify-center gap-2.5 lg:mx-0 lg:justify-start" aria-label={isArabic ? "مراحل الرحلة" : "Journey stages"}>
             {slides.map((slide, index) => (
               <button
                 key={slide.image}
                 type="button"
                 onClick={() => setActiveSlide(index)}
-                className={`h-1.5 flex-1 rounded-full transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] ${
-                  index === activeSlide ? "bg-gradient-to-r from-[#EC911F] to-[#E32F54]" : "bg-[#391B68]/15 hover:bg-[#391B68]/30"
+                className={`h-2.5 rounded-full transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] ${
+                  index === activeSlide
+                    ? "w-8 bg-gradient-to-r from-[#EC911F] to-[#E32F54] shadow-[0_3px_10px_rgba(227,47,84,0.2)]"
+                    : "w-2.5 bg-[#391B68]/20 hover:bg-[#391B68]/40"
                 }`}
                 aria-label={`${isArabic ? "اعرض" : "Show"} ${slide.title}`}
                 aria-current={index === activeSlide ? "step" : undefined}
@@ -124,17 +138,27 @@ export function VideoPreviewSection({ locale, copy }: LandingSectionProps) {
 
         <div className={`order-2 min-w-0 ${isArabic ? "lg:col-start-1 lg:row-start-1" : "lg:col-start-2 lg:row-start-1"}`}>
           <div
-            className="group relative mx-auto w-full max-w-[700px]"
+            className="group relative mx-auto w-full max-w-[700px] rounded-[32px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F]"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
             onFocus={() => setPaused(true)}
             onBlur={() => setPaused(false)}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft") showPrevious();
+              if (event.key === "ArrowRight") showNext();
+            }}
+            onTouchStart={(event) => {
+              touchStartX.current = event.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+            role="region"
+            tabIndex={0}
             aria-roledescription="carousel"
             aria-label={isArabic ? "رحلة التعلم" : "Learning journey"}
           >
             <div className="absolute -inset-4 -z-10 rounded-[36px] bg-gradient-to-br from-[#391B68]/10 via-[#E32F54]/5 to-[#EC911F]/15 blur-2xl" />
 
-            <div className="relative aspect-[16/11] overflow-hidden rounded-[26px] border border-[#391B68]/10 bg-[#391B68] shadow-[0_28px_70px_rgba(57,27,104,0.2)] sm:aspect-[16/10] sm:rounded-[32px]">
+            <div className="relative aspect-[7/4] overflow-hidden rounded-[26px] border border-[#391B68]/10 bg-[#291342] shadow-[0_28px_70px_rgba(57,27,104,0.2)] sm:rounded-[32px]">
               {slides.map((slide, index) => (
                 <Image
                   key={slide.image}
@@ -143,7 +167,7 @@ export function VideoPreviewSection({ locale, copy }: LandingSectionProps) {
                   fill
                   priority={index === 0}
                   sizes="(max-width: 1023px) 100vw, 56vw"
-                  className={`object-cover transition-[opacity,transform] duration-700 ease-out ${
+                  className={`object-contain object-center transition-[opacity,transform] duration-700 ease-out ${
                     index === activeSlide ? "scale-100 opacity-100" : "pointer-events-none scale-[1.025] opacity-0"
                   }`}
                 />
