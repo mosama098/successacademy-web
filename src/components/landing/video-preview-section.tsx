@@ -166,9 +166,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
   return (
     <section className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf8fd_100%)] px-5 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-12">
       <div
-        className={`mx-auto grid max-w-[1240px] items-center gap-x-16 gap-y-7 [direction:ltr] lg:grid-cols-[1.06fr_0.94fr] lg:gap-y-0 ${
-          isArabic ? "" : "lg:grid-cols-[0.94fr_1.06fr]"
-        }`}
+        className="mx-auto grid max-w-[1240px] items-center gap-x-16 gap-y-7 [direction:ltr] lg:grid-cols-[0.94fr_1.06fr] lg:gap-y-0"
       >
         <div
           className={`order-1 text-center lg:row-start-1 lg:self-end lg:text-start ${
