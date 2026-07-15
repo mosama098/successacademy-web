@@ -7,7 +7,7 @@ import { bookingHref, type LandingSectionProps } from "./types";
 
 const journeyContent = {
   ar: {
-    badge: "ليه Success Academy؟",
+    badge: "ليه تختار Success Academy؟",
     title: "كل اللي تحتاجه علشان تتعلم الإنجليزي… وتكمل",
     intro: "من تقييم البداية لحد المتابعة المستمرة، نظام الدراسة بيجمع لك الأربع حاجات اللي تحتاجها علشان تحقق تقدم حقيقي.",
     cta: "ابدأ بتقييم مجاني",
@@ -15,36 +15,36 @@ const journeyContent = {
     stages: [
       {
         image: "/journey/assessment.png",
-        focal: "object-[48%_48%]",
+        focal: "object-center",
         label: "تقييم وخطة واضحة",
         heading: "ابدأ من مستواك الحقيقي",
-        description: "نعرف مستواك الحقيقي ونحدد لك نقطة بداية وخطة تدريب مناسبة لهدفك، بدل ما تبدأ في برنامج مش مناسب ليك.",
+        description: "نعرف مستواك ونحدد لك نقطة بداية وخطة مناسبة لهدفك.",
       },
       {
         image: "/journey/training.png",
-        focal: "object-[43%_48%]",
+        focal: "object-[45%_50%]",
         label: "مرونة تناسب يومك",
-        heading: "اتعلم بالنظام اللي يناسب حياتك",
-        description: "اختار الدراسة أونلاين أو من فرع الدقي، وفي مواعيد مرنة تساعدك توازن بين التعلم وشغلك أو دراستك.",
+        heading: "اتعلم بالطريقة اللي تناسب يومك",
+        description: "أونلاين أو من فرع الدقي، بمواعيد مرنة تناسب جدولك.",
       },
       {
         image: "/journey/practice.png",
-        focal: "object-[50%_47%]",
+        focal: "object-center",
         label: "ممارسة حقيقية للغة",
         heading: "استخدم الإنجليزي… مش بس ادرسه",
-        description: "تتدرب من خلال مهام ومواقف عملية تساعدك تستخدم اللغة بثقة، مش مجرد تحفظ قواعد وكلمات.",
+        description: "تتدرب على مهام ومواقف عملية تخليك تستخدم اللغة بثقة.",
       },
       {
         image: "/journey/follow-up.png",
-        focal: "object-[58%_48%]",
+        focal: "object-[55%_42%]",
         label: "متابعة تخليك تكمل",
-        heading: "مش هتكمل الرحلة لوحدك",
-        description: "Success Manager يتابع التزامك وتقدمك، ويساعدك تتجاوز أي تعطيل وتستمر لحد ما تحقق هدفك.",
+        heading: "متابعة تساعدك تكمل",
+        description: "Success Manager يتابع تقدمك ويساعدك تحافظ على التزامك.",
       },
     ],
   },
   en: {
-    badge: "Why Success Academy?",
+    badge: "Why Choose Success Academy?",
     title: "Everything you need to learn English — and keep progressing",
     intro: "From your starting assessment to continuous support, our learning system brings together the four things you need to make real progress.",
     cta: "Start with a Free Assessment",
@@ -52,31 +52,31 @@ const journeyContent = {
     stages: [
       {
         image: "/journey/assessment.png",
-        focal: "object-[48%_48%]",
+        focal: "object-center",
         label: "Clear Assessment & Plan",
-        heading: "Start from your real level",
-        description: "We identify your real English level and build a clear training direction around your goal, instead of placing you in the wrong programme.",
+        heading: "Start at your real level",
+        description: "We assess your level and build a clear plan around your goal.",
       },
       {
         image: "/journey/training.png",
-        focal: "object-[43%_48%]",
+        focal: "object-[45%_50%]",
         label: "Flexible Learning",
-        heading: "Learn in a way that fits your life",
-        description: "Choose online learning or our Dokki branch, with flexible schedules that work around your job, studies, and daily routine.",
+        heading: "Learn in a way that fits your day",
+        description: "Study online or at our Dokki branch, with flexible schedules.",
       },
       {
         image: "/journey/practice.png",
-        focal: "object-[50%_47%]",
+        focal: "object-center",
         label: "Real English Practice",
         heading: "Use English — don’t just study it",
-        description: "Practise through useful tasks and real situations that help you communicate confidently, not simply memorise grammar and vocabulary.",
+        description: "Practise through real tasks and situations that build confidence.",
       },
       {
         image: "/journey/follow-up.png",
-        focal: "object-[58%_48%]",
-        label: "Support That Keeps You Going",
-        heading: "You are not doing this alone",
-        description: "Your Success Manager follows your commitment and progress, helps you overcome obstacles, and keeps you moving toward your goal.",
+        focal: "object-[55%_42%]",
+        label: "Continuous Support",
+        heading: "Support that keeps you going",
+        description: "Your Success Manager tracks progress and helps you stay committed.",
       },
     ],
   },
@@ -90,10 +90,10 @@ const stageAngles = [
 ] as const;
 
 const orbitalLabelPositions = [
-  "left-1/2 top-0 -translate-x-1/2",
-  "-right-2 top-1/2 -translate-y-1/2",
-  "bottom-0 left-1/2 -translate-x-1/2",
-  "-left-2 top-1/2 -translate-y-1/2",
+  "left-1/2 top-[10%] -translate-x-1/2",
+  "right-[-58px] top-1/2 -translate-y-1/2",
+  "bottom-[10%] left-1/2 -translate-x-1/2",
+  "left-[-58px] top-1/2 -translate-y-1/2",
 ] as const;
 
 function polarPoint(angle: number, radius = 190) {
@@ -150,37 +150,23 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
 
   const renderStageImages = () =>
     content.stages.map((stage, index) => (
-      <div
+      <Image
         key={stage.image}
-        className={`absolute inset-0 transition-[opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${
+        src={stage.image}
+        alt={content.imageAlt.replace("{stage}", stage.label)}
+        fill
+        priority={index === 0}
+        sizes="(max-width: 1023px) 320px, 340px"
+        className={`object-cover transition-[opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${stage.focal} ${
           activeStage === index ? "scale-100 opacity-100" : "pointer-events-none scale-[1.015] opacity-0"
         }`}
-      >
-        <Image
-          src={stage.image}
-          alt=""
-          fill
-          priority={index === 0}
-          sizes="(max-width: 1023px) 320px, 340px"
-          aria-hidden="true"
-          className={`scale-110 object-cover blur-[5px] brightness-[0.72] saturate-[0.9] ${stage.focal}`}
-        />
-        <div className="absolute inset-0 bg-[#291342]/10" aria-hidden="true" />
-        <Image
-          src={stage.image}
-          alt={content.imageAlt.replace("{stage}", stage.label)}
-          fill
-          priority={index === 0}
-          sizes="(max-width: 1023px) 320px, 340px"
-          className="object-contain object-center"
-        />
-      </div>
+      />
     ));
 
   return (
-    <section className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf8fd_100%)] px-5 py-14 sm:px-6 lg:px-10 lg:py-24">
+    <section className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf8fd_100%)] px-5 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-12">
       <div
-        className={`mx-auto grid max-w-[1240px] items-center gap-x-16 gap-y-9 [direction:ltr] lg:grid-cols-[1.06fr_0.94fr] lg:gap-y-0 ${
+        className={`mx-auto grid max-w-[1240px] items-center gap-x-16 gap-y-7 [direction:ltr] lg:grid-cols-[1.06fr_0.94fr] lg:gap-y-0 ${
           isArabic ? "" : "lg:grid-cols-[0.94fr_1.06fr]"
         }`}
       >
@@ -189,13 +175,13 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
             isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"
           }`}
         >
-          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-4 py-2 text-[13px] font-black text-[#391B68] lg:text-[15px]">
+          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-5 py-2.5 text-[14px] font-bold text-[#391B68] lg:text-[17px]">
             {content.badge}
           </span>
-          <h2 className="mx-auto mt-5 max-w-[590px] text-[29px] font-black leading-[1.24] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[50px] lg:leading-[1.16]">
+          <h2 className="mx-auto mt-4 max-w-[590px] text-[29px] font-black leading-[1.24] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[48px] lg:leading-[1.16]">
             {content.title}
           </h2>
-          <p className="mx-auto mt-5 max-w-[570px] text-[17px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[19px] lg:leading-9">
+          <p className="mx-auto mt-3 max-w-[570px] text-[17px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[18px] lg:leading-8">
             {content.intro}
           </p>
         </div>
@@ -203,7 +189,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
         <div
           className={`order-2 lg:row-span-2 lg:row-start-1 ${isArabic ? "lg:col-start-1" : "lg:col-start-2"}`}
         >
-          <div className="relative mx-auto hidden aspect-square w-full max-w-[600px] lg:block" role="group" aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}>
+          <div className="relative mx-auto hidden aspect-square w-full max-w-[560px] lg:block" role="group" aria-label={isArabic ? "فوائد الدراسة" : "Study benefits"}>
             <div className="absolute inset-[22%] rounded-full bg-[#391B68]/12 blur-3xl" aria-hidden="true" />
 
             <svg className="absolute inset-[12.5%] h-[75%] w-[75%] overflow-visible" viewBox="0 0 520 520" fill="none" aria-hidden="false">
@@ -273,7 +259,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
                     onFocus={() => selectStage(index)}
                     onClick={() => selectStage(index)}
                     onKeyDown={(event) => handleTabKeyDown(event, index, desktopTabRefs.current)}
-                    className={`absolute z-20 flex min-h-[56px] w-[178px] items-center justify-center gap-2.5 rounded-full border bg-white px-4 py-2.5 text-center text-[16px] font-bold leading-6 shadow-[0_10px_28px_rgba(57,27,104,0.1)] transition-[color,border-color,box-shadow,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#EC911F] xl:text-[17px] ${orbitalLabelPositions[index]} ${
+                    className={`absolute z-20 flex min-h-[54px] w-[166px] items-center justify-center gap-2 rounded-full border bg-white px-3 py-2 text-center text-[16px] font-bold leading-5 shadow-[0_10px_28px_rgba(57,27,104,0.1)] transition-[color,border-color,box-shadow,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#EC911F] xl:text-[17px] ${orbitalLabelPositions[index]} ${
                       isActive
                         ? "border-[#E32F54]/40 text-[#391B68] shadow-[0_12px_34px_rgba(227,47,84,0.18)]"
                         : "border-[#391B68]/10 text-[#391B68]/75 hover:-translate-y-0.5 hover:border-[#391B68]/25 hover:text-[#391B68]"
@@ -301,7 +287,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
               {renderStageImages()}
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-2.5" role="tablist" aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}>
+            <div className="mt-5 grid grid-cols-2 gap-2.5" role="tablist" aria-label={isArabic ? "فوائد الدراسة" : "Study benefits"}>
               {content.stages.map((stage, index) => {
                 const isActive = activeStage === index;
 
@@ -340,19 +326,19 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
             isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"
           }`}
         >
-          <div className="mx-auto max-w-[550px] border-t border-[#391B68]/10 pt-7 lg:mx-0 lg:mt-7">
+          <div className="mx-auto max-w-[570px] border-t border-[#391B68]/10 pt-5 lg:mx-0 lg:mt-5">
             <span className="inline-block text-[14px] font-black tracking-[0.16em] text-[#E32F54] lg:text-[15px]" dir="ltr">
               {String(activeStage + 1).padStart(2, "0")} / {String(content.stages.length).padStart(2, "0")}
             </span>
-            <h3 className="mt-2 text-[25px] font-black leading-[1.25] text-[#391B68] sm:text-[28px] lg:text-[33px]">
+            <h3 className="mt-2 text-[25px] font-black leading-[1.25] text-[#391B68] sm:text-[28px] lg:text-[31px]">
               {content.stages[activeStage].heading}
             </h3>
-            <p className="mt-4 text-[17px] font-bold leading-8 text-slate-600 lg:text-[19px] lg:leading-9">
+            <p className="mt-3 text-[17px] font-bold leading-8 text-slate-600 lg:text-[18px] lg:leading-8">
               {content.stages[activeStage].description}
             </p>
           </div>
 
-          <CtaLink href={bookingHref} locale={locale} source="journey_orbit" className="mx-auto mt-8 h-[56px] w-full px-8 text-[16px] sm:w-auto lg:mx-0 lg:text-[17px]">
+          <CtaLink href={bookingHref} locale={locale} source="journey_orbit" className="mx-auto mt-6 h-[56px] w-full px-8 text-[16px] sm:w-auto lg:mx-0 lg:text-[17px]">
             {content.cta}
           </CtaLink>
         </div>
