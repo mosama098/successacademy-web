@@ -66,19 +66,35 @@ const journeyContent = {
   },
 } as const;
 
-const segmentPositions = [
-  "right-0 top-0 rounded-tr-full",
-  "bottom-0 right-0 rounded-br-full",
-  "bottom-0 left-0 rounded-bl-full",
-  "left-0 top-0 rounded-tl-full",
+const stageAngles = [
+  [-35, 35],
+  [55, 125],
+  [145, 215],
+  [235, 305],
 ] as const;
 
-const segmentLabelPositions = [
-  "top-[15%]",
-  "bottom-[15%]",
-  "bottom-[15%]",
-  "top-[15%]",
+const orbitalLabelPositions = [
+  "left-1/2 top-0 -translate-x-1/2",
+  "-right-2 top-1/2 -translate-y-1/2",
+  "bottom-0 left-1/2 -translate-x-1/2",
+  "-left-2 top-1/2 -translate-y-1/2",
 ] as const;
+
+function polarPoint(angle: number, radius = 190) {
+  const radians = ((angle - 90) * Math.PI) / 180;
+  return {
+    x: 260 + radius * Math.cos(radians),
+    y: 260 + radius * Math.sin(radians),
+  };
+}
+
+function describeArc(startAngle: number, endAngle: number) {
+  const start = polarPoint(startAngle);
+  const end = polarPoint(endAngle);
+  return `M ${start.x} ${start.y} A 190 190 0 0 1 ${end.x} ${end.y}`;
+}
+
+const orbitalArcs = stageAngles.map(([start, end]) => describeArc(start, end));
 
 export function VideoPreviewSection({ locale }: LandingSectionProps) {
   const content = journeyContent[locale];
@@ -87,6 +103,8 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
   const mobileTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const isArabic = locale === "ar";
   const panelId = `journey-stage-panel-${locale}`;
+  const gradientId = `journey-orbit-gradient-${locale}`;
+  const glowId = `journey-orbit-glow-${locale}`;
 
   const selectStage = (index: number) => setActiveStage(index);
 
@@ -108,98 +126,155 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
     tabRefs[nextIndex]?.focus();
   };
 
+  const activateArcFromKeyboard = (event: KeyboardEvent<SVGPathElement>, index: number) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    selectStage(index);
+  };
+
+  const stageImages = (
+    <>
+      {content.stages.map((stage, index) => (
+        <Image
+          key={stage.image}
+          src={stage.image}
+          alt={content.imageAlt.replace("{stage}", stage.title)}
+          fill
+          priority={index === 0}
+          sizes="(max-width: 1023px) 320px, 340px"
+          className={`object-cover object-center transition-[opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${
+            activeStage === index ? "scale-100 opacity-100" : "pointer-events-none scale-[1.02] opacity-0"
+          }`}
+        />
+      ))}
+    </>
+  );
+
   return (
     <section className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf8fd_100%)] px-5 py-14 sm:px-6 lg:px-10 lg:py-24">
       <div
-        className={`mx-auto grid max-w-[1240px] items-center gap-10 [direction:ltr] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 ${
-          isArabic ? "" : "lg:grid-cols-[0.95fr_1.05fr]"
+        className={`mx-auto grid max-w-[1240px] items-center gap-x-16 gap-y-9 [direction:ltr] lg:grid-cols-[1.06fr_0.94fr] lg:gap-y-0 ${
+          isArabic ? "" : "lg:grid-cols-[0.94fr_1.06fr]"
         }`}
       >
-        <div className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} lg:row-start-1`}>
-          <div className="relative mx-auto hidden aspect-square w-full max-w-[570px] lg:block">
-            <div className="absolute inset-3 rounded-full bg-[#391B68]/10 blur-3xl" aria-hidden="true" />
-            <div
-              className="absolute inset-0 overflow-hidden rounded-full border border-[#391B68]/10 bg-white p-[3px] shadow-[0_32px_80px_rgba(57,27,104,0.18)]"
-              role="tablist"
-              aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}
-            >
-              <div className="relative h-full w-full overflow-hidden rounded-full bg-[#f1edf7]">
-                {content.stages.map((stage, index) => {
-                  const isActive = activeStage === index;
+        <div
+          className={`order-1 text-center lg:row-start-1 lg:self-end lg:text-start ${
+            isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"
+          }`}
+        >
+          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-4 py-2 text-[12px] font-black text-[#391B68]">
+            {content.badge}
+          </span>
+          <h2 className="mx-auto mt-5 max-w-[570px] text-[30px] font-black leading-[1.22] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[48px]">
+            {content.title}
+          </h2>
+          <p className="mx-auto mt-4 max-w-[550px] text-[16px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[18px]">
+            {content.intro}
+          </p>
+        </div>
 
-                  return (
-                    <button
-                      key={stage.image}
-                      ref={(element) => {
-                        desktopTabRefs.current[index] = element;
-                      }}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      aria-controls={panelId}
-                      tabIndex={isActive ? 0 : -1}
-                      onMouseEnter={() => selectStage(index)}
-                      onFocus={() => selectStage(index)}
-                      onClick={() => selectStage(index)}
-                      onKeyDown={(event) => handleTabKeyDown(event, index, desktopTabRefs.current)}
-                      className={`absolute h-1/2 w-1/2 transition-[background-color,color,box-shadow] duration-500 focus-visible:z-20 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-6px] focus-visible:outline-[#EC911F] ${segmentPositions[index]} ${
-                        isActive
-                          ? "bg-[linear-gradient(135deg,#391B68_0%,#E32F54_58%,#EC911F_100%)] text-white shadow-[inset_0_0_32px_rgba(255,255,255,0.12)]"
-                          : "bg-[#eee9f5] text-[#391B68] hover:bg-[#e5ddee]"
-                      }`}
-                    >
-                      <span
-                        className={`absolute left-1/2 z-[5] w-[190px] -translate-x-1/2 whitespace-nowrap text-center text-[17px] font-black leading-6 drop-shadow-[0_1px_1px_rgba(255,255,255,0.22)] xl:text-[18px] ${segmentLabelPositions[index]}`}
-                        dir={isArabic ? "rtl" : "ltr"}
-                      >
-                        {stage.title}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+        <div
+          className={`order-2 lg:row-span-2 lg:row-start-1 ${isArabic ? "lg:col-start-1" : "lg:col-start-2"}`}
+        >
+          <div className="relative mx-auto hidden aspect-square w-full max-w-[600px] lg:block" role="group" aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}>
+            <div className="absolute inset-[22%] rounded-full bg-[#391B68]/12 blur-3xl" aria-hidden="true" />
+
+            <svg className="absolute inset-[12.5%] h-[75%] w-[75%] overflow-visible" viewBox="0 0 520 520" fill="none" aria-hidden="false">
+              <defs>
+                <linearGradient id={gradientId} x1="90" y1="70" x2="430" y2="450" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#EC911F" />
+                  <stop offset="0.52" stopColor="#E32F54" />
+                  <stop offset="1" stopColor="#391B68" />
+                </linearGradient>
+                <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {content.stages.map((stage, index) => {
+                const isActive = activeStage === index;
+
+                return (
+                  <path
+                    key={stage.image}
+                    d={orbitalArcs[index]}
+                    fill="none"
+                    stroke={isActive ? `url(#${gradientId})` : "#e8e2f0"}
+                    strokeWidth={isActive ? 32 : 28}
+                    strokeLinecap="round"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${String(index + 1).padStart(2, "0")} ${stage.title}`}
+                    aria-pressed={isActive}
+                    aria-controls={panelId}
+                    onMouseEnter={() => selectStage(index)}
+                    onFocus={() => selectStage(index)}
+                    onClick={() => selectStage(index)}
+                    onKeyDown={(event) => activateArcFromKeyboard(event, index)}
+                    filter={isActive ? `url(#${glowId})` : undefined}
+                    className="cursor-pointer transition-[stroke,stroke-width,filter] duration-300 focus-visible:outline-none motion-reduce:transition-none"
+                  />
+                );
+              })}
+            </svg>
+
+            <div className="absolute left-1/2 top-1/2 z-10 aspect-square w-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[6px] border-white bg-[#291342] shadow-[0_26px_65px_rgba(33,16,53,0.28)]">
+              {stageImages}
+              <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/25" />
             </div>
 
-            <div className="absolute left-1/2 top-1/2 z-10 aspect-square w-[56%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[7px] border-white bg-[#291342] shadow-[0_22px_55px_rgba(33,16,53,0.32)]">
-              {content.stages.map((stage, index) => (
-                <Image
-                  key={stage.image}
-                  src={stage.image}
-                  alt={content.imageAlt.replace("{stage}", stage.title)}
-                  fill
-                  priority={index === 0}
-                  sizes="320px"
-                  className={`object-cover object-center transition-[opacity,transform] duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${
-                    activeStage === index ? "scale-100 opacity-100" : "pointer-events-none scale-[1.025] opacity-0"
-                  }`}
-                />
-              ))}
-              <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/25" />
+            <div role="tablist" aria-label={isArabic ? "اختيار مرحلة الرحلة" : "Choose a journey stage"}>
+              {content.stages.map((stage, index) => {
+                const isActive = activeStage === index;
+
+                return (
+                  <button
+                    key={stage.image}
+                    ref={(element) => {
+                      desktopTabRefs.current[index] = element;
+                    }}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={panelId}
+                    tabIndex={isActive ? 0 : -1}
+                    onMouseEnter={() => selectStage(index)}
+                    onFocus={() => selectStage(index)}
+                    onClick={() => selectStage(index)}
+                    onKeyDown={(event) => handleTabKeyDown(event, index, desktopTabRefs.current)}
+                    className={`absolute z-20 flex min-h-[48px] w-[142px] items-center justify-center gap-2 rounded-full border bg-white px-3 py-2 text-center text-[13px] font-black leading-5 shadow-[0_10px_28px_rgba(57,27,104,0.1)] transition-[color,border-color,box-shadow,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#EC911F] ${orbitalLabelPositions[index]} ${
+                      isActive
+                        ? "border-[#E32F54]/40 text-[#391B68] shadow-[0_12px_34px_rgba(227,47,84,0.18)]"
+                        : "border-[#391B68]/10 text-[#391B68]/75 hover:-translate-y-0.5 hover:border-[#391B68]/25 hover:text-[#391B68]"
+                    }`}
+                  >
+                    <span
+                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] transition-colors duration-300 ${
+                        isActive
+                          ? "bg-[linear-gradient(135deg,#EC911F,#E32F54_60%,#391B68)] text-white"
+                          : "bg-[#f0ebf5] text-[#391B68]"
+                      }`}
+                      dir="ltr"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span>{stage.title}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="lg:hidden">
-            <div className="relative mx-auto aspect-square w-[min(78vw,340px)] overflow-hidden rounded-full border-[5px] border-white bg-[#291342] shadow-[0_22px_55px_rgba(57,27,104,0.22)]">
-              {content.stages.map((stage, index) => (
-                <Image
-                  key={stage.image}
-                  src={stage.image}
-                  alt={content.imageAlt.replace("{stage}", stage.title)}
-                  fill
-                  priority={index === 0}
-                  sizes="(max-width: 767px) 78vw, 340px"
-                  className={`object-cover object-center transition-[opacity,transform] duration-500 motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${
-                    activeStage === index ? "scale-100 opacity-100" : "pointer-events-none scale-[1.025] opacity-0"
-                  }`}
-                />
-              ))}
+            <div className="relative mx-auto aspect-square w-[min(76vw,320px)] overflow-hidden rounded-full border-[5px] border-white bg-[#291342] shadow-[0_22px_55px_rgba(57,27,104,0.22)]">
+              {stageImages}
             </div>
 
-            <div
-              className="mt-6 grid grid-cols-2 gap-2.5"
-              role="tablist"
-              aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}
-            >
+            <div className="mt-6 grid grid-cols-2 gap-2.5" role="tablist" aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}>
               {content.stages.map((stage, index) => {
                 const isActive = activeStage === index;
 
@@ -231,26 +306,14 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
         </div>
 
         <div
-          className={`text-center lg:row-start-1 lg:text-start ${
+          id={panelId}
+          role="tabpanel"
+          aria-live="polite"
+          className={`order-3 text-center lg:row-start-2 lg:self-start lg:text-start ${
             isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"
           }`}
         >
-          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-4 py-2 text-[12px] font-black text-[#391B68]">
-            {content.badge}
-          </span>
-          <h2 className="mx-auto mt-5 max-w-[580px] text-[30px] font-black leading-[1.22] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[48px]">
-            {content.title}
-          </h2>
-          <p className="mx-auto mt-4 max-w-[560px] text-[16px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[18px]">
-            {content.intro}
-          </p>
-
-          <div
-            id={panelId}
-            role="tabpanel"
-            aria-live="polite"
-            className="mx-auto mt-8 max-w-[560px] border-t border-[#391B68]/10 pt-7 lg:mx-0"
-          >
+          <div className="mx-auto max-w-[550px] border-t border-[#391B68]/10 pt-7 lg:mx-0 lg:mt-7">
             <span className="inline-block text-[12px] font-black tracking-[0.16em] text-[#E32F54]" dir="ltr">
               {String(activeStage + 1).padStart(2, "0")} / {String(content.stages.length).padStart(2, "0")}
             </span>
@@ -262,7 +325,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
             </p>
           </div>
 
-          <CtaLink href={bookingHref} locale={locale} source="journey_circle" className="mx-auto mt-8 h-[56px] w-full px-8 sm:w-auto lg:mx-0">
+          <CtaLink href={bookingHref} locale={locale} source="journey_orbit" className="mx-auto mt-8 h-[56px] w-full px-8 sm:w-auto lg:mx-0">
             {content.cta}
           </CtaLink>
         </div>
