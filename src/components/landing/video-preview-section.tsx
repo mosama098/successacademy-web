@@ -8,8 +8,8 @@ import { bookingHref, type LandingSectionProps } from "./types";
 const journeyContent = {
   ar: {
     badge: "ليه تختار Success Academy؟",
-    title: "كل اللي تحتاجه علشان تتعلم الإنجليزي… وتكمل",
-    intro: "من تقييم البداية لحد المتابعة المستمرة، نظام الدراسة بيجمع لك الأربع حاجات اللي تحتاجها علشان تحقق تقدم حقيقي.",
+    title: "كل اللي تحتاجه عشان تتعلم الإنجليزي وتكمل",
+    intro: "تقييم واضح، تدريب مرن، ممارسة حقيقية، ومتابعة تساعدك تكمل.",
     cta: "ابدأ بتقييم مجاني",
     imageAlt: "ميزة {stage} في نظام الدراسة مع Success Academy",
     stages: [
@@ -45,8 +45,8 @@ const journeyContent = {
   },
   en: {
     badge: "Why Choose Success Academy?",
-    title: "Everything you need to learn English — and keep progressing",
-    intro: "From your starting assessment to continuous support, our learning system brings together the four things you need to make real progress.",
+    title: "Everything You Need to Learn English and Keep Progressing",
+    intro: "Clear assessment, flexible training, real practice, and continuous support.",
     cta: "Start with a Free Assessment",
     imageAlt: "The {stage} benefit of studying with Success Academy",
     stages: [
@@ -175,13 +175,13 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
             isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"
           }`}
         >
-          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-5 py-2.5 text-[14px] font-bold text-[#391B68] lg:text-[17px]">
+          <span className="inline-flex max-w-full items-center justify-center rounded-full border border-[#EC911F]/25 bg-[#EC911F]/[0.08] px-5 py-2.5 text-center text-[14px] font-bold text-[#EC911F] sm:text-[15px] lg:px-6 lg:py-3 lg:text-[18px]">
             {content.badge}
           </span>
-          <h2 className="mx-auto mt-4 max-w-[590px] text-[29px] font-black leading-[1.24] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[48px] lg:leading-[1.16]">
+          <h2 className="mx-auto mt-4 max-w-[590px] text-[29px] font-black leading-[1.24] text-[#391B68] sm:text-4xl lg:mx-0 lg:max-w-none lg:text-[38px] lg:leading-[1.18]">
             {content.title}
           </h2>
-          <p className="mx-auto mt-3 max-w-[570px] text-[17px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[18px] lg:leading-8">
+          <p className="mx-auto mt-3 max-w-[570px] text-[17px] font-bold leading-8 text-slate-600 lg:mx-0 lg:max-w-none lg:text-[18px] lg:leading-8">
             {content.intro}
           </p>
         </div>
