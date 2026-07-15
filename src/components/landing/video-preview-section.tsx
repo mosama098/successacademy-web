@@ -7,60 +7,76 @@ import { bookingHref, type LandingSectionProps } from "./types";
 
 const journeyContent = {
   ar: {
-    badge: "رحلتك معنا",
-    title: "شوف رحلتك خطوة بخطوة",
-    intro: "من أول تقييم مجاني لحد ما تبدأ خطة مناسبة لمستواك وهدفك.",
+    badge: "ليه Success Academy؟",
+    title: "كل اللي تحتاجه علشان تتعلم الإنجليزي… وتكمل",
+    intro: "من تقييم البداية لحد المتابعة المستمرة، نظام الدراسة بيجمع لك الأربع حاجات اللي تحتاجها علشان تحقق تقدم حقيقي.",
     cta: "ابدأ بتقييم مجاني",
-    imageAlt: "مرحلة {stage} في رحلة التعلم مع Success Academy",
+    imageAlt: "ميزة {stage} في نظام الدراسة مع Success Academy",
     stages: [
       {
         image: "/journey/assessment.png",
-        title: "التقييم المجاني",
-        description: "اعرف مستواك الحقيقي قبل ما تختار أي برنامج.",
+        focal: "object-[48%_48%]",
+        label: "تقييم وخطة واضحة",
+        heading: "ابدأ من مستواك الحقيقي",
+        description: "نعرف مستواك الحقيقي ونحدد لك نقطة بداية وخطة تدريب مناسبة لهدفك، بدل ما تبدأ في برنامج مش مناسب ليك.",
       },
       {
         image: "/journey/training.png",
-        title: "التدريب المناسب",
-        description: "نرشح لك خطة تناسب هدفك ووقتك ومستواك الحالي.",
+        focal: "object-[43%_48%]",
+        label: "مرونة تناسب يومك",
+        heading: "اتعلم بالنظام اللي يناسب حياتك",
+        description: "اختار الدراسة أونلاين أو من فرع الدقي، وفي مواعيد مرنة تساعدك توازن بين التعلم وشغلك أو دراستك.",
       },
       {
         image: "/journey/practice.png",
-        title: "الممارسة والتطبيق",
-        description: "تستخدم اللغة في مهام عملية عشان تتحول لمعرفة بتستخدم فعلاً.",
+        focal: "object-[50%_47%]",
+        label: "ممارسة حقيقية للغة",
+        heading: "استخدم الإنجليزي… مش بس ادرسه",
+        description: "تتدرب من خلال مهام ومواقف عملية تساعدك تستخدم اللغة بثقة، مش مجرد تحفظ قواعد وكلمات.",
       },
       {
         image: "/journey/follow-up.png",
-        title: "المتابعة والتطوير",
-        description: "فريق المتابعة يساعدك تكمل بثبات وتحقق تقدم واضح.",
+        focal: "object-[58%_48%]",
+        label: "متابعة تخليك تكمل",
+        heading: "مش هتكمل الرحلة لوحدك",
+        description: "Success Manager يتابع التزامك وتقدمك، ويساعدك تتجاوز أي تعطيل وتستمر لحد ما تحقق هدفك.",
       },
     ],
   },
   en: {
-    badge: "Your Journey",
-    title: "See your journey, step by step",
-    intro: "From a free assessment to a plan built around your level and goal.",
+    badge: "Why Success Academy?",
+    title: "Everything you need to learn English — and keep progressing",
+    intro: "From your starting assessment to continuous support, our learning system brings together the four things you need to make real progress.",
     cta: "Start with a Free Assessment",
-    imageAlt: "The {stage} stage of the Success Academy learning journey",
+    imageAlt: "The {stage} benefit of studying with Success Academy",
     stages: [
       {
         image: "/journey/assessment.png",
-        title: "Free Assessment",
-        description: "Understand your real level before choosing any programme.",
+        focal: "object-[48%_48%]",
+        label: "Clear Assessment & Plan",
+        heading: "Start from your real level",
+        description: "We identify your real English level and build a clear training direction around your goal, instead of placing you in the wrong programme.",
       },
       {
         image: "/journey/training.png",
-        title: "The Right Training",
-        description: "Get a plan that fits your goal, schedule, and current level.",
+        focal: "object-[43%_48%]",
+        label: "Flexible Learning",
+        heading: "Learn in a way that fits your life",
+        description: "Choose online learning or our Dokki branch, with flexible schedules that work around your job, studies, and daily routine.",
       },
       {
         image: "/journey/practice.png",
-        title: "Practice and Application",
-        description: "Use English in practical tasks so knowledge becomes real ability.",
+        focal: "object-[50%_47%]",
+        label: "Real English Practice",
+        heading: "Use English — don’t just study it",
+        description: "Practise through useful tasks and real situations that help you communicate confidently, not simply memorise grammar and vocabulary.",
       },
       {
         image: "/journey/follow-up.png",
-        title: "Support and Progress",
-        description: "Our follow-up team helps you stay consistent and make clear progress.",
+        focal: "object-[58%_48%]",
+        label: "Support That Keeps You Going",
+        heading: "You are not doing this alone",
+        description: "Your Success Manager follows your commitment and progress, helps you overcome obstacles, and keeps you moving toward your goal.",
       },
     ],
   },
@@ -132,23 +148,34 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
     selectStage(index);
   };
 
-  const stageImages = (
-    <>
-      {content.stages.map((stage, index) => (
+  const renderStageImages = () =>
+    content.stages.map((stage, index) => (
+      <div
+        key={stage.image}
+        className={`absolute inset-0 transition-[opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${
+          activeStage === index ? "scale-100 opacity-100" : "pointer-events-none scale-[1.015] opacity-0"
+        }`}
+      >
         <Image
-          key={stage.image}
           src={stage.image}
-          alt={content.imageAlt.replace("{stage}", stage.title)}
+          alt=""
           fill
           priority={index === 0}
           sizes="(max-width: 1023px) 320px, 340px"
-          className={`object-cover object-center transition-[opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-opacity motion-reduce:duration-100 ${
-            activeStage === index ? "scale-100 opacity-100" : "pointer-events-none scale-[1.02] opacity-0"
-          }`}
+          aria-hidden="true"
+          className={`scale-110 object-cover blur-[5px] brightness-[0.72] saturate-[0.9] ${stage.focal}`}
         />
-      ))}
-    </>
-  );
+        <div className="absolute inset-0 bg-[#291342]/10" aria-hidden="true" />
+        <Image
+          src={stage.image}
+          alt={content.imageAlt.replace("{stage}", stage.label)}
+          fill
+          priority={index === 0}
+          sizes="(max-width: 1023px) 320px, 340px"
+          className="object-contain object-center"
+        />
+      </div>
+    ));
 
   return (
     <section className="overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#faf8fd_100%)] px-5 py-14 sm:px-6 lg:px-10 lg:py-24">
@@ -162,13 +189,13 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
             isArabic ? "[direction:rtl] lg:col-start-2" : "lg:col-start-1"
           }`}
         >
-          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-4 py-2 text-[12px] font-black text-[#391B68]">
+          <span className="inline-flex items-center rounded-full border border-[#391B68]/10 bg-[#391B68]/[0.06] px-4 py-2 text-[13px] font-black text-[#391B68] lg:text-[15px]">
             {content.badge}
           </span>
-          <h2 className="mx-auto mt-5 max-w-[570px] text-[30px] font-black leading-[1.22] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[48px]">
+          <h2 className="mx-auto mt-5 max-w-[590px] text-[29px] font-black leading-[1.24] text-[#391B68] sm:text-4xl lg:mx-0 lg:text-[50px] lg:leading-[1.16]">
             {content.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-[550px] text-[16px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[18px]">
+          <p className="mx-auto mt-5 max-w-[570px] text-[17px] font-bold leading-8 text-slate-600 lg:mx-0 lg:text-[19px] lg:leading-9">
             {content.intro}
           </p>
         </div>
@@ -208,7 +235,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
                     strokeLinecap="round"
                     role="button"
                     tabIndex={0}
-                    aria-label={`${String(index + 1).padStart(2, "0")} ${stage.title}`}
+                    aria-label={`${String(index + 1).padStart(2, "0")} ${stage.label}`}
                     aria-pressed={isActive}
                     aria-controls={panelId}
                     onMouseEnter={() => selectStage(index)}
@@ -222,8 +249,8 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
               })}
             </svg>
 
-            <div className="absolute left-1/2 top-1/2 z-10 aspect-square w-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[6px] border-white bg-[#291342] shadow-[0_26px_65px_rgba(33,16,53,0.28)]">
-              {stageImages}
+            <div className="absolute left-1/2 top-1/2 z-10 aspect-square w-[54%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[6px] border-white bg-[#291342] shadow-[0_26px_65px_rgba(33,16,53,0.28)]">
+              {renderStageImages()}
               <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/25" />
             </div>
 
@@ -246,14 +273,14 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
                     onFocus={() => selectStage(index)}
                     onClick={() => selectStage(index)}
                     onKeyDown={(event) => handleTabKeyDown(event, index, desktopTabRefs.current)}
-                    className={`absolute z-20 flex min-h-[48px] w-[142px] items-center justify-center gap-2 rounded-full border bg-white px-3 py-2 text-center text-[13px] font-black leading-5 shadow-[0_10px_28px_rgba(57,27,104,0.1)] transition-[color,border-color,box-shadow,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#EC911F] ${orbitalLabelPositions[index]} ${
+                    className={`absolute z-20 flex min-h-[56px] w-[178px] items-center justify-center gap-2.5 rounded-full border bg-white px-4 py-2.5 text-center text-[16px] font-bold leading-6 shadow-[0_10px_28px_rgba(57,27,104,0.1)] transition-[color,border-color,box-shadow,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#EC911F] xl:text-[17px] ${orbitalLabelPositions[index]} ${
                       isActive
                         ? "border-[#E32F54]/40 text-[#391B68] shadow-[0_12px_34px_rgba(227,47,84,0.18)]"
                         : "border-[#391B68]/10 text-[#391B68]/75 hover:-translate-y-0.5 hover:border-[#391B68]/25 hover:text-[#391B68]"
                     }`}
                   >
                     <span
-                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] transition-colors duration-300 ${
+                      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[13px] font-black transition-colors duration-300 ${
                         isActive
                           ? "bg-[linear-gradient(135deg,#EC911F,#E32F54_60%,#391B68)] text-white"
                           : "bg-[#f0ebf5] text-[#391B68]"
@@ -262,7 +289,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
                     >
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span>{stage.title}</span>
+                    <span>{stage.label}</span>
                   </button>
                 );
               })}
@@ -271,7 +298,7 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
 
           <div className="lg:hidden">
             <div className="relative mx-auto aspect-square w-[min(76vw,320px)] overflow-hidden rounded-full border-[5px] border-white bg-[#291342] shadow-[0_22px_55px_rgba(57,27,104,0.22)]">
-              {stageImages}
+              {renderStageImages()}
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-2.5" role="tablist" aria-label={isArabic ? "مراحل رحلتك" : "Your journey stages"}>
@@ -291,13 +318,13 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
                     tabIndex={isActive ? 0 : -1}
                     onClick={() => selectStage(index)}
                     onKeyDown={(event) => handleTabKeyDown(event, index, mobileTabRefs.current)}
-                    className={`min-h-12 rounded-full border px-3 py-2 text-[13px] font-black leading-5 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] ${
+                    className={`min-h-[52px] rounded-full border px-3 py-2.5 text-[14px] font-black leading-5 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] ${
                       isActive
                         ? "border-transparent bg-[linear-gradient(135deg,#391B68,#E32F54_65%,#EC911F)] text-white shadow-[0_10px_24px_rgba(57,27,104,0.2)]"
                         : "border-[#391B68]/10 bg-white text-[#391B68] hover:border-[#391B68]/25 hover:bg-[#f7f4fa]"
                     }`}
                   >
-                    {stage.title}
+                    {stage.label}
                   </button>
                 );
               })}
@@ -314,18 +341,18 @@ export function VideoPreviewSection({ locale }: LandingSectionProps) {
           }`}
         >
           <div className="mx-auto max-w-[550px] border-t border-[#391B68]/10 pt-7 lg:mx-0 lg:mt-7">
-            <span className="inline-block text-[12px] font-black tracking-[0.16em] text-[#E32F54]" dir="ltr">
+            <span className="inline-block text-[14px] font-black tracking-[0.16em] text-[#E32F54] lg:text-[15px]" dir="ltr">
               {String(activeStage + 1).padStart(2, "0")} / {String(content.stages.length).padStart(2, "0")}
             </span>
-            <h3 className="mt-2 text-[27px] font-black leading-tight text-[#391B68] sm:text-[31px]">
-              {content.stages[activeStage].title}
+            <h3 className="mt-2 text-[25px] font-black leading-[1.25] text-[#391B68] sm:text-[28px] lg:text-[33px]">
+              {content.stages[activeStage].heading}
             </h3>
-            <p className="mt-3 text-[16px] font-bold leading-8 text-slate-600 lg:text-[17px]">
+            <p className="mt-4 text-[17px] font-bold leading-8 text-slate-600 lg:text-[19px] lg:leading-9">
               {content.stages[activeStage].description}
             </p>
           </div>
 
-          <CtaLink href={bookingHref} locale={locale} source="journey_orbit" className="mx-auto mt-8 h-[56px] w-full px-8 sm:w-auto lg:mx-0">
+          <CtaLink href={bookingHref} locale={locale} source="journey_orbit" className="mx-auto mt-8 h-[56px] w-full px-8 text-[16px] sm:w-auto lg:mx-0 lg:text-[17px]">
             {content.cta}
           </CtaLink>
         </div>
