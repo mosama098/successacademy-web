@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 4.2 seconds
+Output:
 "use client";
 
 import { useState } from "react";
@@ -11,8 +14,8 @@ type ComparisonFeature = {
   key: string;
   icon: FeatureIcon;
   category: string;
-  traditional: { statement: string; highlight?: string };
-  success: { statement: string; highlight?: string };
+  traditional: { statement: string; highlight?: string; highlightDir?: "ltr" | "rtl" };
+  success: { statement: string; highlight?: string; highlightDir?: "ltr" | "rtl" };
 };
 
 type ComparisonContent = {
@@ -53,22 +56,22 @@ const comparisonContent: Record<"ar" | "en", ComparisonContent> = {
         key: "group",
         icon: "group",
         category: "المجموعة",
-        traditional: { statement: "عدد كبير وتفاعل محدود" },
-        success: { statement: "من 7 إلى 10 طلاب فقط", highlight: "7–10" },
+        traditional: { statement: "عدد كبير وتفاعل أقل" },
+        success: { statement: "طلاب فقط في المجموعة", highlight: "7–10", highlightDir: "ltr" },
       },
       {
         key: "application",
         icon: "project",
         category: "التطبيق",
-        traditional: { statement: "تتعلم من غير استخدام حقيقي" },
-        success: { statement: "Project عملي كل 15 ساعة تدريب", highlight: "كل 15 ساعة" },
+        traditional: { statement: "معلومات من غير تطبيق عملي" },
+        success: { statement: "مشروع عملي يثبت استخدامك للغة", highlight: "كل 15 ساعة", highlightDir: "rtl" },
       },
       {
         key: "trainers",
         icon: "trainer",
         category: "المحاضرون",
-        traditional: { statement: "شرح تقليدي وFeedback محدود" },
-        success: { statement: "محاضرون متميزون وFeedback حقيقي" },
+        traditional: { statement: "شرح تقليدي وملاحظات محدودة" },
+        success: { statement: "محاضرون متميزون وملاحظات عملية" },
       },
       {
         key: "schedule",
@@ -81,15 +84,15 @@ const comparisonContent: Record<"ar" | "en", ComparisonContent> = {
         key: "sessions",
         icon: "session",
         category: "المحاضرات",
-        traditional: { statement: "الـLive ينتهي… والمحتوى يضيع" },
-        success: { statement: "Live + Recorded ترجع لها في أي وقت", highlight: "Live + Recorded" },
+        traditional: { statement: "المحاضرة تنتهي ومش بتقدر ترجع لها" },
+        success: { statement: "راجع محاضراتك في أي وقت", highlight: "Live + Recorded", highlightDir: "ltr" },
       },
       {
         key: "support",
         icon: "support",
         category: "المتابعة",
         traditional: { statement: "بعد المحاضرة أنت لوحدك" },
-        success: { statement: "Success Manager يتابعك خطوة بخطوة", highlight: "Success Manager" },
+        success: { statement: "متابعة مستمرة تساعدك تلتزم وتكمل", highlight: "Success Manager", highlightDir: "ltr" },
       },
     ],
   },
@@ -116,43 +119,43 @@ const comparisonContent: Record<"ar" | "en", ComparisonContent> = {
         key: "group",
         icon: "group",
         category: "Group Size",
-        traditional: { statement: "Large classes with limited interaction" },
-        success: { statement: "Only 7–10 learners per group", highlight: "7–10" },
+        traditional: { statement: "Large classes with less interaction" },
+        success: { statement: "Learners only in each group", highlight: "7–10", highlightDir: "ltr" },
       },
       {
         key: "application",
         icon: "project",
         category: "Practical Application",
         traditional: { statement: "Learning without real application" },
-        success: { statement: "A practical project every 15 training hours", highlight: "Every 15 Hours" },
+        success: { statement: "A practical project that proves real language use", highlight: "Every 15 Hours", highlightDir: "ltr" },
       },
       {
         key: "trainers",
         icon: "trainer",
         category: "Trainers",
         traditional: { statement: "Standard teaching with limited feedback" },
-        success: { statement: "Experienced trainers with meaningful feedback" },
+        success: { statement: "Experienced trainers with actionable feedback" },
       },
       {
         key: "schedule",
         icon: "clock",
         category: "Schedule",
-        traditional: { statement: "Fixed times that control your day" },
+        traditional: { statement: "Fixed schedules control your day" },
         success: { statement: "Flexible schedules that fit your routine" },
       },
       {
         key: "sessions",
         icon: "session",
         category: "Sessions",
-        traditional: { statement: "The live class ends and the content is gone" },
-        success: { statement: "Live + recorded sessions you can revisit anytime", highlight: "Live + Recorded" },
+        traditional: { statement: "The live session ends with no replay" },
+        success: { statement: "Revisit your sessions anytime", highlight: "Live + Recorded", highlightDir: "ltr" },
       },
       {
         key: "support",
         icon: "support",
         category: "Support",
         traditional: { statement: "You are on your own after class" },
-        success: { statement: "A Success Manager follows you step by step", highlight: "Success Manager" },
+        success: { statement: "Continuous support that keeps you committed and progressing", highlight: "Success Manager", highlightDir: "ltr" },
       },
     ],
   },
@@ -189,22 +192,22 @@ export function ProblemSection({ locale }: LandingSectionProps) {
   const isSuccess = mode === "success";
 
   return (
-    <section id="why" className="overflow-hidden bg-[#F8F6FB] px-5 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24" dir={isArabic ? "rtl" : "ltr"}>
+    <section id="why" className="overflow-hidden bg-[#F8F6FB] px-5 pb-[80px] pt-[72px] sm:px-6 sm:py-20 lg:px-8 lg:py-[84px]" dir={isArabic ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-[1360px]">
-        <header className="mx-auto max-w-[950px] text-center">
-          <span className="inline-flex rounded-full border border-[#EC911F]/25 bg-[#EC911F]/[0.08] px-5 py-2 text-sm font-black text-[#EC911F] sm:text-[15px]">
+        <header className="mx-auto max-w-[900px] text-center">
+          <span className="inline-flex rounded-full border border-[#EC911F]/25 bg-[#EC911F]/[0.08] px-5 py-2 text-[15px] font-black text-[#EC911F] sm:text-[16px]">
             {content.badge}
           </span>
-          <h2 className="mt-5 text-[31px] font-black leading-[1.2] text-[#391B68] sm:text-[40px] lg:text-[52px]">
+          <h2 className="mt-4 text-[30px] font-black leading-[1.2] text-[#391B68] sm:text-[40px] lg:text-[48px]">
             {content.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-[760px] text-[17px] font-bold leading-8 text-slate-600 lg:text-[19px]">
+          <p className="mx-auto mt-3 max-w-[720px] text-[17px] font-bold leading-8 text-slate-600 lg:text-[18px]">
             {content.subtitle}
           </p>
         </header>
 
         <div
-          className={`relative mt-9 overflow-hidden rounded-[28px] border p-4 shadow-[0_24px_70px_rgba(57,27,104,0.12)] transition-[background-color,border-color,box-shadow] duration-300 sm:p-6 lg:mt-11 lg:p-8 ${
+          className={`relative mt-8 overflow-hidden rounded-[28px] border p-4 shadow-[0_24px_70px_rgba(57,27,104,0.12)] transition-[background-color,border-color,box-shadow] duration-[260ms] sm:p-6 lg:mt-10 lg:p-7 ${
             isSuccess ? "border-[#391B68]/15 bg-[#fdfcff] shadow-[0_28px_75px_rgba(57,27,104,0.15)]" : "border-slate-200 bg-[#f4f2f6]"
           }`}
         >
@@ -212,9 +215,9 @@ export function ProblemSection({ locale }: LandingSectionProps) {
 
           <div className="flex flex-col items-center">
             <span className="mb-2 text-[13px] font-black text-slate-500 sm:text-sm">{content.hint}</span>
-            <div className="relative grid h-[56px] w-full max-w-[440px] grid-cols-2 rounded-full border border-[#391B68]/12 bg-white p-1 shadow-inner" role="group" aria-label={content.regionLabel} dir="ltr">
+            <div className="relative grid h-[56px] w-full max-w-[500px] grid-cols-2 rounded-full border border-[#391B68]/12 bg-white p-1 shadow-[inset_0_1px_3px_rgba(57,27,104,0.08),0_8px_24px_rgba(57,27,104,0.08)] sm:h-[60px]" role="group" aria-label={content.regionLabel} dir="ltr">
               <span
-                className={`pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full shadow-[0_8px_20px_rgba(57,27,104,0.2)] transition-transform duration-300 motion-reduce:transition-none ${
+                className={`pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full shadow-[0_8px_20px_rgba(57,27,104,0.18)] transition-transform duration-[260ms] motion-reduce:transition-none ${
                   isSuccess ? "translate-x-full bg-[#391B68]" : "translate-x-0 bg-slate-600"
                 }`}
                 aria-hidden="true"
@@ -223,7 +226,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                 type="button"
                 aria-pressed={!isSuccess}
                 onClick={() => setMode("traditional")}
-                className={`relative z-10 rounded-full px-3 text-[14px] font-black transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] sm:text-[16px] ${!isSuccess ? "text-white" : "text-slate-600 hover:text-[#391B68]"}`}
+                className={`relative z-10 rounded-full px-3 text-[14px] font-black transition-colors duration-[260ms] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] sm:text-[16px] ${!isSuccess ? "text-white" : "text-slate-600 hover:text-[#391B68]"}`}
                 dir={isArabic ? "rtl" : "ltr"}
               >
                 {content.traditional}
@@ -232,7 +235,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                 type="button"
                 aria-pressed={isSuccess}
                 onClick={() => setMode("success")}
-                className={`relative z-10 rounded-full px-3 text-[14px] font-black transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] sm:text-[16px] ${isSuccess ? "text-white" : "text-slate-600 hover:text-[#391B68]"}`}
+                className={`relative z-10 rounded-full px-3 text-[14px] font-black transition-colors duration-[260ms] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] sm:text-[16px] ${isSuccess ? "text-white" : "text-slate-600 hover:text-[#391B68]"}`}
                 dir="ltr"
               >
                 {content.success}
@@ -240,15 +243,15 @@ export function ProblemSection({ locale }: LandingSectionProps) {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3.5 md:grid-cols-2 lg:grid-cols-3 lg:gap-4" aria-live="polite" aria-atomic="true">
+          <div className="mt-5 grid gap-3.5 md:grid-cols-2 lg:grid-cols-3 lg:gap-4" aria-live="polite" aria-atomic="true">
             {content.features.map((feature, index) => {
               const isCore = index === content.features.length - 1;
               return (
                 <article
                   key={feature.key}
-                  style={{ transitionDelay: `${index * 35}ms` }}
-                  className={`group relative flex min-h-[92px] items-center gap-4 overflow-hidden rounded-2xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-300 motion-reduce:transform-none motion-reduce:transition-none sm:min-h-[108px] sm:p-5 md:block md:min-h-[150px] md:rounded-[20px] ${
-                    isCore ? "md:col-span-2 lg:col-span-3" : ""
+                  style={{ transitionDelay: `${index * 25}ms` }}
+                  className={`group relative flex min-h-[88px] items-center gap-3.5 overflow-hidden rounded-2xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none sm:min-h-[100px] sm:p-5 md:rounded-[20px] ${
+                    isCore ? "md:col-span-2 md:flex md:h-[128px] md:min-h-0 md:items-center lg:col-span-3" : "md:block md:h-[148px] md:min-h-0"
                   } ${
                     isCore && isSuccess
                       ? "border-[#391B68] bg-[#391B68] text-white shadow-[0_18px_36px_rgba(57,27,104,0.22)]"
@@ -258,7 +261,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                   }`}
                 >
                   {isSuccess && !isCore ? <span className="absolute inset-x-0 top-0 h-0.5 bg-[linear-gradient(90deg,#EC911F,#E32F54)] opacity-70" aria-hidden="true" /> : null}
-                  <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-colors duration-300 md:h-12 md:w-12 ${
+                  <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-colors duration-[260ms] md:h-12 md:w-12 ${
                     isCore && isSuccess
                       ? "bg-white/12 text-[#EC911F]"
                       : isSuccess
@@ -268,12 +271,12 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                     <FeatureIcon icon={feature.icon} />
                   </div>
 
-                  <div className={`min-w-0 flex-1 md:mt-4 ${isCore ? "md:mt-0 md:flex md:items-center md:gap-5" : ""}`}>
-                    <div className={isCore ? "md:min-w-[180px]" : ""}>
+                  <div className={`min-w-0 flex-1 ${isCore ? "md:flex md:items-center md:gap-6" : "md:mt-3"}`}>
+                    <div className={isCore ? "md:min-w-[190px]" : ""}>
                       <span className={`text-[12px] font-black uppercase tracking-[0.08em] sm:text-[13px] ${isCore && isSuccess ? "text-white/65" : "text-slate-500"}`}>
                         {feature.category}
                       </span>
-                      {isCore ? (
+                      {isCore && isSuccess ? (
                         <span className={`ms-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-black sm:text-xs ${isSuccess ? "bg-[#EC911F] text-white" : "bg-white/75 text-slate-600"}`}>
                           {content.coreAdvantage}
                         </span>
@@ -289,14 +292,14 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                           <div
                             key={itemMode}
                             aria-hidden={!visible}
-                            className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1.5 opacity-0"}`}
+                            className={`col-start-1 row-start-1 transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
                           >
                             {item.highlight ? (
-                              <strong className={`mt-1 block text-[21px] font-black leading-7 sm:text-[24px] md:text-[27px] ${isCore && isSuccess ? "text-[#EC911F]" : "text-[#E32F54]"}`} dir="auto">
+                              <strong className={`mt-1 block text-[22px] font-black leading-7 [unicode-bidi:isolate] sm:text-[24px] md:text-[27px] ${isCore && isSuccess ? "text-[#EC911F]" : "text-[#E32F54]"}`} dir={item.highlightDir ?? (isArabic ? "rtl" : "ltr")}>
                                 {item.highlight}
                               </strong>
                             ) : null}
-                            <p className={`mt-1 text-[17px] font-black leading-6 sm:text-[18px] sm:leading-7 md:text-[20px] ${isCore && isSuccess ? "text-white" : isSuccess ? "text-[#391B68]" : "text-slate-700"}`}>
+                            <p className={`mt-1 text-[17px] font-black leading-6 sm:text-[18px] sm:leading-7 md:text-[19px] ${isCore && isSuccess ? "text-white" : isSuccess ? "text-[#391B68]" : "text-slate-700"}`}>
                               {item.statement}
                             </p>
                           </div>
@@ -305,16 +308,18 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                     </div>
                   </div>
 
-                  <span className={`absolute end-4 top-4 hidden h-6 w-6 place-items-center rounded-full text-sm font-black md:grid ${isSuccess ? isCore ? "bg-[#EC911F] text-white" : "bg-[#391B68] text-white" : "bg-white text-slate-500"}`} aria-hidden="true">
-                    {isSuccess ? "✓" : "−"}
-                  </span>
+                  {!isCore ? (
+                    <span className={`absolute end-4 top-4 hidden h-6 w-6 place-items-center rounded-full text-sm font-black md:grid ${isSuccess ? "bg-[#391B68] text-white" : "bg-white text-slate-500"}`} aria-hidden="true">
+                      {isSuccess ? "✓" : "−"}
+                    </span>
+                  ) : null}
                 </article>
               );
             })}
           </div>
         </div>
 
-        <div className="mt-7 flex flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-5">
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-5 lg:mt-9">
           <p className="text-[16px] font-black text-[#391B68] sm:text-[17px]">{content.supportLine}</p>
           <CtaLink href={bookingHref} locale={locale} source="success_system_switch" className="h-[56px] w-full px-8 text-[16px] sm:w-auto">
             {content.cta}
