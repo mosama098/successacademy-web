@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 4.2 seconds
-Output:
 "use client";
 
 import { useState } from "react";
