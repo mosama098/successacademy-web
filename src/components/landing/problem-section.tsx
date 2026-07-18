@@ -187,15 +187,19 @@ export function ProblemSection({ locale }: LandingSectionProps) {
   const content = comparisonContent[locale];
   const isArabic = locale === "ar";
   const isSuccess = mode === "success";
+  const supportFeature = content.features.find((feature) => feature.key === "support") ?? content.features[6];
+  const desktopFeatureKeys = ["group", "application", "sessions", "curriculum", "trainers", "schedule"];
+  const desktopFeatures = desktopFeatureKeys.map((key) => content.features.find((feature) => feature.key === key)!);
+  const tierAKeys = new Set(["group", "application", "sessions"]);
 
   return (
     <section id="why" className="overflow-hidden bg-[#F8F6FB] px-5 pb-[80px] pt-[72px] sm:px-6 sm:py-20 lg:px-8 lg:py-[84px]" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="mx-auto max-w-[1360px]">
+      <div className="mx-auto max-w-[1240px]">
         <header className="mx-auto max-w-[900px] text-center">
           <span className="inline-flex rounded-full border border-[#EC911F]/25 bg-[#EC911F]/[0.08] px-5 py-2 text-[15px] font-black text-[#EC911F] sm:text-[16px]">
             {content.badge}
           </span>
-          <h2 className="mt-4 text-[30px] font-black leading-[1.2] text-[#391B68] sm:text-[40px] lg:text-[48px]">
+          <h2 className="mt-4 text-[30px] font-black leading-[1.2] text-[#391B68] sm:text-[40px] lg:text-[46px] lg:leading-[1.18]">
             {content.title}
           </h2>
           <p className="mx-auto mt-3 max-w-[720px] text-[17px] font-bold leading-8 text-slate-600 lg:text-[18px]">
@@ -204,7 +208,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
         </header>
 
         <div
-          className={`relative mt-8 overflow-hidden rounded-[28px] border p-4 shadow-[0_24px_70px_rgba(57,27,104,0.12)] transition-[background-color,border-color,box-shadow] duration-[260ms] sm:p-6 lg:mt-10 lg:p-7 ${
+          className={`relative mt-8 overflow-hidden rounded-[28px] border p-4 shadow-[0_24px_70px_rgba(57,27,104,0.12)] transition-[background-color,border-color,box-shadow] duration-[260ms] sm:p-6 lg:mt-9 lg:p-7 ${
             isSuccess ? "border-[#391B68]/15 bg-[#fdfcff] shadow-[0_28px_75px_rgba(57,27,104,0.15)]" : "border-slate-200 bg-[#f4f2f6]"
           }`}
         >
@@ -212,7 +216,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
 
           <div className="flex flex-col items-center">
             <span className="mb-2 text-[13px] font-black text-slate-500 sm:text-sm">{content.hint}</span>
-            <div className="relative grid h-[56px] w-full max-w-[500px] grid-cols-2 rounded-full border border-[#391B68]/12 bg-white p-1 shadow-[inset_0_1px_3px_rgba(57,27,104,0.08),0_8px_24px_rgba(57,27,104,0.08)] sm:h-[60px]" role="group" aria-label={content.regionLabel} dir="ltr">
+            <div className="relative grid h-[56px] w-full max-w-[500px] grid-cols-2 rounded-full border border-[#391B68]/12 bg-white p-1 shadow-[inset_0_1px_3px_rgba(57,27,104,0.08),0_8px_24px_rgba(57,27,104,0.08)] sm:h-[60px] lg:h-16 lg:max-w-[520px]" role="group" aria-label={content.regionLabel} dir="ltr">
               <span
                 className={`pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full shadow-[0_8px_20px_rgba(57,27,104,0.18)] transition-transform duration-[260ms] motion-reduce:transition-none ${
                   isSuccess ? "translate-x-full bg-[#391B68]" : "translate-x-0 bg-slate-600"
@@ -240,7 +244,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3.5 md:grid-cols-2 lg:grid-cols-3 lg:gap-4" aria-live="polite" aria-atomic="true">
+          <div className="mt-5 grid gap-3.5 md:grid-cols-2 lg:hidden" aria-live="polite" aria-atomic="true">
             {content.features.map((feature, index) => {
               const isCore = index === content.features.length - 1;
               return (
@@ -313,6 +317,130 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                 </article>
               );
             })}
+          </div>
+
+          <div className="mt-6 hidden grid-cols-12 gap-4 lg:grid" aria-live="polite" aria-atomic="true" dir="ltr">
+            <article
+              dir={isArabic ? "rtl" : "ltr"}
+              className={`relative col-span-4 flex min-h-[494px] flex-col overflow-hidden rounded-[24px] border p-7 transition-[background-color,border-color,box-shadow,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${
+                isArabic ? "order-1" : "order-2"
+              } ${
+                isSuccess
+                  ? "border-[#391B68] bg-[#391B68] text-white shadow-[0_24px_48px_rgba(57,27,104,0.24)]"
+                  : "border-slate-200 bg-[#e9e6ed] text-slate-700"
+              }`}
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(236,145,31,0.14),transparent_32%)] opacity-80" aria-hidden="true" />
+              <div className="relative flex items-center gap-4">
+                <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${isSuccess ? "bg-white/10 text-[#EC911F]" : "bg-white/70 text-slate-500"}`}>
+                  <FeatureIcon icon={supportFeature.icon} />
+                </div>
+                <div className="min-w-0">
+                  <span className={`block text-[14px] font-black uppercase tracking-[0.08em] ${isSuccess ? "text-white/70" : "text-slate-500"}`}>
+                    {supportFeature.category}
+                  </span>
+                  {isSuccess ? (
+                    <span className="mt-2 inline-flex rounded-full bg-[#EC911F] px-3 py-1.5 text-[12px] font-black text-white">
+                      {content.coreAdvantage}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="relative my-auto py-8">
+                {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
+                  const item = supportFeature[itemMode];
+                  const visible = mode === itemMode;
+
+                  return (
+                    <div
+                      key={itemMode}
+                      aria-hidden={!visible}
+                      className={`transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "relative translate-y-0 opacity-100" : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"}`}
+                    >
+                      {item.highlight ? (
+                        <strong className={`block text-[36px] font-black leading-tight [unicode-bidi:isolate] ${isSuccess ? "text-[#EC911F]" : "text-slate-700"}`} dir={item.highlightDir ?? "ltr"}>
+                          {item.highlight}
+                        </strong>
+                      ) : null}
+                      <p className={`mt-4 max-w-[320px] text-[19px] font-black leading-8 ${isSuccess ? "text-white" : "text-slate-700"}`}>
+                        {item.statement}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className={`relative flex items-center gap-3 border-t pt-5 ${isSuccess ? "border-white/15" : "border-slate-300"}`} aria-hidden="true">
+                <span className={`h-2.5 w-2.5 rounded-full ${isSuccess ? "bg-[#EC911F]" : "bg-slate-400"}`} />
+                <span className={`h-px flex-1 ${isSuccess ? "bg-gradient-to-r from-[#EC911F]/70 via-[#E32F54]/45 to-white/10" : "bg-slate-300"}`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${isSuccess ? "bg-white/70" : "bg-slate-400"}`} />
+              </div>
+            </article>
+
+            <div
+              className={`col-span-8 grid grid-cols-2 gap-4 ${isArabic ? "order-2" : "order-1"}`}
+              dir={isArabic ? "rtl" : "ltr"}
+            >
+              {desktopFeatures.map((feature, index) => {
+                const isTierA = tierAKeys.has(feature.key);
+
+                return (
+                  <article
+                    key={feature.key}
+                    style={{ transitionDelay: `${index * 25}ms` }}
+                    className={`group relative flex flex-col overflow-hidden rounded-[20px] border p-5 transition-[background-color,border-color,box-shadow,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${
+                      isTierA ? "h-[160px] p-6" : "h-[142px]"
+                    } ${
+                      isSuccess
+                        ? isTierA
+                          ? "border-[#391B68]/18 bg-white text-[#391B68] shadow-[0_14px_32px_rgba(57,27,104,0.11)] -translate-y-px"
+                          : "border-[#391B68]/12 bg-white/90 text-[#391B68] shadow-[0_10px_24px_rgba(57,27,104,0.07)]"
+                        : "border-slate-200 bg-[#ebe8ee] text-slate-700"
+                    }`}
+                  >
+                    {isSuccess && isTierA ? <span className="absolute inset-x-0 top-0 h-0.5 bg-[#E32F54]" aria-hidden="true" /> : null}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className={`grid shrink-0 place-items-center rounded-xl ${isTierA ? "h-11 w-11" : "h-10 w-10"} ${isSuccess ? "bg-[#391B68]/[0.07] text-[#391B68]" : "bg-white/70 text-slate-500"}`}>
+                        <FeatureIcon icon={feature.icon} />
+                      </div>
+                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-sm font-black ${isSuccess ? "bg-[#391B68] text-white" : "bg-white text-slate-500"}`} aria-hidden="true">
+                        {isSuccess ? "✓" : "−"}
+                      </span>
+                    </div>
+
+                    <div className="mt-auto min-w-0">
+                      <span className="block text-[13px] font-black uppercase tracking-[0.08em] text-slate-500">
+                        {feature.category}
+                      </span>
+                      <div className="grid">
+                        {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
+                          const item = feature[itemMode];
+                          const visible = mode === itemMode;
+
+                          return (
+                            <div
+                              key={itemMode}
+                              aria-hidden={!visible}
+                              className={`col-start-1 row-start-1 transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
+                            >
+                              {item.highlight ? (
+                                <strong className="mt-1 block text-[29px] font-black leading-8 text-[#E32F54] [unicode-bidi:isolate]" dir={item.highlightDir ?? (isArabic ? "rtl" : "ltr")}>
+                                  {item.highlight}
+                                </strong>
+                              ) : null}
+                              <p className={`mt-1 font-black ${isTierA ? "text-[17px] leading-6" : "text-[19px] leading-7"} ${isSuccess ? "text-[#391B68]" : "text-slate-700"}`}>
+                                {item.statement}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
 
