@@ -133,24 +133,33 @@ export function ProblemSection({ locale }: LandingSectionProps) {
 
           <div className={`${isArabic ? "lg:order-1" : "lg:order-2"}`} dir={isArabic ? "rtl" : "ltr"}>
             <div className="relative mx-auto max-w-[700px]">
-              <div className={`absolute inset-y-0 z-10 w-9 rounded-[20px] bg-[#391B68] shadow-[0_12px_30px_rgba(57,27,104,0.18)] md:w-[72px] lg:w-20 ${isArabic ? "right-0" : "left-0"}`}>
-                <div className="flex h-full flex-col items-center justify-center gap-5 px-1.5 py-3 text-center text-white md:px-2 md:py-4">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/10 text-[#EC911F] md:h-10 md:w-10">
-                    <LayerIcon icon="support" className="h-5 w-5 md:h-6 md:w-6" />
+              <div className={`absolute inset-y-0 z-10 w-9 rounded-[20px] bg-[#391B68] shadow-[0_12px_30px_rgba(57,27,104,0.18)] md:w-[72px] lg:w-[92px] lg:rounded-[22px] ${isArabic ? "right-0" : "left-0"}`}>
+                <div className="flex h-full flex-col items-center justify-center gap-5 px-1.5 py-3 text-center text-white md:px-2 md:py-4 lg:gap-4 lg:px-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/10 text-[#EC911F] md:h-10 md:w-10 lg:h-9 lg:w-9">
+                    <LayerIcon icon="support" className="h-5 w-5 md:h-6 md:w-6 lg:h-5 lg:w-5" />
                   </span>
-                  <div className="hidden min-w-0 md:block">
+                  <div className="hidden min-w-0 md:block lg:hidden">
                     <strong className="block text-[15px] font-black leading-5 [unicode-bidi:isolate] lg:text-[17px]" dir="ltr">Success Manager</strong>
                     <p className="mt-2 text-[11px] font-bold leading-4 text-white/75 lg:text-[12px]">{content.managerDescription}</p>
                   </div>
-                  <span className="hidden text-[10px] font-black leading-4 text-[#EC911F] md:block lg:text-[11px]">{content.managerLabel}</span>
+                  <div className="hidden min-w-0 lg:block">
+                    <strong className="block text-[17px] font-black leading-[1.15] text-white [unicode-bidi:isolate]" dir="ltr">
+                      <span className="block">Success</span>
+                      <span className="block">Manager</span>
+                    </strong>
+                    <p className="mt-2.5 text-[11px] font-bold leading-[1.45] text-white/75">
+                      {isArabic ? "متابعة تربط كل خطوة باللي بعدها" : content.managerDescription}
+                    </p>
+                  </div>
+                  <span className="hidden text-[10px] font-black leading-4 text-[#EC911F] md:block lg:text-[10px]">{content.managerLabel}</span>
                 </div>
               </div>
 
               <div className={`space-y-2 ${isArabic ? "pr-11 md:pr-20 lg:pr-24" : "pl-11 md:pl-20 lg:pl-24"}`}>
                 {content.layers.map((layer, index) => (
                   <div key={layer.category} className="group relative">
-                    <span className={`absolute top-1/2 z-0 h-px w-[26px] -translate-y-1/2 bg-[#391B68]/15 transition-colors duration-[220ms] group-hover:bg-[#EC911F]/65 motion-reduce:transition-none md:w-11 lg:w-14 ${isArabic ? "right-[-26px] md:right-[-44px] lg:right-[-56px]" : "left-[-26px] md:left-[-44px] lg:left-[-56px]"}`} aria-hidden="true" />
-                    <span className={`absolute top-1/2 z-20 h-2 w-2 -translate-y-1/2 rounded-full border border-[#391B68]/50 bg-[#EC911F]/80 transition-colors duration-[220ms] group-hover:bg-[#EC911F] motion-reduce:transition-none ${isArabic ? "right-[-30px] md:right-[-48px] lg:right-[-60px]" : "left-[-30px] md:left-[-48px] lg:left-[-60px]"}`} aria-hidden="true" />
+                    <span className={`absolute top-1/2 z-0 h-px w-[26px] -translate-y-1/2 bg-[#391B68]/15 transition-colors duration-[220ms] group-hover:bg-[#EC911F]/55 motion-reduce:transition-none md:w-11 lg:w-[50px] ${isArabic ? "right-[-26px] md:right-[-44px] lg:right-[-50px]" : "left-[-26px] md:left-[-44px] lg:left-[-50px]"}`} aria-hidden="true" />
+                    <span className={`absolute top-1/2 z-20 h-2 w-2 -translate-y-1/2 rounded-full border border-[#391B68]/40 bg-[#EC911F]/65 transition-colors duration-[220ms] group-hover:bg-[#EC911F]/90 motion-reduce:transition-none lg:h-1.5 lg:w-1.5 ${isArabic ? "right-[-30px] md:right-[-48px] lg:right-[-53px]" : "left-[-30px] md:left-[-48px] lg:left-[-53px]"}`} aria-hidden="true" />
                     <div className={offsets[index]}>
                     <article className={`relative z-[1] flex min-h-[90px] items-center gap-3 rounded-[16px] border border-[#391B68]/[0.08] px-3.5 py-2.5 shadow-[0_5px_16px_rgba(57,27,104,0.045)] transition-[transform,border-color,box-shadow] duration-[220ms] group-hover:border-[#391B68]/15 group-hover:shadow-[0_7px_18px_rgba(57,27,104,0.06)] motion-reduce:transform-none motion-reduce:transition-none md:min-h-[72px] md:px-3.5 md:py-2 lg:min-h-[68px] ${isArabic ? "lg:group-hover:-translate-x-0.5" : "lg:group-hover:translate-x-0.5"} ${index % 2 === 0 ? "bg-white" : "bg-[#f5f2f8]"} ${isArabic ? "" : "flex-row-reverse"}`}>
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#391B68]/[0.07] text-[#391B68]">
