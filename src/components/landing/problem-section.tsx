@@ -188,9 +188,8 @@ export function ProblemSection({ locale }: LandingSectionProps) {
   const isArabic = locale === "ar";
   const isSuccess = mode === "success";
   const supportFeature = content.features.find((feature) => feature.key === "support") ?? content.features[6];
-  const desktopFeatureKeys = ["group", "application", "sessions", "curriculum", "trainers", "schedule"];
-  const desktopFeatures = desktopFeatureKeys.map((key) => content.features.find((feature) => feature.key === key)!);
-  const tierAKeys = new Set(["group", "application", "sessions"]);
+  const proofFeatures = ["group", "application", "sessions"].map((key) => content.features.find((feature) => feature.key === key)!);
+  const supportingFeatures = ["curriculum", "trainers", "schedule"].map((key) => content.features.find((feature) => feature.key === key)!);
 
   return (
     <section id="why" className="overflow-hidden bg-[#F8F6FB] px-5 pb-[80px] pt-[72px] sm:px-6 sm:py-20 lg:px-8 lg:py-[84px]" dir={isArabic ? "rtl" : "ltr"}>
@@ -319,127 +318,122 @@ export function ProblemSection({ locale }: LandingSectionProps) {
             })}
           </div>
 
-          <div className="mt-6 hidden grid-cols-12 gap-4 lg:grid" aria-live="polite" aria-atomic="true" dir="ltr">
-            <article
-              dir={isArabic ? "rtl" : "ltr"}
-              className={`relative col-span-4 flex min-h-[494px] flex-col overflow-hidden rounded-[24px] border p-7 transition-[background-color,border-color,box-shadow,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${
-                isArabic ? "order-1" : "order-2"
-              } ${
-                isSuccess
-                  ? "border-[#391B68] bg-[#391B68] text-white shadow-[0_24px_48px_rgba(57,27,104,0.24)]"
-                  : "border-slate-200 bg-[#e9e6ed] text-slate-700"
-              }`}
-            >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(236,145,31,0.14),transparent_32%)] opacity-80" aria-hidden="true" />
-              <div className="relative flex items-center gap-4">
-                <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${isSuccess ? "bg-white/10 text-[#EC911F]" : "bg-white/70 text-slate-500"}`}>
-                  <FeatureIcon icon={supportFeature.icon} />
-                </div>
-                <div className="min-w-0">
-                  <span className={`block text-[14px] font-black uppercase tracking-[0.08em] ${isSuccess ? "text-white/70" : "text-slate-500"}`}>
-                    {supportFeature.category}
-                  </span>
-                  {isSuccess ? (
-                    <span className="mt-2 inline-flex rounded-full bg-[#EC911F] px-3 py-1.5 text-[12px] font-black text-white">
-                      {content.coreAdvantage}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="relative my-auto py-8">
-                {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
-                  const item = supportFeature[itemMode];
-                  const visible = mode === itemMode;
-
-                  return (
-                    <div
-                      key={itemMode}
-                      aria-hidden={!visible}
-                      className={`transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "relative translate-y-0 opacity-100" : "pointer-events-none absolute inset-0 translate-y-1 opacity-0"}`}
-                    >
-                      {item.highlight ? (
-                        <strong className={`block text-[36px] font-black leading-tight [unicode-bidi:isolate] ${isSuccess ? "text-[#EC911F]" : "text-slate-700"}`} dir={item.highlightDir ?? "ltr"}>
-                          {item.highlight}
-                        </strong>
-                      ) : null}
-                      <p className={`mt-4 max-w-[320px] text-[19px] font-black leading-8 ${isSuccess ? "text-white" : "text-slate-700"}`}>
-                        {item.statement}
-                      </p>
+          <div className="mt-6 hidden lg:block" aria-live="polite" aria-atomic="true">
+            <div className="grid grid-cols-3 gap-4" dir={isArabic ? "rtl" : "ltr"}>
+              {proofFeatures.map((feature) => (
+                <article
+                  key={feature.key}
+                  className={`flex h-[176px] flex-col rounded-[23px] border p-6 transition-[background-color,border-color,box-shadow,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${
+                    isSuccess
+                      ? "-translate-y-px border-[#391B68]/15 bg-white text-[#391B68] shadow-[0_14px_32px_rgba(57,27,104,0.09)]"
+                      : "border-slate-200 bg-[#ebe8ee] text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${isSuccess ? "bg-[#391B68]/[0.07] text-[#391B68]" : "bg-white/70 text-slate-500"}`}>
+                      <FeatureIcon icon={feature.icon} />
                     </div>
-                  );
-                })}
-              </div>
+                    <span className="text-[13px] font-black uppercase tracking-[0.08em] text-slate-500">{feature.category}</span>
+                  </div>
+                  <div className="mt-auto grid min-w-0">
+                    {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
+                      const item = feature[itemMode];
+                      const visible = mode === itemMode;
 
-              <div className={`relative flex items-center gap-3 border-t pt-5 ${isSuccess ? "border-white/15" : "border-slate-300"}`} aria-hidden="true">
-                <span className={`h-2.5 w-2.5 rounded-full ${isSuccess ? "bg-[#EC911F]" : "bg-slate-400"}`} />
-                <span className={`h-px flex-1 ${isSuccess ? "bg-gradient-to-r from-[#EC911F]/70 via-[#E32F54]/45 to-white/10" : "bg-slate-300"}`} />
-                <span className={`h-2.5 w-2.5 rounded-full ${isSuccess ? "bg-white/70" : "bg-slate-400"}`} />
-              </div>
-            </article>
+                      return (
+                        <div
+                          key={itemMode}
+                          aria-hidden={!visible}
+                          className={`col-start-1 row-start-1 transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
+                        >
+                          {item.highlight ? (
+                            <strong className="block text-[32px] font-black leading-9 text-[#E32F54] [unicode-bidi:isolate]" dir={item.highlightDir ?? (isArabic ? "rtl" : "ltr")}>
+                              {item.highlight}
+                            </strong>
+                          ) : null}
+                          <p className={`mt-1 text-[17px] font-black leading-6 ${isSuccess ? "text-[#391B68]" : "text-slate-700"}`}>{item.statement}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </article>
+              ))}
+            </div>
 
-            <div
-              className={`col-span-8 grid grid-cols-2 gap-4 ${isArabic ? "order-2" : "order-1"}`}
-              dir={isArabic ? "rtl" : "ltr"}
-            >
-              {desktopFeatures.map((feature, index) => {
-                const isTierA = tierAKeys.has(feature.key);
+            <div className="mt-4 grid grid-cols-[1.55fr_3fr] gap-4" dir="ltr">
+              <article
+                dir={isArabic ? "rtl" : "ltr"}
+                className={`flex h-[198px] flex-col rounded-[23px] border p-6 transition-[background-color,border-color,box-shadow] duration-[260ms] motion-reduce:transition-none ${
+                  isArabic ? "order-1" : "order-2"
+                } ${
+                  isSuccess
+                    ? "border-[#391B68] bg-[#391B68] text-white shadow-[0_18px_38px_rgba(57,27,104,0.2)]"
+                    : "border-slate-200 bg-[#e9e6ed] text-slate-700"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${isSuccess ? "bg-white/10 text-[#EC911F]" : "bg-white/70 text-slate-500"}`}>
+                    <FeatureIcon icon={supportFeature.icon} />
+                  </div>
+                  <span className={`text-[13px] font-black uppercase tracking-[0.08em] ${isSuccess ? "text-white/70" : "text-slate-500"}`}>{supportFeature.category}</span>
+                  {isSuccess ? <span className="ms-auto inline-flex rounded-full bg-[#EC911F] px-3 py-1.5 text-[12px] font-black text-white">{content.coreAdvantage}</span> : null}
+                </div>
+                <div className="mt-auto grid min-w-0">
+                  {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
+                    const item = supportFeature[itemMode];
+                    const visible = mode === itemMode;
 
-                return (
+                    return (
+                      <div
+                        key={itemMode}
+                        aria-hidden={!visible}
+                        className={`col-start-1 row-start-1 transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
+                      >
+                        {item.highlight ? (
+                          <strong className={`block whitespace-nowrap text-[30px] font-black leading-9 [unicode-bidi:isolate] ${isSuccess ? "text-[#EC911F]" : "text-slate-700"}`} dir={item.highlightDir ?? "ltr"}>
+                            {item.highlight}
+                          </strong>
+                        ) : null}
+                        <p className={`mt-2 text-[17px] font-black leading-7 ${isSuccess ? "text-white" : "text-slate-700"}`}>{item.statement}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+
+              <div className={`grid grid-cols-3 gap-4 ${isArabic ? "order-2" : "order-1"}`} dir={isArabic ? "rtl" : "ltr"}>
+                {supportingFeatures.map((feature) => (
                   <article
                     key={feature.key}
-                    style={{ transitionDelay: `${index * 25}ms` }}
-                    className={`group relative flex flex-col overflow-hidden rounded-[20px] border p-5 transition-[background-color,border-color,box-shadow,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${
-                      isTierA ? "h-[160px] p-6" : "h-[142px]"
-                    } ${
+                    className={`flex h-[198px] flex-col rounded-[21px] border p-5 transition-[background-color,border-color,box-shadow] duration-[260ms] motion-reduce:transition-none ${
                       isSuccess
-                        ? isTierA
-                          ? "border-[#391B68]/18 bg-white text-[#391B68] shadow-[0_14px_32px_rgba(57,27,104,0.11)] -translate-y-px"
-                          : "border-[#391B68]/12 bg-white/90 text-[#391B68] shadow-[0_10px_24px_rgba(57,27,104,0.07)]"
+                        ? "border-[#391B68]/12 bg-white/90 text-[#391B68] shadow-[0_9px_22px_rgba(57,27,104,0.06)]"
                         : "border-slate-200 bg-[#ebe8ee] text-slate-700"
                     }`}
                   >
-                    {isSuccess && isTierA ? <span className="absolute inset-x-0 top-0 h-0.5 bg-[#E32F54]" aria-hidden="true" /> : null}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className={`grid shrink-0 place-items-center rounded-xl ${isTierA ? "h-11 w-11" : "h-10 w-10"} ${isSuccess ? "bg-[#391B68]/[0.07] text-[#391B68]" : "bg-white/70 text-slate-500"}`}>
-                        <FeatureIcon icon={feature.icon} />
-                      </div>
-                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-sm font-black ${isSuccess ? "bg-[#391B68] text-white" : "bg-white text-slate-500"}`} aria-hidden="true">
-                        {isSuccess ? "✓" : "−"}
-                      </span>
+                    <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isSuccess ? "bg-[#391B68]/[0.07] text-[#391B68]" : "bg-white/70 text-slate-500"}`}>
+                      <FeatureIcon icon={feature.icon} />
                     </div>
+                    <div className="mt-auto grid min-w-0">
+                      <span className="mb-2 text-[13px] font-black uppercase tracking-[0.08em] text-slate-500">{feature.category}</span>
+                      {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
+                        const item = feature[itemMode];
+                        const visible = mode === itemMode;
 
-                    <div className="mt-auto min-w-0">
-                      <span className="block text-[13px] font-black uppercase tracking-[0.08em] text-slate-500">
-                        {feature.category}
-                      </span>
-                      <div className="grid">
-                        {(["traditional", "success"] as ComparisonMode[]).map((itemMode) => {
-                          const item = feature[itemMode];
-                          const visible = mode === itemMode;
-
-                          return (
-                            <div
-                              key={itemMode}
-                              aria-hidden={!visible}
-                              className={`col-start-1 row-start-1 transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}
-                            >
-                              {item.highlight ? (
-                                <strong className="mt-1 block text-[29px] font-black leading-8 text-[#E32F54] [unicode-bidi:isolate]" dir={item.highlightDir ?? (isArabic ? "rtl" : "ltr")}>
-                                  {item.highlight}
-                                </strong>
-                              ) : null}
-                              <p className={`mt-1 font-black ${isTierA ? "text-[17px] leading-6" : "text-[19px] leading-7"} ${isSuccess ? "text-[#391B68]" : "text-slate-700"}`}>
-                                {item.statement}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
+                        return (
+                          <p
+                            key={itemMode}
+                            aria-hidden={!visible}
+                            className={`col-start-1 row-start-2 text-[18px] font-black leading-7 transition-[opacity,transform] duration-[260ms] motion-reduce:transform-none motion-reduce:transition-none ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"} ${isSuccess ? "text-[#391B68]" : "text-slate-700"}`}
+                          >
+                            {item.statement}
+                          </p>
+                        );
+                      })}
                     </div>
                   </article>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         </div>
