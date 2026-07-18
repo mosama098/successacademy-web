@@ -94,8 +94,8 @@ function LayerIcon({ icon, className = "h-6 w-6" }: { icon: LayerIcon | "support
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 3 4.5 6v5c0 4.7 2.8 8.2 7.5 10 4.7-1.8 7.5-5.3 7.5-10V6L12 3Z" /><path d="m8.5 12 2.2 2.2 4.8-5" /></svg>;
 }
 
-const arabicOffsets = ["", "-translate-x-[3px] md:-translate-x-1 lg:-translate-x-2", "-translate-x-[6px] md:-translate-x-2 lg:-translate-x-4", "-translate-x-[6px] md:-translate-x-2 lg:-translate-x-4", "-translate-x-[3px] md:-translate-x-1 lg:-translate-x-2", ""];
-const englishOffsets = ["", "translate-x-[3px] md:translate-x-1 lg:translate-x-2", "translate-x-[6px] md:translate-x-2 lg:translate-x-4", "translate-x-[6px] md:translate-x-2 lg:translate-x-4", "translate-x-[3px] md:translate-x-1 lg:translate-x-2", ""];
+const arabicOffsets = ["", "-translate-x-0.5 md:-translate-x-[3px] lg:-translate-x-1", "-translate-x-1 md:-translate-x-[6px] lg:-translate-x-2", "-translate-x-1 md:-translate-x-[6px] lg:-translate-x-2", "-translate-x-0.5 md:-translate-x-[3px] lg:-translate-x-1", ""];
+const englishOffsets = ["", "translate-x-0.5 md:translate-x-[3px] lg:translate-x-1", "translate-x-1 md:translate-x-[6px] lg:translate-x-2", "translate-x-1 md:translate-x-[6px] lg:translate-x-2", "translate-x-0.5 md:translate-x-[3px] lg:translate-x-1", ""];
 
 export function ProblemSection({ locale }: LandingSectionProps) {
   const content = stackContent[locale];
@@ -103,29 +103,29 @@ export function ProblemSection({ locale }: LandingSectionProps) {
   const offsets = isArabic ? arabicOffsets : englishOffsets;
 
   return (
-    <section id="why" className="relative overflow-hidden bg-[#F8F6FB] px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-[108px]" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="pointer-events-none absolute inset-y-16 start-[42%] hidden w-[520px] rounded-full bg-[#391B68]/[0.06] blur-[90px] lg:block" aria-hidden="true" />
-      <div className="relative mx-auto max-w-[1240px]">
-        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-20" dir="ltr">
-          <div className={`${isArabic ? "lg:order-2" : "lg:order-1"}`} dir={isArabic ? "rtl" : "ltr"}>
+    <section id="why" className="relative overflow-hidden bg-[#F8F6FB] px-5 py-16 sm:px-6 sm:py-[72px] lg:px-8 lg:py-20" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="pointer-events-none absolute inset-y-20 start-[48%] hidden w-[360px] rounded-full bg-[#391B68]/[0.04] blur-[70px] lg:block" aria-hidden="true" />
+      <div className="relative mx-auto max-w-[1200px]">
+        <div className="grid items-start gap-10 sm:gap-12 lg:grid-cols-[minmax(0,0.41fr)_minmax(0,0.59fr)] lg:gap-14" dir="ltr">
+          <div className={`${isArabic ? "lg:order-2" : "lg:order-1"} lg:pt-2`} dir={isArabic ? "rtl" : "ltr"}>
             <span className="inline-flex rounded-full border border-[#EC911F]/25 bg-[#EC911F]/[0.08] px-4 py-2 text-[14px] font-black text-[#EC911F] sm:text-[15px]">
               {content.badge}
             </span>
-            <h2 className="mt-5 max-w-[560px] text-[32px] font-black leading-[1.16] text-[#391B68] sm:text-[42px] lg:text-[52px] lg:leading-[1.1]">
+            <h2 className="mt-4 max-w-[520px] text-[32px] font-black leading-[1.16] text-[#391B68] sm:text-[40px] lg:text-[46px] lg:leading-[1.1]">
               <span className="block">{content.titleLead}</span>
               <span className="block"><span className="text-[#E32F54]">{content.titleHighlight}</span>{content.titleTail}</span>
             </h2>
-            <p className={`mt-5 max-w-[540px] text-[17px] font-bold text-slate-600 sm:text-[18px] ${isArabic ? "leading-[1.85]" : "leading-[1.65]"}`}>
+            <p className={`mt-5 max-w-[500px] text-[17px] font-bold text-slate-600 sm:text-[18px] ${isArabic ? "leading-[1.75]" : "leading-[1.62]"}`}>
               {content.description}
             </p>
-            <p className="mt-5 flex items-center gap-3 text-[15px] font-black text-[#391B68] sm:text-[16px]">
+            <p className="mt-4 flex items-center gap-3 text-[15px] font-black text-[#391B68] sm:text-[16px]">
               <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#EC911F]" aria-hidden="true" />
               {content.statement}
             </p>
 
-            <div className="mt-8 hidden lg:block">
-              <p className="mb-3 text-[15px] font-black text-[#391B68]">{content.ctaSupport}</p>
-              <CtaLink href={bookingHref} locale={locale} source="success_stack" className="h-[56px] rounded-2xl px-8 text-[17px]">
+            <div className="mt-6 hidden lg:block">
+              <p className="mb-3 text-[14px] font-black text-[#391B68]">{content.ctaSupport}</p>
+              <CtaLink href={bookingHref} locale={locale} source="success_stack" className="h-[54px] rounded-2xl px-7 text-[16px]">
                 {content.cta}
               </CtaLink>
             </div>
@@ -133,25 +133,26 @@ export function ProblemSection({ locale }: LandingSectionProps) {
 
           <div className={`${isArabic ? "lg:order-1" : "lg:order-2"}`} dir={isArabic ? "rtl" : "ltr"}>
             <div className="relative mx-auto max-w-[700px]">
-              <div className={`absolute inset-y-0 z-10 w-[40px] rounded-[22px] bg-[#391B68] shadow-[0_18px_45px_rgba(57,27,104,0.24)] md:w-[86px] lg:w-[100px] ${isArabic ? "right-0" : "left-0"}`}>
-                <div className="flex h-full flex-col items-center px-2 py-4 text-center text-white md:px-3 md:py-5">
+              <div className={`absolute inset-y-0 z-10 w-9 rounded-[20px] bg-[#391B68] shadow-[0_12px_30px_rgba(57,27,104,0.18)] md:w-[72px] lg:w-20 ${isArabic ? "right-0" : "left-0"}`}>
+                <div className="flex h-full flex-col items-center justify-center gap-5 px-1.5 py-3 text-center text-white md:px-2 md:py-4">
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/10 text-[#EC911F] md:h-10 md:w-10">
                     <LayerIcon icon="support" className="h-5 w-5 md:h-6 md:w-6" />
                   </span>
-                  <div className="my-auto hidden min-w-0 md:block">
+                  <div className="hidden min-w-0 md:block">
                     <strong className="block text-[15px] font-black leading-5 [unicode-bidi:isolate] lg:text-[17px]" dir="ltr">Success Manager</strong>
-                    <p className="mt-3 text-[12px] font-bold leading-5 text-white/75 lg:text-[13px]">{content.managerDescription}</p>
+                    <p className="mt-2 text-[11px] font-bold leading-4 text-white/75 lg:text-[12px]">{content.managerDescription}</p>
                   </div>
                   <span className="hidden text-[10px] font-black leading-4 text-[#EC911F] md:block lg:text-[11px]">{content.managerLabel}</span>
                 </div>
               </div>
 
-              <div className={`space-y-2.5 md:space-y-3 ${isArabic ? "pr-12 md:pr-[98px] lg:pr-[116px]" : "pl-12 md:pl-[98px] lg:pl-[116px]"}`}>
+              <div className={`space-y-2 ${isArabic ? "pr-11 md:pr-20 lg:pr-24" : "pl-11 md:pl-20 lg:pl-24"}`}>
                 {content.layers.map((layer, index) => (
-                  <div key={layer.category} className={`group relative ${offsets[index]}`}>
-                    <span className={`absolute top-1/2 z-0 h-px w-12 -translate-y-1/2 bg-[#391B68]/25 transition-colors duration-[240ms] group-hover:bg-[#EC911F] motion-reduce:transition-none md:w-[98px] lg:w-[116px] ${isArabic ? "right-[-48px] md:right-[-98px] lg:right-[-116px]" : "left-[-48px] md:left-[-98px] lg:left-[-116px]"}`} aria-hidden="true" />
-                    <span className={`absolute top-1/2 z-20 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-[#391B68] bg-[#EC911F] transition-transform duration-[240ms] group-hover:scale-125 motion-reduce:transform-none motion-reduce:transition-none ${isArabic ? "right-[-43px] md:right-[-93px] lg:right-[-111px]" : "left-[-43px] md:left-[-93px] lg:left-[-111px]"}`} aria-hidden="true" />
-                    <article className={`relative z-[1] flex min-h-[94px] items-center gap-3 rounded-[18px] border border-[#391B68]/10 px-3.5 py-3 shadow-[0_8px_24px_rgba(57,27,104,0.07)] transition-[transform,border-color,box-shadow] duration-[240ms] group-hover:border-[#391B68]/20 group-hover:shadow-[0_12px_28px_rgba(57,27,104,0.1)] motion-reduce:transform-none motion-reduce:transition-none md:min-h-[82px] md:px-4 md:py-3 ${isArabic ? "lg:group-hover:-translate-x-1" : "lg:group-hover:translate-x-1"} ${index % 2 === 0 ? "bg-white" : "bg-[#f3eff8]"} ${isArabic ? "" : "flex-row-reverse"}`}>
+                  <div key={layer.category} className="group relative">
+                    <span className={`absolute top-1/2 z-0 h-px w-[26px] -translate-y-1/2 bg-[#391B68]/15 transition-colors duration-[220ms] group-hover:bg-[#EC911F]/65 motion-reduce:transition-none md:w-11 lg:w-14 ${isArabic ? "right-[-26px] md:right-[-44px] lg:right-[-56px]" : "left-[-26px] md:left-[-44px] lg:left-[-56px]"}`} aria-hidden="true" />
+                    <span className={`absolute top-1/2 z-20 h-2 w-2 -translate-y-1/2 rounded-full border border-[#391B68]/50 bg-[#EC911F]/80 transition-colors duration-[220ms] group-hover:bg-[#EC911F] motion-reduce:transition-none ${isArabic ? "right-[-30px] md:right-[-48px] lg:right-[-60px]" : "left-[-30px] md:left-[-48px] lg:left-[-60px]"}`} aria-hidden="true" />
+                    <div className={offsets[index]}>
+                    <article className={`relative z-[1] flex min-h-[90px] items-center gap-3 rounded-[16px] border border-[#391B68]/[0.08] px-3.5 py-2.5 shadow-[0_5px_16px_rgba(57,27,104,0.045)] transition-[transform,border-color,box-shadow] duration-[220ms] group-hover:border-[#391B68]/15 group-hover:shadow-[0_7px_18px_rgba(57,27,104,0.06)] motion-reduce:transform-none motion-reduce:transition-none md:min-h-[72px] md:px-3.5 md:py-2 lg:min-h-[68px] ${isArabic ? "lg:group-hover:-translate-x-0.5" : "lg:group-hover:translate-x-0.5"} ${index % 2 === 0 ? "bg-white" : "bg-[#f5f2f8]"} ${isArabic ? "" : "flex-row-reverse"}`}>
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#391B68]/[0.07] text-[#391B68]">
                         <LayerIcon icon={layer.icon} />
                       </span>
@@ -165,6 +166,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
                       </div>
                       <span className="shrink-0 text-[13px] font-black text-[#EC911F] md:text-[14px]" dir="ltr">{String(index + 1).padStart(2, "0")}</span>
                     </article>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -182,7 +184,7 @@ export function ProblemSection({ locale }: LandingSectionProps) {
           </div>
         </div>
 
-        <div className="mt-8 lg:hidden">
+        <div className="mt-7 lg:hidden">
           <p className="mb-3 text-[15px] font-black text-[#391B68]">{content.ctaSupport}</p>
           <CtaLink href={bookingHref} locale={locale} source="success_stack" className="h-[56px] w-full rounded-2xl px-6 text-[17px] sm:w-auto sm:px-8">
             {content.cta}
