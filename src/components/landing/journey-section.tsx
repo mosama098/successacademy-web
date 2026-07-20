@@ -197,7 +197,7 @@ export function JourneySection({ locale }: LandingSectionProps) {
         </header>
 
         <div className="mt-6 overflow-hidden rounded-[22px] border border-white/10 bg-[#391B68] shadow-[0_18px_48px_rgba(57,27,104,0.18)] lg:rounded-[26px]">
-          <div className="grid min-h-[56px] grid-cols-3 gap-1 border-b border-white/10 bg-white/[0.045] p-1.5 sm:min-h-[60px] sm:p-2" role="tablist" aria-label={content.badge}>
+          <div className="grid min-h-[58px] grid-cols-3 gap-1.5 border-b border-white/15 bg-[#2f1558] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.14)] sm:min-h-[62px] sm:gap-2 sm:p-2" role="tablist" aria-label={content.badge}>
             {content.goals.map((goal, index) => {
               const selected = goal.id === activeId;
               return (
@@ -212,9 +212,11 @@ export function JourneySection({ locale }: LandingSectionProps) {
                   tabIndex={selected ? 0 : -1}
                   onClick={() => setActiveId(goal.id)}
                   onKeyDown={(event) => handleTabKeyDown(event, index)}
-                  className={`min-h-[44px] rounded-[14px] px-1.5 py-1.5 text-[11px] font-black leading-4 transition-[background-color,color] duration-[220ms] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none sm:px-3 sm:text-[13px] lg:text-[15px] ${selected ? "bg-[#EC911F] text-white" : "text-white/75 hover:bg-white/[0.07] hover:text-white"}`}
+                  style={{ fontSize: "clamp(11px, 3vw, 15px)", lineHeight: 1.25 }}
+                  className={`relative min-h-[46px] cursor-pointer touch-manipulation rounded-[14px] border px-2 py-1.5 font-black transition-[background-color,border-color,color,box-shadow,transform] duration-[220ms] focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd39b] active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none sm:px-3 sm:py-2 ${selected ? "border-[#f7b45e] bg-[#EC911F] text-white shadow-[0_5px_16px_rgba(236,145,31,0.28),inset_0_1px_0_rgba(255,255,255,0.24)]" : "border-white/10 bg-white/[0.045] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.11] hover:text-white hover:shadow-[0_5px_14px_rgba(15,5,30,0.2)] active:bg-white/[0.14]"}`}
                 >
-                  {goal.tab}
+                  <span className="relative z-[1]">{goal.tab}</span>
+                  {selected ? <span className="absolute inset-x-[28%] bottom-1 h-0.5 rounded-full bg-white/85" aria-hidden="true" /> : null}
                 </button>
               );
             })}
