@@ -24,6 +24,7 @@ type TestimonialsContent = {
   videoLabel: string;
   soundOn: string;
   soundOff: string;
+  ctaHeadline: string;
   ctaSupport: string;
   cta: string;
   privacy: string;
@@ -55,7 +56,9 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     videoLabel: "تجارب طلاب حقيقية",
     soundOn: "تشغيل الصوت",
     soundOff: "كتم الصوت",
-    ctaSupport: "جاهز تبدأ قصتك أنت؟",
+    ctaHeadline: "جاهز تبدأ قصتك أنت؟",
+    ctaSupport:
+      "ابدأ من مستواك الحقيقي، وإحنا نساعدك تحدد الطريق المناسب لهدفك.",
     cta: "ابدأ بتقييم مستواك مجانًا",
     privacy:
       "تم اختصار بعض الرسائل مع الحفاظ على معناها، وإخفاء البيانات الشخصية حفاظًا على خصوصية الطلاب.",
@@ -104,6 +107,27 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
           { text: "Online Programme", ltr: true },
         ],
       },
+      {
+        category: [{ text: "تجربة أونلاين" }],
+        quote: [
+          {
+            text: "دي كانت أول مرة أخد كورس أونلاين، وكانت من أحلى التجارب… وكانوا معانا في كل خطوة.",
+          },
+        ],
+        source: [
+          { text: "طالبة – " },
+          { text: "Online Programme", ltr: true },
+        ],
+      },
+      {
+        category: [{ text: "تعلم عملي" }],
+        quote: [
+          {
+            text: "الشرح كان بسيط، والأنشطة كانت ممتعة وساعدتني أفتكر الكلمات وأستخدمها بسهولة.",
+          },
+        ],
+        source: [{ text: "طالبة في " }, { text: "Success Academy", ltr: true }],
+      },
     ],
   },
   en: {
@@ -115,7 +139,9 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     videoLabel: "Real Student Stories",
     soundOn: "Turn Sound On",
     soundOff: "Mute",
-    ctaSupport: "Ready to start your own story?",
+    ctaHeadline: "Ready to Start Your Own Story?",
+    ctaSupport:
+      "Start from your real level, and we’ll help you identify the right path for your goal.",
     cta: "Start Your Free Assessment",
     privacy:
       "Some messages have been shortened without changing their meaning, and personal details have been hidden to protect student privacy.",
@@ -155,6 +181,24 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
           },
         ],
         source: [{ text: "Online Programme Student" }],
+      },
+      {
+        category: [{ text: "Online Experience" }],
+        quote: [
+          {
+            text: "This was my first online course, and it became one of my best experiences. The team was with us at every step.",
+          },
+        ],
+        source: [{ text: "Online Programme Student" }],
+      },
+      {
+        category: [{ text: "Practical Learning" }],
+        quote: [
+          {
+            text: "The explanations were clear, and the activities helped me remember and use the language more easily.",
+          },
+        ],
+        source: [{ text: "Success Academy Student" }],
       },
     ],
   },
@@ -475,58 +519,58 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
             </p>
           </article>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {content.supporting.slice(0, 2).map((testimonial, index) => (
+          <div className="mt-3 grid gap-2.5 lg:gap-0">
+            {content.supporting.map((testimonial, index) => (
               <article
                 key={index}
-                className="rounded-[19px] border border-white/12 bg-[#F8F6FB] p-4 text-[#391B68] shadow-[0_8px_22px_rgba(10,3,22,0.15)] transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/35 motion-reduce:transform-none motion-reduce:transition-none sm:px-4"
+                className={`relative rounded-[18px] border border-white/16 p-3.5 text-[#391B68] shadow-[0_8px_20px_rgba(10,3,22,0.14)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/35 hover:shadow-[0_12px_26px_rgba(10,3,22,0.2)] motion-reduce:transform-none motion-reduce:transition-none sm:p-4 lg:grid lg:w-[calc(100%-28px)] lg:grid-cols-[110px_minmax(0,1fr)_150px] lg:items-center lg:gap-4 lg:px-4 lg:py-3 lg:ms-0 lg:me-auto ${
+                  index > 0 ? "lg:-mt-3.5" : ""
+                } ${
+                  index % 2 === 1
+                    ? isArabic
+                      ? "lg:-translate-x-6"
+                      : "lg:translate-x-6"
+                    : ""
+                } ${
+                  index % 3 === 0
+                    ? "bg-[#F8F6FB]"
+                    : index % 3 === 1
+                      ? "bg-white"
+                      : "bg-[#eee9f5]"
+                }`}
+                style={{ zIndex: content.supporting.length - index }}
               >
                 <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
                   <RichText parts={testimonial.category} />
                 </span>
-                <blockquote className="mt-1.5 text-[16px] font-black leading-[1.5]">
+                <blockquote className="mt-1 text-[15.5px] font-black leading-[1.52] sm:text-[16px] lg:mt-0 lg:leading-[1.45]">
                   <RichText parts={testimonial.quote} />
                 </blockquote>
-                <p className="mt-2 text-[12px] font-bold text-[#716878] sm:text-[13px]">
+                <p className="mt-1.5 text-[11.5px] font-bold text-[#716878] sm:text-[12px] lg:mt-0">
                   <RichText parts={testimonial.source} />
                 </p>
               </article>
             ))}
           </div>
 
-          <article className="relative mt-2.5 overflow-hidden rounded-[19px] border border-white/12 bg-[#eee9f5] px-5 py-3 text-[#391B68] shadow-[0_8px_22px_rgba(10,3,22,0.14)] sm:px-5 sm:py-3">
-            <span
-              className="absolute inset-y-0 start-0 w-1 bg-[#EC911F]"
-              aria-hidden="true"
-            />
-            <div className="sm:flex sm:items-center sm:justify-between sm:gap-8">
-              <div className="min-w-0 flex-1">
-                <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
-                  <RichText parts={content.supporting[2].category} />
-                </span>
-                <blockquote className="mt-1 text-[16px] font-black leading-[1.5] sm:text-[17px]">
-                  <RichText parts={content.supporting[2].quote} />
-                </blockquote>
-              </div>
-              <p className="mt-2 shrink-0 text-[12px] font-bold text-[#716878] sm:mt-0 sm:text-[13px]">
-                <RichText parts={content.supporting[2].source} />
-              </p>
-            </div>
-          </article>
-
           <p className="mt-3 max-w-[700px] text-[12px] font-bold leading-[1.55] text-white/68 sm:text-[13px]">
             {content.privacy}
           </p>
 
-          <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-start sm:gap-4">
-            <p className="text-[15px] font-black text-white sm:text-[16px]">
-              {content.ctaSupport}
-            </p>
+          <div className="mt-3 rounded-[22px] border border-[#EC911F]/25 bg-[#F8F6FB] p-4 text-[#391B68] shadow-[0_14px_34px_rgba(10,3,22,0.2)] sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div className="min-w-0">
+              <h3 className="text-[26px] font-black leading-[1.2] sm:text-[28px]">
+                {content.ctaHeadline}
+              </h3>
+              <p className="mt-2 max-w-[520px] text-[14.5px] font-bold leading-[1.55] text-[#6d6578] sm:text-[15px]">
+                {content.ctaSupport}
+              </p>
+            </div>
             <CtaLink
               href={bookingHref}
               locale={locale}
               source="student_testimonials"
-              className="h-[52px] w-full shrink-0 rounded-[16px] px-7 text-[16px] shadow-[0_10px_24px_rgba(236,145,31,0.28)] sm:w-auto"
+              className="mt-4 h-[56px] w-full shrink-0 rounded-[17px] px-7 text-[16px] shadow-[0_12px_28px_rgba(236,145,31,0.3)] sm:mt-0 sm:w-auto"
             >
               {content.cta}
             </CtaLink>
