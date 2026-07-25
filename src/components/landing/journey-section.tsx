@@ -45,11 +45,11 @@ const sectionContent: Record<"ar" | "en", SectionContent> = {
         id: "work",
         tab: "الشغل",
         eyebrow: "إنجليزي لشغلك",
-        heading: [{ text: "من الإنترفيو للـ " }, { text: "Meeting", ltr: true }, { text: "…\nاتكلم بثقة في كل موقف" }],
+        heading: [{ text: "من مقابلة العمل لاجتماعات الشغل…\nاتكلم بثقة في كل موقف" }],
         situations: [
           [{ text: "جاوب في مقابلة العمل من غير إجابات محفوظة." }],
-          [{ text: "شارك في الـ " }, { text: "Meeting", ltr: true }, { text: " ووضح رأيك بثقة." }],
-          [{ text: "اكتب " }, { text: "Emails", ltr: true }, { text: " ورسائل شغل واضحة واحترافية." }],
+          [{ text: "شارك في اجتماعات الشغل ووضّح رأيك بثقة." }],
+          [{ text: "اكتب رسائل البريد الإلكتروني ورسائل الشغل بشكل واضح واحترافي." }],
         ],
         closing: [{ text: "خطتك بتتبني على طبيعة شغلك ومستواك الحالي." }],
         icon: "work",
@@ -58,9 +58,9 @@ const sectionContent: Record<"ar" | "en", SectionContent> = {
         id: "university",
         tab: "الجامعة",
         eyebrow: "إنجليزي لدراستك ومستقبلك",
-        heading: [{ text: "من الـ " }, { text: "Presentation", ltr: true }, { text: " لأول فرصة شغل…\nجهّز نفسك من دلوقتي" }],
+        heading: [{ text: "من العرض التقديمي لأول فرصة شغل…\nجهّز نفسك من دلوقتي" }],
         situations: [
-          [{ text: "قدّم " }, { text: "Presentation", ltr: true }, { text: " بثقة ومن غير توتر." }],
+          [{ text: "قدّم عرضك التقديمي بثقة ومن غير توتر." }],
           [{ text: "افهم المراجع والمحتوى الدراسي بالإنجليزي." }],
           [{ text: "استعد للمنح، التدريب ومقابلات العمل." }],
         ],
@@ -181,7 +181,7 @@ export function JourneySection({ locale }: LandingSectionProps) {
   };
 
   return (
-    <section id="process" className="relative overflow-hidden bg-[#F8F6FB] px-5 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-[72px]" dir={isArabic ? "rtl" : "ltr"}>
+    <section id="process" className="relative overflow-hidden bg-[#F8F6FB] px-5 pb-[calc(104px+env(safe-area-inset-bottom))] pt-12 sm:px-6 sm:pb-[calc(104px+env(safe-area-inset-bottom))] sm:pt-16 lg:px-8 lg:py-[72px]" dir={isArabic ? "rtl" : "ltr"}>
       <div className="pointer-events-none absolute left-1/2 top-[62%] h-44 w-[460px] -translate-x-1/2 rounded-full bg-[#EC911F]/[0.045] blur-[70px]" aria-hidden="true" />
       <div className="relative mx-auto max-w-[1140px]">
         <header className="mx-auto max-w-[860px] text-center">
@@ -216,15 +216,15 @@ export function JourneySection({ locale }: LandingSectionProps) {
                   className={`relative min-h-[46px] cursor-pointer touch-manipulation rounded-[14px] border px-2 py-1.5 font-black transition-[background-color,border-color,color,box-shadow,transform] duration-[220ms] focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd39b] active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none sm:px-3 sm:py-2 ${selected ? "border-[#f7b45e] bg-[#EC911F] text-white shadow-[0_5px_16px_rgba(236,145,31,0.28),inset_0_1px_0_rgba(255,255,255,0.24)]" : "border-white/10 bg-white/[0.045] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:-translate-y-px hover:border-white/25 hover:bg-white/[0.11] hover:text-white hover:shadow-[0_5px_14px_rgba(15,5,30,0.2)] active:bg-white/[0.14]"}`}
                 >
                   <span className="relative z-[1]">{goal.tab}</span>
-                  {selected ? <span className="absolute inset-x-[28%] bottom-1 h-0.5 rounded-full bg-white/85" aria-hidden="true" /> : null}
+                  {selected ? <span className="absolute inset-x-[28%] bottom-1.5 h-0.5 rounded-full bg-white/85 lg:bottom-1" aria-hidden="true" /> : null}
                 </button>
               );
             })}
           </div>
 
           <div id={`goal-panel-${locale}`} role="tabpanel" aria-labelledby={`goal-tab-${activeGoal.id}-${locale}`} className="p-5 sm:p-7 lg:p-[18px]">
-            <div key={activeGoal.id} className="goal-panel-enter grid items-center gap-7 lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:gap-8" dir="ltr">
-              <div className={`${isArabic ? "lg:order-2" : "lg:order-1"}`} dir={isArabic ? "rtl" : "ltr"}>
+            <div key={activeGoal.id} className="goal-panel-enter grid items-center lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:gap-x-8 lg:gap-y-0" dir="ltr">
+              <div className={`${isArabic ? "lg:col-start-2" : "lg:col-start-1"} lg:row-start-1 lg:self-end`} dir={isArabic ? "rtl" : "ltr"}>
                 <div className="flex items-center gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-[#EC911F]/15 text-[#EC911F]">
                     <GoalIcon icon={activeGoal.icon} />
@@ -238,23 +238,24 @@ export function JourneySection({ locale }: LandingSectionProps) {
                   <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#EC911F]" aria-hidden="true" />
                   <span><RichText parts={activeGoal.closing} /></span>
                 </p>
-                <div className="mt-4 lg:flex lg:items-center lg:gap-4">
-                  <p className="mb-2 text-[13px] font-bold leading-5 text-white/65 sm:text-[14px] lg:mb-0 lg:max-w-[230px]">{content.ctaSupport}</p>
-                  <CtaLink href={bookingHref} locale={locale} source={`goal_${activeGoal.id}`} className="h-[52px] w-full shrink-0 rounded-[15px] px-6 text-[15px] shadow-[0_8px_20px_rgba(236,145,31,0.18)] sm:w-auto sm:text-[16px]">
-                    {content.cta}
-                  </CtaLink>
-                </div>
               </div>
 
-              <div className={`${isArabic ? "lg:order-1" : "lg:order-2"}`} dir={isArabic ? "rtl" : "ltr"}>
+              <div className={`mt-2 ${isArabic ? "lg:col-start-1" : "lg:col-start-2"} lg:row-span-2 lg:row-start-1 lg:mt-0 lg:self-center`} dir={isArabic ? "rtl" : "ltr"}>
                 {activeGoal.situations.map((situation, index) => (
-                  <div key={index} className={`flex min-h-[60px] items-center gap-3 py-2.5 sm:min-h-[64px] ${index > 0 ? "border-t border-white/10" : ""}`}>
+                  <div key={index} className={`flex min-h-[66px] items-center gap-3 py-3.5 sm:min-h-[68px] sm:py-4 lg:min-h-[64px] lg:py-2.5 ${index > 0 ? "border-t border-white/10" : ""}`}>
                     <span className="shrink-0 text-[13px] font-black text-[#EC911F] [unicode-bidi:isolate] sm:text-[14px]" dir="ltr">{String(index + 1).padStart(2, "0")}</span>
-                    <p className="text-[15px] font-bold leading-6 text-white sm:text-[17px] lg:text-[18px]">
+                    <p className="text-[15px] font-semibold leading-6 text-white sm:text-[17px] lg:text-[18px] lg:font-bold">
                       <RichText parts={situation} />
                     </p>
                   </div>
                 ))}
+              </div>
+
+              <div className={`mt-4 ${isArabic ? "lg:col-start-2" : "lg:col-start-1"} lg:row-start-2 lg:flex lg:items-center lg:gap-4 lg:self-start`} dir={isArabic ? "rtl" : "ltr"}>
+                <p className="mb-3 text-[13px] font-bold leading-5 text-white/65 sm:text-[14px] lg:mb-0 lg:max-w-[230px]">{content.ctaSupport}</p>
+                <CtaLink href={bookingHref} locale={locale} source={`goal_${activeGoal.id}`} className="h-[52px] w-full shrink-0 rounded-[15px] px-6 text-[15px] shadow-[0_8px_20px_rgba(236,145,31,0.18)] sm:w-auto sm:text-[16px]">
+                  {content.cta}
+                </CtaLink>
               </div>
             </div>
           </div>
