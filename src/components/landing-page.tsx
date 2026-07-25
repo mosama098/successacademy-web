@@ -10,6 +10,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { SectionShell } from "@/components/landing/section-shell";
 import { SuccessManagerSection } from "@/components/landing/success-manager-section";
+import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { VideoPreviewSection } from "@/components/landing/video-preview-section";
 import { PageTracker } from "@/components/page-tracker";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
@@ -36,6 +37,7 @@ export function LandingPage({ locale }: LandingPageProps) {
       <VideoPreviewSection locale={locale} copy={copy} />
       <ProblemSection locale={locale} copy={copy} />
       <JourneySection locale={locale} copy={copy} />
+      <TestimonialsSection locale={locale} copy={copy} />
       <ExperienceVideosSection locale={locale} copy={copy} />
       <AssessmentCtaSection locale={locale} copy={copy} />
       <DeliverySection locale={locale} copy={copy} />
@@ -50,4 +52,3 @@ export function LandingPage({ locale }: LandingPageProps) {
     </main>
   );
 }
-
