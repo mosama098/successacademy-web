@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
+import { createElement, useEffect, useRef, useState } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
 import { bookingHref, type LandingSectionProps } from "./types";
 
@@ -23,7 +24,6 @@ type TestimonialsContent = {
   videoLabel: string;
   soundOn: string;
   soundOff: string;
-  loading: string;
   ctaSupport: string;
   cta: string;
   privacy: string;
@@ -31,7 +31,19 @@ type TestimonialsContent = {
   supporting: Testimonial[];
 };
 
-const videoPath = "/videos/student-stories.mp4";
+type WistiaPlayerElement = HTMLElement & {
+  muted: boolean;
+  pause: () => void;
+  play: () => Promise<void> | void;
+};
+
+type WistiaMuteChangeEvent = CustomEvent<{
+  isMuted: boolean;
+}>;
+
+const wistiaMediaId = "doak9uwru1";
+const wistiaSwatch =
+  "https://fast.wistia.com/embed/medias/doak9uwru1/swatch";
 
 const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
   ar: {
@@ -43,7 +55,6 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     videoLabel: "تجارب طلاب حقيقية",
     soundOn: "تشغيل الصوت",
     soundOff: "كتم الصوت",
-    loading: "جاري تجهيز تجارب الطلاب",
     ctaSupport: "جاهز تبدأ قصتك أنت؟",
     cta: "ابدأ بتقييم مستواك مجانًا",
     privacy:
@@ -104,7 +115,6 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     videoLabel: "Real Student Stories",
     soundOn: "Turn Sound On",
     soundOff: "Mute",
-    loading: "Loading student stories",
     ctaSupport: "Ready to start your own story?",
     cta: "Start Your Free Assessment",
     privacy:
@@ -216,49 +226,110 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
 export function TestimonialsSection({ locale }: LandingSectionProps) {
   const content = testimonialsContent[locale];
   const isArabic = locale === "ar";
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<WistiaPlayerElement | null>(null);
   const videoFrameRef = useRef<HTMLDivElement>(null);
+  const isVisibleRef = useRef(false);
+  const isPlayerReadyRef = useRef(false);
+  const isMutedRef = useRef(true);
   const [isMuted, setIsMuted] = useState(true);
-  const [isReady, setIsReady] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   useEffect(() => {
     const frame = videoFrameRef.current;
-    const video = videoRef.current;
+    const player = playerRef.current;
 
-    if (!frame || !video) return;
+    if (!frame || !player) return;
 
-    video.muted = true;
+    const safelyPlay = () => {
+      if (!isPlayerReadyRef.current || !isVisibleRef.current) return;
+
+      player.muted = isMutedRef.current;
+
+      try {
+        const result = player.play();
+        if (result instanceof Promise) {
+          void result.catch(() => undefined);
+        }
+      } catch {
+        // The player can reject autoplay while its media pipeline is settling.
+      }
+    };
+
+    const safelyPause = () => {
+      if (!isPlayerReadyRef.current) return;
+
+      try {
+        player.pause();
+      } catch {
+        // Ignore a pause request made while the player is being initialized.
+      }
+    };
+
+    const handleApiReady = () => {
+      isPlayerReadyRef.current = true;
+      isMutedRef.current = true;
+      player.muted = true;
+      setIsMuted(true);
+      setIsPlayerReady(true);
+      safelyPlay();
+    };
+
+    const handleMuteChange = (event: Event) => {
+      const { isMuted: nextMuted } =
+        (event as WistiaMuteChangeEvent).detail ?? {};
+
+      if (typeof nextMuted !== "boolean") return;
+
+      isMutedRef.current = nextMuted;
+      setIsMuted(nextMuted);
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.45) {
-          void video.play().catch(() => undefined);
+        isVisibleRef.current =
+          entry.isIntersecting && entry.intersectionRatio >= 0.425;
+
+        if (isVisibleRef.current) {
+          safelyPlay();
         } else {
-          video.pause();
+          safelyPause();
         }
       },
-      { threshold: [0, 0.45, 0.75] },
+      { threshold: [0, 0.425, 0.75] },
     );
 
+    player.addEventListener("api-ready", handleApiReady);
+    player.addEventListener("mute-change", handleMuteChange);
     observer.observe(frame);
 
     return () => {
       observer.disconnect();
-      video.pause();
+      safelyPause();
+      player.removeEventListener("api-ready", handleApiReady);
+      player.removeEventListener("mute-change", handleMuteChange);
+      isVisibleRef.current = false;
+      isPlayerReadyRef.current = false;
     };
   }, []);
 
   const toggleSound = () => {
-    const video = videoRef.current;
-    if (!video) return;
+    const player = playerRef.current;
+    if (!player || !isPlayerReadyRef.current) return;
 
-    const nextMuted = !video.muted;
-    video.muted = nextMuted;
+    const nextMuted = !player.muted;
+    player.muted = nextMuted;
+    isMutedRef.current = nextMuted;
     setIsMuted(nextMuted);
 
-    if (!nextMuted && video.paused) {
-      void video.play().catch(() => undefined);
+    if (isVisibleRef.current) {
+      try {
+        const result = player.play();
+        if (result instanceof Promise) {
+          void result.catch(() => undefined);
+        }
+      } catch {
+        // The sound state remains valid even if playback is momentarily blocked.
+      }
     }
   };
 
@@ -268,6 +339,18 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
       className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-16 text-white sm:px-6 md:py-20 lg:px-8 lg:py-[84px]"
       dir={isArabic ? "rtl" : "ltr"}
     >
+      <Script
+        id="wistia-aurora-player"
+        src="https://fast.wistia.com/player.js"
+        strategy="afterInteractive"
+      />
+      <Script
+        id={`wistia-media-${wistiaMediaId}`}
+        src={`https://fast.wistia.com/embed/${wistiaMediaId}.js`}
+        strategy="afterInteractive"
+        type="module"
+      />
+
       <div
         className="pointer-events-none absolute start-[8%] top-[28%] h-52 w-52 rounded-full bg-[#EC911F]/[0.08] blur-[72px]"
         aria-hidden="true"
@@ -307,77 +390,58 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
           <div
             ref={videoFrameRef}
             className="relative aspect-[9/16] overflow-hidden rounded-[28px] border border-[#EC911F]/30 bg-[#24103f] shadow-[0_26px_65px_rgba(10,3,22,0.38)]"
+            style={{
+              backgroundImage: `url("${wistiaSwatch}")`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "contain",
+            }}
           >
             <div
               className="pointer-events-none absolute -inset-8 -z-10 rounded-full bg-[#EC911F]/10 blur-3xl"
               aria-hidden="true"
             />
 
-            {!isReady ? (
-              <div className="absolute inset-0 z-10 grid place-items-center bg-[#2c1550] px-6 text-center">
-                <div>
-                  <span className="mx-auto grid h-12 w-12 place-items-center rounded-[14px] border border-[#EC911F]/35 bg-[#EC911F]/12 text-sm font-black text-[#EC911F]">
-                    SA
-                  </span>
-                  <p className="mt-4 text-[16px] font-black text-white">
-                    Success Academy
-                  </p>
-                  <p className="mt-1 text-[13px] font-bold text-white/60">
-                    {content.loading}
-                  </p>
-                  <span className="mx-auto mt-5 block h-1 w-16 overflow-hidden rounded-full bg-white/12">
-                    <span className="block h-full w-1/2 animate-pulse rounded-full bg-[#EC911F] motion-reduce:animate-none" />
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {videoFailed ? (
-              <div className="absolute inset-0 z-20 grid place-items-center bg-[#2c1550] px-8 text-center">
-                <div>
-                  <span className="text-[18px] font-black text-white">
-                    Success Academy
-                  </span>
-                  <p className="mt-2 text-[14px] font-bold leading-6 text-white/65">
-                    {content.videoLabel}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <video
-                ref={videoRef}
-                src={videoPath}
-                className="h-full w-full bg-[#24103f] object-contain"
-                preload="metadata"
-                muted
-                playsInline
-                loop
-                controls={false}
-                onLoadedData={() => setIsReady(true)}
-                onCanPlay={() => setIsReady(true)}
-                onError={() => {
-                  setVideoFailed(true);
-                  setIsReady(true);
-                }}
-              />
-            )}
+            {createElement("wistia-player", {
+              ref: (node: WistiaPlayerElement | null) => {
+                playerRef.current = node;
+              },
+              "media-id": wistiaMediaId,
+              aspect: "0.5625",
+              muted: true,
+              preload: "metadata",
+              "fit-strategy": "contain",
+              "end-video-behavior": "loop",
+              "player-color": "#EC911F",
+              "big-play-button": "false",
+              "controls-visible-on-load": "false",
+              "fullscreen-control": "true",
+              "play-bar-control": "true",
+              "play-pause-control": "true",
+              "volume-control": "false",
+              "rounded-player": "28",
+              className: "relative z-10 block h-full w-full",
+              style: {
+                height: "100%",
+                width: "100%",
+              },
+            })}
 
             <span className="pointer-events-none absolute inset-x-4 top-4 z-30 inline-flex w-fit rounded-full border border-white/15 bg-[#24103f]/80 px-3 py-2 text-[11px] font-black text-white shadow-sm backdrop-blur sm:text-[12px]">
               {content.videoLabel}
             </span>
 
-            {!videoFailed ? (
-              <button
-                type="button"
-                onClick={toggleSound}
-                aria-label={isMuted ? content.soundOn : content.soundOff}
-                aria-pressed={!isMuted}
-                className="absolute bottom-4 end-4 z-30 inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-white/18 bg-[#24103f]/90 px-3.5 py-2.5 text-[12px] font-black text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur transition-[background-color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/65 hover:bg-[#391B68] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none"
-              >
-                <SpeakerIcon muted={isMuted} />
-                <span>{isMuted ? content.soundOn : content.soundOff}</span>
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={toggleSound}
+              disabled={!isPlayerReady}
+              aria-label={isMuted ? content.soundOn : content.soundOff}
+              aria-pressed={!isMuted}
+              className="absolute bottom-4 end-4 z-30 inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-white/18 bg-[#24103f]/90 px-3.5 py-2.5 text-[12px] font-black text-white shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur transition-[background-color,border-color,opacity,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/65 hover:bg-[#391B68] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] active:translate-y-0 disabled:cursor-wait disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none"
+            >
+              <SpeakerIcon muted={isMuted} />
+              <span>{isMuted ? content.soundOn : content.soundOff}</span>
+            </button>
           </div>
         </div>
 
