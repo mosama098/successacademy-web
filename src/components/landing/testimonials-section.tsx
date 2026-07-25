@@ -336,7 +336,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
   return (
     <section
       id="student-stories"
-      className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-16 text-white sm:px-6 md:py-20 lg:px-8 lg:py-[84px]"
+      className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-16 text-white sm:px-6 md:py-20 lg:px-8 lg:py-24"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Script
@@ -357,21 +357,23 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
       />
 
       <div
-        className={`relative mx-auto grid max-w-[1220px] items-start gap-x-12 gap-y-6 lg:gap-x-16 ${
+        className={`relative mx-auto grid max-w-[1280px] items-start gap-x-12 gap-y-6 lg:gap-x-16 ${
           isArabic
-            ? "lg:grid-cols-[minmax(340px,0.45fr)_minmax(0,0.55fr)]"
-            : "lg:grid-cols-[minmax(0,0.55fr)_minmax(340px,0.45fr)]"
+            ? "lg:grid-cols-[minmax(390px,0.4fr)_minmax(0,0.6fr)]"
+            : "lg:grid-cols-[minmax(0,0.6fr)_minmax(390px,0.4fr)]"
         }`}
+        dir="ltr"
       >
         <header
-          className={`max-w-[700px] ${
+          className={`max-w-[700px] lg:row-start-1 ${
             isArabic ? "lg:col-start-2" : "lg:col-start-1"
-          } lg:row-start-1`}
+          }`}
+          dir={isArabic ? "rtl" : "ltr"}
         >
           <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#EC911F]/10 px-4 py-2 text-[13px] font-black text-[#f2b35f] sm:text-[14px]">
             {content.badge}
           </span>
-          <h2 className="mt-4 text-[31px] font-black leading-[1.23] sm:text-[39px] lg:text-[46px] lg:leading-[1.16]">
+          <h2 className="mt-4 text-[31px] font-black leading-[1.23] sm:text-[39px] lg:text-[52px] lg:leading-[1.17]">
             <span className="block text-white">{content.headingLead}</span>
             <span className="mt-1 block text-[#EC911F]">
               {content.headingHighlight}
@@ -383,9 +385,10 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
         </header>
 
         <div
-          className={`mx-auto mt-1 w-full max-w-[350px] lg:row-span-2 lg:row-start-1 lg:mt-0 lg:max-w-[380px] lg:self-center ${
+          className={`mx-auto mt-1 w-full max-w-[350px] lg:row-span-2 lg:row-start-1 lg:mt-0 lg:max-w-[420px] lg:self-start ${
             isArabic ? "lg:col-start-1" : "lg:col-start-2"
           }`}
+          dir={isArabic ? "rtl" : "ltr"}
         >
           <div
             ref={videoFrameRef}
@@ -447,8 +450,9 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
 
         <div
           className={`${isArabic ? "lg:col-start-2" : "lg:col-start-1"} lg:row-start-2`}
+          dir={isArabic ? "rtl" : "ltr"}
         >
-          <article className="relative overflow-hidden rounded-[24px] border border-[#EC911F]/25 bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_16px_38px_rgba(10,3,22,0.2)] sm:px-6 sm:py-5">
+          <article className="relative overflow-hidden rounded-[26px] border border-[#EC911F]/25 bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_20px_48px_rgba(10,3,22,0.24)] sm:p-7 lg:px-8 lg:py-7">
             <span
               className="absolute inset-y-0 start-0 w-1.5 bg-[#EC911F]"
               aria-hidden="true"
@@ -461,53 +465,66 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                 <QuoteIcon large />
               </span>
             </div>
-            <blockquote className="mt-2.5 max-w-[650px] text-[20px] font-black leading-[1.58] sm:text-[22px] lg:text-[23px]">
+            <blockquote className="mt-3 max-w-[680px] text-[20px] font-black leading-[1.58] sm:text-[22px] lg:text-[25px]">
               <RichText parts={content.featured.quote} />
             </blockquote>
-            <p className="mt-3 text-[13px] font-bold text-[#6d6578] sm:text-[14px]">
+            <p className="mt-4 border-t border-[#391B68]/10 pt-3 text-[13px] font-bold text-[#6d6578] sm:text-[14px]">
               <RichText parts={content.featured.source} />
             </p>
           </article>
 
-          <div className="mt-3 grid gap-2.5">
-            {content.supporting.map((testimonial, index) => (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {content.supporting.slice(0, 2).map((testimonial, index) => (
               <article
                 key={index}
-                className="rounded-[20px] border border-white/12 bg-[#F8F6FB] px-5 py-3.5 text-[#391B68] shadow-[0_8px_22px_rgba(10,3,22,0.14)] transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/35 motion-reduce:transform-none motion-reduce:transition-none sm:px-6"
+                className="rounded-[21px] border border-white/12 bg-[#F8F6FB] px-5 py-5 text-[#391B68] shadow-[0_10px_26px_rgba(10,3,22,0.16)] transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/35 motion-reduce:transform-none motion-reduce:transition-none sm:px-6"
               >
-                <div className="flex items-start gap-4">
-                  <span className="mt-0.5 shrink-0 text-[#391B68]/25">
-                    <QuoteIcon />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
-                      <RichText parts={testimonial.category} />
-                    </span>
-                    <blockquote className="mt-1 text-[16px] font-black leading-6 sm:text-[17px] sm:leading-[1.55]">
-                      <RichText parts={testimonial.quote} />
-                    </blockquote>
-                    <p className="mt-1.5 text-[12px] font-bold text-[#716878] sm:text-[13px]">
-                      <RichText parts={testimonial.source} />
-                    </p>
-                  </div>
-                </div>
+                <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
+                  <RichText parts={testimonial.category} />
+                </span>
+                <blockquote className="mt-2 text-[16px] font-black leading-[1.65] sm:text-[18px]">
+                  <RichText parts={testimonial.quote} />
+                </blockquote>
+                <p className="mt-3 text-[12px] font-bold text-[#716878] sm:text-[13px]">
+                  <RichText parts={testimonial.source} />
+                </p>
               </article>
             ))}
           </div>
 
-          <p className="mt-3.5 max-w-[700px] text-[12px] font-bold leading-6 text-white/58 sm:text-[13px]">
+          <article className="relative mt-3 overflow-hidden rounded-[21px] border border-white/12 bg-[#eee9f5] px-5 py-4 text-[#391B68] shadow-[0_10px_26px_rgba(10,3,22,0.15)] sm:px-6 sm:py-5">
+            <span
+              className="absolute inset-y-0 start-0 w-1 bg-[#EC911F]"
+              aria-hidden="true"
+            />
+            <div className="sm:flex sm:items-center sm:justify-between sm:gap-8">
+              <div className="min-w-0 flex-1">
+                <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
+                  <RichText parts={content.supporting[2].category} />
+                </span>
+                <blockquote className="mt-1.5 text-[17px] font-black leading-[1.6] sm:text-[19px]">
+                  <RichText parts={content.supporting[2].quote} />
+                </blockquote>
+              </div>
+              <p className="mt-2 shrink-0 text-[12px] font-bold text-[#716878] sm:mt-0 sm:text-[13px]">
+                <RichText parts={content.supporting[2].source} />
+              </p>
+            </div>
+          </article>
+
+          <p className="mt-4 max-w-[700px] text-[12px] font-bold leading-6 text-white/62 sm:text-[13px]">
             {content.privacy}
           </p>
 
-          <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-5">
-            <p className="text-[15px] font-black text-white">
+          <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <p className="text-[16px] font-black text-white sm:text-[17px]">
               {content.ctaSupport}
             </p>
             <CtaLink
               href={bookingHref}
               locale={locale}
               source="student_testimonials"
-              className="h-[56px] w-full shrink-0 rounded-[16px] px-7 text-[16px] shadow-[0_10px_24px_rgba(236,145,31,0.2)] sm:w-auto"
+              className="h-[56px] w-full shrink-0 rounded-[17px] px-8 text-[17px] shadow-[0_12px_28px_rgba(236,145,31,0.3)] sm:w-auto"
             >
               {content.cta}
             </CtaLink>
