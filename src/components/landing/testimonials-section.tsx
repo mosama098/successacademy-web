@@ -514,11 +514,11 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
             </div>
           </article>
 
-          <p className="mt-3 max-w-[700px] text-[11.5px] font-bold leading-[1.5] text-white/62 sm:text-[12px]">
+          <p className="mt-3 max-w-[700px] text-[12px] font-bold leading-[1.55] text-white/68 sm:text-[13px]">
             {content.privacy}
           </p>
 
-          <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+          <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-start sm:gap-4">
             <p className="text-[15px] font-black text-white sm:text-[16px]">
               {content.ctaSupport}
             </p>
