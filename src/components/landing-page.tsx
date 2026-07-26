@@ -1,7 +1,4 @@
 import { LeadForm } from "@/components/lead-form";
-import { AssessmentCtaSection } from "@/components/landing/assessment-cta-section";
-import { DeliverySection } from "@/components/landing/delivery-section";
-import { ExperienceVideosSection } from "@/components/landing/experience-videos-section";
 import { FinalCtaSection } from "@/components/landing/final-cta-section";
 import { FooterSection } from "@/components/landing/footer-section";
 import { HeroSection } from "@/components/landing/hero-section";
@@ -10,7 +7,6 @@ import { Navbar } from "@/components/landing/navbar";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { RegistrationStepsSection } from "@/components/landing/registration-steps-section";
 import { SectionShell } from "@/components/landing/section-shell";
-import { SuccessManagerSection } from "@/components/landing/success-manager-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { VideoPreviewSection } from "@/components/landing/video-preview-section";
 import { PageTracker } from "@/components/page-tracker";
@@ -40,11 +36,9 @@ export function LandingPage({ locale }: LandingPageProps) {
       <JourneySection locale={locale} copy={copy} />
       <TestimonialsSection locale={locale} copy={copy} />
       <RegistrationStepsSection locale={locale} copy={copy} />
-      <ExperienceVideosSection locale={locale} copy={copy} />
-      <AssessmentCtaSection locale={locale} copy={copy} />
-      <DeliverySection locale={locale} copy={copy} />
-      <SuccessManagerSection locale={locale} copy={copy} />
-      <LeadForm locale={locale} copy={copy.form} />
+      <div id="assessment" className="scroll-mt-24">
+        <LeadForm locale={locale} copy={copy.form} />
+      </div>
       <SectionShell id="faq" title={copy.faq.title} centered>
         <FaqAccordion items={copy.faq.items} locale={locale} />
       </SectionShell>
