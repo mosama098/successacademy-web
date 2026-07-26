@@ -273,49 +273,23 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
   );
 }
 
-function CarouselArrow({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg
-      className="h-5 w-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {direction === "left" ? (
-        <>
-          <path d="m15 18-6-6 6-6" />
-          <path d="M21 12H9" />
-        </>
-      ) : (
-        <>
-          <path d="m9 18 6-6-6-6" />
-          <path d="M3 12h12" />
-        </>
-      )}
-    </svg>
-  );
-}
-
 export function TestimonialsSection({ locale }: LandingSectionProps) {
   const content = testimonialsContent[locale];
   const isArabic = locale === "ar";
   const testimonials = [content.featured, ...content.supporting];
   const playerRef = useRef<WistiaPlayerElement | null>(null);
   const videoFrameRef = useRef<HTMLDivElement>(null);
+  const sliderStageRef = useRef<HTMLDivElement>(null);
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
-  const carouselHoveredRef = useRef(false);
-  const carouselFocusedRef = useRef(false);
   const isVisibleRef = useRef(false);
   const isPlayerReadyRef = useRef(false);
   const isMutedRef = useRef(true);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [autoplayCycle, setAutoplayCycle] = useState(0);
+  const [isSliderVisible, setIsSliderVisible] = useState(false);
+  const [isSwiping, setIsSwiping] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -341,18 +315,45 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
   }, []);
 
   useEffect(() => {
-    if (prefersReducedMotion || isCarouselPaused || !isPageVisible) return;
+    const stage = sliderStageRef.current;
+    if (!stage) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSliderVisible(
+          entry.isIntersecting && entry.intersectionRatio >= 0.3,
+        );
+      },
+      { threshold: [0, 0.3, 0.6] },
+    );
+
+    observer.observe(stage);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (
+      prefersReducedMotion ||
+      !isSliderVisible ||
+      !isPageVisible ||
+      isSwiping
+    ) {
+      return;
+    }
 
     const interval = window.setInterval(() => {
       setActiveTestimonial(
         (current) => (current + 1) % testimonials.length,
       );
-    }, 5000);
+    }, 4500);
 
     return () => window.clearInterval(interval);
   }, [
-    isCarouselPaused,
+    autoplayCycle,
     isPageVisible,
+    isSliderVisible,
+    isSwiping,
     prefersReducedMotion,
     testimonials.length,
   ]);
@@ -461,17 +462,24 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
     setActiveTestimonial(
       (current) => (current - 1 + testimonials.length) % testimonials.length,
     );
+    setAutoplayCycle((current) => current + 1);
   };
 
   const showNextTestimonial = () => {
     setActiveTestimonial((current) => (current + 1) % testimonials.length);
+    setAutoplayCycle((current) => current + 1);
+  };
+
+  const showTestimonial = (index: number) => {
+    setActiveTestimonial(index);
+    setAutoplayCycle((current) => current + 1);
   };
 
   const handleCarouselPointerDown = (
     event: ReactPointerEvent<HTMLDivElement>,
   ) => {
     swipeStartRef.current = { x: event.clientX, y: event.clientY };
-    setIsCarouselPaused(true);
+    setIsSwiping(true);
   };
 
   const handleCarouselPointerUp = (
@@ -495,15 +503,13 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
       }
     }
 
-    setIsCarouselPaused(
-      carouselHoveredRef.current || carouselFocusedRef.current,
-    );
+    setIsSwiping(false);
   };
 
   return (
     <section
       id="student-stories"
-      className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-14 text-white sm:px-6 sm:pt-16 md:py-16 lg:px-8 lg:py-14"
+      className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-14 text-white sm:px-6 sm:pt-16 md:py-16 lg:px-8 lg:py-[54px]"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Script
@@ -524,7 +530,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
       />
 
       <div
-        className={`relative mx-auto grid max-w-[1240px] items-start gap-x-10 gap-y-4 lg:gap-x-12 ${
+        className={`relative mx-auto grid max-w-[1260px] items-start gap-x-10 gap-y-4 lg:gap-x-14 ${
           isArabic
             ? "lg:grid-cols-[320px_minmax(0,1fr)]"
             : "lg:grid-cols-[minmax(0,1fr)_320px]"
@@ -540,7 +546,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
           <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#EC911F]/10 px-4 py-1.5 text-[13px] font-black text-[#f2b35f] sm:text-[14px]">
             {content.badge}
           </span>
-          <h2 className="mt-3.5 text-[30px] font-black leading-[1.23] sm:text-[38px] lg:text-[40px] lg:leading-[1.17]">
+          <h2 className="mt-3.5 text-[30px] font-black leading-[1.23] sm:text-[38px] lg:text-[42px] lg:leading-[1.17]">
             <span className="block text-white lg:whitespace-nowrap">
               {content.headingLead}
             </span>
@@ -548,7 +554,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
               {content.headingHighlight}
             </span>
           </h2>
-          <p className="mt-3 max-w-[620px] text-[15px] font-bold leading-[1.65] text-white/72 sm:text-[16px]">
+          <p className="mt-3 max-w-[720px] text-[15px] font-bold leading-[1.65] text-white/72 sm:text-[16px]">
             {content.description}
           </p>
         </header>
@@ -623,34 +629,16 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
         >
           <div
             className="touch-pan-y"
-            onMouseEnter={() => {
-              carouselHoveredRef.current = true;
-              setIsCarouselPaused(true);
-            }}
-            onMouseLeave={() => {
-              carouselHoveredRef.current = false;
-              setIsCarouselPaused(carouselFocusedRef.current);
-            }}
-            onFocusCapture={() => {
-              carouselFocusedRef.current = true;
-              setIsCarouselPaused(true);
-            }}
-            onBlurCapture={(event) => {
-              if (event.currentTarget.contains(event.relatedTarget)) return;
-              carouselFocusedRef.current = false;
-              setIsCarouselPaused(carouselHoveredRef.current);
-            }}
             onPointerDown={handleCarouselPointerDown}
             onPointerUp={handleCarouselPointerUp}
             onPointerCancel={() => {
               swipeStartRef.current = null;
-              setIsCarouselPaused(
-                carouselHoveredRef.current || carouselFocusedRef.current,
-              );
+              setIsSwiping(false);
             }}
           >
             <div
-              className="relative h-[300px] sm:h-[285px] lg:h-[275px]"
+              ref={sliderStageRef}
+              className="relative h-[350px] overflow-hidden sm:h-[360px] lg:h-[345px]"
               aria-roledescription={
                 isArabic ? "عارض شهادات الطلاب" : "testimonial carousel"
               }
@@ -660,26 +648,38 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                   (index - activeTestimonial + testimonials.length) %
                   testimonials.length;
                 const isActive = position === 0;
-                const isVisibleBackCard = position === 1 || position === 2;
-                const isPreviousCard = position === testimonials.length - 1;
-                const opacity =
-                  position === 0
-                    ? 1
-                    : position === 1
-                      ? 0.7
-                      : position === 2
-                        ? 0.38
-                        : 0;
+                const isNext = position === 1;
+                const isFarNext = position === 2;
+                const isPrevious = position === testimonials.length - 1;
+                const isFarPrevious = position === testimonials.length - 2;
+                const isSideCard = isPrevious || isNext;
+                const isFarCard = isFarPrevious || isFarNext;
+                const opacity = isActive
+                  ? 1
+                  : isSideCard
+                    ? 0.78
+                    : isFarCard
+                      ? 0.3
+                      : 0;
                 const transform =
-                  position === 0
-                    ? "translateY(0px) scale(1)"
-                    : position === 1
-                      ? "translateY(18px) scale(0.965)"
-                      : position === 2
-                        ? "translateY(35px) scale(0.93)"
-                        : isPreviousCard
-                          ? "translateY(-10px) scale(0.98)"
-                          : "translateY(52px) scale(0.9)";
+                  isActive
+                    ? "translate(-50%, 0px) scale(1)"
+                    : isSideCard
+                      ? "translate(-50%, 20px) scale(0.9)"
+                      : isFarCard
+                        ? "translate(-50%, 38px) scale(0.79)"
+                        : "translate(-50%, 46px) scale(0.76)";
+                const leftClass = isActive
+                  ? "left-1/2"
+                  : isPrevious
+                    ? "left-[-20%] sm:left-[10%] lg:left-[28%]"
+                    : isNext
+                      ? "left-[120%] sm:left-[90%] lg:left-[72%]"
+                      : isFarPrevious
+                        ? "left-[-48%] sm:left-[-10%] lg:left-[12%]"
+                        : isFarNext
+                          ? "left-[148%] sm:left-[110%] lg:left-[88%]"
+                          : "left-1/2";
 
                 return (
                   <article
@@ -692,38 +692,44 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                     }
                     aria-hidden={!isActive}
                     tabIndex={isActive ? 0 : -1}
-                    className={`absolute inset-x-0 top-0 min-h-[210px] overflow-hidden rounded-[23px] border bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_18px_42px_rgba(10,3,22,0.23)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] sm:min-h-[200px] sm:p-6 lg:min-h-[185px] lg:px-7 lg:py-6 ${
+                    className={`absolute top-0 flex h-[315px] w-[86vw] max-w-[320px] flex-col overflow-hidden rounded-[24px] border bg-[#2b144d]/95 p-5 text-white shadow-[0_20px_48px_rgba(10,3,22,0.32)] backdrop-blur-[2px] will-change-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] sm:h-[320px] sm:w-[300px] sm:p-6 lg:h-[310px] lg:w-[295px] ${leftClass} ${
                       isActive
-                        ? "border-[#EC911F]/32"
+                        ? "border-[#EC911F]/65 shadow-[0_24px_58px_rgba(10,3,22,0.45),0_0_26px_rgba(236,145,31,0.1)]"
                         : "border-white/16"
                     } ${
                       prefersReducedMotion
                         ? "transition-none"
-                        : "transition-[transform,opacity] duration-[650ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                        : "transition-[left,transform,opacity] duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
                     }`}
                     style={{
                       opacity,
                       pointerEvents: isActive ? "auto" : "none",
                       transform,
-                      zIndex: isActive ? 30 : isVisibleBackCard ? 20 - position : 0,
+                      zIndex: isActive
+                        ? 40
+                        : isSideCard
+                          ? 30
+                          : isFarCard
+                            ? 20
+                            : 0,
                     }}
                   >
                     <span
-                      className="absolute inset-y-0 start-0 w-1.5 bg-[#EC911F]"
+                      className="absolute inset-y-0 start-0 w-1 bg-[#EC911F]"
                       aria-hidden="true"
                     />
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
                         <RichText parts={testimonial.category} />
                       </span>
-                      <span className="text-[#391B68]/22">
+                      <span className="text-white/24">
                         <QuoteIcon />
                       </span>
                     </div>
-                    <blockquote className="mt-2 text-[17px] font-black leading-[1.55] sm:text-[19px] lg:text-[21px]">
+                    <blockquote className="mt-4 text-[17px] font-black leading-[1.6] text-[#F8F6FB] sm:text-[19px] lg:text-[20px]">
                       <RichText parts={testimonial.quote} />
                     </blockquote>
-                    <p className="mt-3 border-t border-[#391B68]/10 pt-2 text-[13px] font-bold text-[#6d6578] sm:text-[14px]">
+                    <p className="mt-auto border-t border-white/12 pt-3 text-[12px] font-bold text-white/65 sm:text-[13px]">
                       <RichText parts={testimonial.source} />
                     </p>
                   </article>
@@ -731,83 +737,64 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
               })}
             </div>
 
-            <div className="mt-1 flex items-center justify-center gap-1.5">
-              <button
-                type="button"
-                onClick={showPreviousTestimonial}
-                aria-label={
-                  isArabic ? "عرض الشهادة السابقة" : "Previous testimonial"
-                }
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/10 text-white transition-[background-color,border-color] duration-200 hover:border-[#EC911F]/50 hover:bg-white/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] motion-reduce:transition-none"
-              >
-                <CarouselArrow direction={isArabic ? "right" : "left"} />
-              </button>
-
-              <div
-                className="flex items-center gap-0.5"
-                aria-label={isArabic ? "موضع الشهادة" : "Testimonial position"}
-              >
-                {testimonials.map((_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setActiveTestimonial(index)}
-                    aria-label={
-                      isArabic
-                        ? `عرض الشهادة ${index + 1} من ${testimonials.length}`
-                        : `Show testimonial ${index + 1} of ${testimonials.length}`
-                    }
-                    aria-current={
-                      index === activeTestimonial ? "true" : undefined
-                    }
-                    className="group inline-flex h-11 w-7 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#EC911F]"
-                  >
-                    <span
-                      className={`block rounded-full transition-[background-color,width] duration-200 ${
-                        index === activeTestimonial
-                          ? "h-2 w-5 bg-[#EC911F]"
-                          : "h-2 w-2 bg-white/35 group-hover:bg-white/65"
-                      }`}
-                      aria-hidden="true"
-                    />
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={showNextTestimonial}
-                aria-label={isArabic ? "عرض الشهادة التالية" : "Next testimonial"}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/10 text-white transition-[background-color,border-color] duration-200 hover:border-[#EC911F]/50 hover:bg-white/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] motion-reduce:transition-none"
-              >
-                <CarouselArrow direction={isArabic ? "left" : "right"} />
-              </button>
+            <div
+              className="mt-1 flex items-center justify-center gap-0.5"
+              aria-label={isArabic ? "موضع الشهادة" : "Testimonial position"}
+            >
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => showTestimonial(index)}
+                  aria-label={
+                    isArabic
+                      ? `عرض الشهادة ${index + 1} من ${testimonials.length}`
+                      : `Show testimonial ${index + 1} of ${testimonials.length}`
+                  }
+                  aria-current={
+                    index === activeTestimonial ? "true" : undefined
+                  }
+                  className="group inline-flex h-11 w-8 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#EC911F]"
+                >
+                  <span
+                    className={`block h-1.5 rounded-full transition-[background-color,width] duration-200 ${
+                      index === activeTestimonial
+                        ? "w-6 bg-[#EC911F]"
+                        : "w-2 bg-white/28 group-hover:bg-white/55"
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+              ))}
             </div>
           </div>
 
-          <p className="mt-2.5 max-w-[700px] text-[12px] font-bold leading-[1.55] text-white/72 sm:text-[13px]">
+          <p className="mt-2 max-w-[700px] text-[12px] font-bold leading-[1.55] text-white/72 sm:text-[13px]">
             {content.privacy}
           </p>
-
-          <div className="mt-3.5 rounded-[24px] border border-[#EC911F]/24 bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_14px_34px_rgba(10,3,22,0.2)] sm:flex sm:min-h-[118px] sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-5">
-            <div className="min-w-0">
-              <h3 className="text-[27px] font-black leading-[1.18] sm:text-[30px] lg:text-[32px]">
-                {content.ctaHeadline}
-              </h3>
-              <p className="mt-2 max-w-[500px] text-[14px] font-bold leading-[1.55] text-[#6d6578] sm:text-[15px]">
-                {content.ctaSupport}
-              </p>
-            </div>
-            <CtaLink
-              href={bookingHref}
-              locale={locale}
-              source="student_testimonials"
-              className="mt-4 h-[54px] w-full shrink-0 rounded-[17px] px-7 text-[16px] shadow-[0_11px_26px_rgba(236,145,31,0.3)] sm:mt-0 sm:w-auto"
-            >
-              {content.cta}
-            </CtaLink>
-          </div>
         </div>
+      </div>
+
+      <div
+        className="relative mx-auto mt-2 max-w-[1260px] rounded-[24px] border border-white/16 bg-white/[0.07] p-4 shadow-[0_16px_38px_rgba(10,3,22,0.22)] sm:p-6 lg:flex lg:min-h-[112px] lg:items-center lg:justify-between lg:gap-8 lg:px-8 lg:py-5"
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <div className="min-w-0">
+          <h3 className="text-[27px] font-black leading-[1.18] text-white sm:text-[31px] lg:text-[34px]">
+            {content.ctaHeadline}
+          </h3>
+          <p className="mt-2 max-w-[650px] text-[14px] font-bold leading-[1.55] text-white/68 sm:text-[15px]">
+            {content.ctaSupport}
+          </p>
+        </div>
+        <CtaLink
+          href={bookingHref}
+          locale={locale}
+          source="student_testimonials"
+          className="mt-4 h-[54px] w-full shrink-0 rounded-[17px] px-7 text-[16px] shadow-[0_11px_26px_rgba(236,145,31,0.3)] lg:mt-0 lg:w-auto"
+        >
+          {content.cta}
+        </CtaLink>
       </div>
     </section>
   );
