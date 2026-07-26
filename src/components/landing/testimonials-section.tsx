@@ -714,10 +714,6 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                             : 0,
                     }}
                   >
-                    <span
-                      className="absolute inset-y-0 start-0 w-1 bg-[#EC911F]"
-                      aria-hidden="true"
-                    />
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-[11px] font-black text-[#EC911F] sm:text-[12px]">
                         <RichText parts={testimonial.category} />
