@@ -509,7 +509,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
   return (
     <section
       id="student-stories"
-      className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-14 text-white sm:px-6 sm:pt-16 md:py-16 lg:px-8 lg:py-[54px]"
+      className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-14 text-white sm:px-6 sm:pt-16 md:py-16 lg:px-8 lg:py-12"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <Script
@@ -638,7 +638,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
           >
             <div
               ref={sliderStageRef}
-              className="relative h-[350px] overflow-hidden sm:h-[360px] lg:h-[345px]"
+              className="relative h-[292px] overflow-hidden sm:h-[275px] lg:h-[255px]"
               aria-roledescription={
                 isArabic ? "عارض شهادات الطلاب" : "testimonial carousel"
               }
@@ -665,20 +665,20 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                   isActive
                     ? "translate(-50%, 0px) scale(1)"
                     : isSideCard
-                      ? "translate(-50%, 20px) scale(0.9)"
+                      ? "translate(-50%, 14px) scale(0.92)"
                       : isFarCard
-                        ? "translate(-50%, 38px) scale(0.79)"
-                        : "translate(-50%, 46px) scale(0.76)";
+                        ? "translate(-50%, 26px) scale(0.82)"
+                        : "translate(-50%, 34px) scale(0.78)";
                 const leftClass = isActive
                   ? "left-1/2"
                   : isPrevious
-                    ? "left-[-20%] sm:left-[10%] lg:left-[28%]"
+                    ? "left-[-18%] sm:left-[20%] lg:left-[33%]"
                     : isNext
-                      ? "left-[120%] sm:left-[90%] lg:left-[72%]"
+                      ? "left-[118%] sm:left-[80%] lg:left-[67%]"
                       : isFarPrevious
-                        ? "left-[-48%] sm:left-[-10%] lg:left-[12%]"
+                        ? "left-[-42%] sm:left-[7%] lg:left-[20%]"
                         : isFarNext
-                          ? "left-[148%] sm:left-[110%] lg:left-[88%]"
+                          ? "left-[142%] sm:left-[93%] lg:left-[80%]"
                           : "left-1/2";
 
                 return (
@@ -692,10 +692,10 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                     }
                     aria-hidden={!isActive}
                     tabIndex={isActive ? 0 : -1}
-                    className={`absolute top-0 flex h-[315px] w-[86vw] max-w-[320px] flex-col overflow-hidden rounded-[24px] border bg-[#2b144d]/95 p-5 text-white shadow-[0_20px_48px_rgba(10,3,22,0.32)] backdrop-blur-[2px] will-change-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] sm:h-[320px] sm:w-[300px] sm:p-6 lg:h-[310px] lg:w-[295px] ${leftClass} ${
+                    className={`absolute top-0 flex h-[260px] w-[74vw] max-w-[250px] flex-col rounded-[20px] border bg-[#F8F6FB] p-[18px] text-[#391B68] shadow-[0_14px_34px_rgba(10,3,22,0.18)] will-change-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] sm:h-[245px] sm:w-[230px] sm:p-[18px] lg:h-[235px] lg:w-[220px] lg:p-4 ${leftClass} ${
                       isActive
-                        ? "border-[#EC911F]/65 shadow-[0_24px_58px_rgba(10,3,22,0.45),0_0_26px_rgba(236,145,31,0.1)]"
-                        : "border-white/16"
+                        ? "border-[#EC911F]/55 shadow-[0_18px_42px_rgba(10,3,22,0.25),0_0_18px_rgba(236,145,31,0.08)]"
+                        : "border-[#d9cee8] shadow-[0_10px_24px_rgba(10,3,22,0.14)]"
                     } ${
                       prefersReducedMotion
                         ? "transition-none"
@@ -719,17 +719,17 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
                       aria-hidden="true"
                     />
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
+                      <span className="text-[11px] font-black text-[#EC911F] sm:text-[12px]">
                         <RichText parts={testimonial.category} />
                       </span>
-                      <span className="text-white/24">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#eee9f5] text-[#391B68]/28">
                         <QuoteIcon />
                       </span>
                     </div>
-                    <blockquote className="mt-4 text-[17px] font-black leading-[1.6] text-[#F8F6FB] sm:text-[19px] lg:text-[20px]">
+                    <blockquote className="mt-2.5 text-[15.5px] font-black leading-[1.58] text-[#391B68] sm:text-[16px] lg:text-[16px] lg:leading-[1.52]">
                       <RichText parts={testimonial.quote} />
                     </blockquote>
-                    <p className="mt-auto border-t border-white/12 pt-3 text-[12px] font-bold text-white/65 sm:text-[13px]">
+                    <p className="mt-auto border-t border-[#391B68]/10 pt-2 text-[11.5px] font-bold text-[#6d6578] sm:text-[12px]">
                       <RichText parts={testimonial.source} />
                     </p>
                   </article>
@@ -776,14 +776,14 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
       </div>
 
       <div
-        className="relative mx-auto mt-2 max-w-[1260px] rounded-[24px] border border-white/16 bg-white/[0.07] p-4 shadow-[0_16px_38px_rgba(10,3,22,0.22)] sm:p-6 lg:flex lg:min-h-[112px] lg:items-center lg:justify-between lg:gap-8 lg:px-8 lg:py-5"
+        className="relative mx-auto mt-2 max-w-[1260px] rounded-[22px] border border-[#d9cee8] bg-[#F8F6FB] p-[14px] text-[#391B68] shadow-[0_14px_32px_rgba(10,3,22,0.18)] sm:p-5 lg:flex lg:min-h-[105px] lg:items-center lg:justify-between lg:gap-8 lg:px-7 lg:py-4"
         dir={isArabic ? "rtl" : "ltr"}
       >
         <div className="min-w-0">
-          <h3 className="text-[27px] font-black leading-[1.18] text-white sm:text-[31px] lg:text-[34px]">
+          <h3 className="text-[27px] font-black leading-[1.18] text-[#391B68] sm:text-[29px] lg:text-[31px]">
             {content.ctaHeadline}
           </h3>
-          <p className="mt-2 max-w-[650px] text-[14px] font-bold leading-[1.55] text-white/68 sm:text-[15px]">
+          <p className="mt-1.5 max-w-[650px] text-[14px] font-bold leading-[1.5] text-[#6d6578] sm:text-[15px]">
             {content.ctaSupport}
           </p>
         </div>
@@ -791,7 +791,7 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
           href={bookingHref}
           locale={locale}
           source="student_testimonials"
-          className="mt-4 h-[54px] w-full shrink-0 rounded-[17px] px-7 text-[16px] shadow-[0_11px_26px_rgba(236,145,31,0.3)] lg:mt-0 lg:w-auto"
+          className="mt-3 h-[52px] w-full shrink-0 rounded-[16px] px-7 text-[16px] shadow-[0_10px_24px_rgba(236,145,31,0.28)] lg:mt-0 lg:w-auto"
         >
           {content.cta}
         </CtaLink>
