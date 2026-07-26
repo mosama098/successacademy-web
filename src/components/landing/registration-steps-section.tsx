@@ -164,7 +164,7 @@ function RichText({ parts }: { parts: TextPart[] }) {
 }
 
 function StepIconGraphic({ icon }: { icon: StepIcon }) {
-  const className = "h-[19px] w-[19px]";
+  const className = "h-5 w-5";
 
   if (icon === "details") {
     return (
@@ -303,12 +303,12 @@ export function RegistrationStepsSection({
     <section
       ref={sectionRef}
       id="registration-steps"
-      className="relative bg-[#F8F6FB] px-5 pb-[calc(108px+env(safe-area-inset-bottom))] pt-16 sm:px-6 sm:pt-[72px] md:pb-[72px] lg:px-8 lg:py-[82px]"
+      className="relative bg-[#F8F6FB] px-5 pb-[calc(108px+env(safe-area-inset-bottom))] pt-16 sm:px-6 sm:pt-[68px] md:pb-[68px] lg:px-8 lg:py-14"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div className="mx-auto max-w-[1220px]">
         <header className="mx-auto max-w-[1000px] text-center">
-          <span className="inline-flex rounded-full border border-[#EC911F]/30 bg-[#EC911F]/[0.08] px-4 py-2 text-[13px] font-black text-[#EC911F] sm:text-[14px]">
+          <span className="inline-flex rounded-full border border-[#EC911F]/30 bg-[#EC911F]/[0.08] px-4 py-1.5 text-[13px] font-black text-[#EC911F] sm:text-[14px]">
             {content.badge}
           </span>
           <h2 className="mt-4 text-[31px] font-black leading-[1.23] text-[#391B68] sm:text-[38px] lg:text-[42px] lg:leading-[1.16]">
@@ -317,104 +317,176 @@ export function RegistrationStepsSection({
               {content.titleHighlight}
             </span>
           </h2>
-          <p className="mx-auto mt-4 max-w-[760px] text-[15px] font-bold leading-[1.72] text-[#6d6578] sm:text-[17px]">
+          <p className="mx-auto mt-3.5 max-w-[760px] text-[15px] font-bold leading-[1.68] text-[#6d6578] sm:text-[17px]">
             {content.description}
           </p>
         </header>
 
-        <div className="relative mx-auto mt-10 max-w-[1180px] lg:mt-9">
-          <div
-            className="absolute bottom-7 start-[27px] top-7 w-0.5 rounded-full bg-[#ded6e8] lg:hidden"
-            aria-hidden="true"
-          >
-            <span
-              className={`block h-full w-full origin-top rounded-full bg-[#EC911F] ${
+        <div
+          className={`mx-auto mt-6 max-w-[1180px] rounded-[24px] border border-[#dcd3e8] bg-white p-[18px] shadow-[0_18px_45px_rgba(57,27,104,0.1)] sm:p-6 lg:rounded-[28px] lg:px-8 lg:py-4 ${
+            prefersReducedMotion
+              ? "transition-none"
+              : "transition-[opacity,transform] duration-[350ms] ease-out"
+          }`}
+          style={{
+            opacity: isRevealed ? 1 : 0,
+            transform: `translateY(${isRevealed ? 0 : 6}px)`,
+          }}
+        >
+          <div className="relative mx-auto max-w-[1080px]">
+            <div
+              className={`absolute bottom-[26px] start-[25px] top-[26px] w-[3px] rounded-full bg-[#ded6e8] lg:hidden ${
                 prefersReducedMotion
                   ? "transition-none"
-                  : "transition-transform duration-[1100ms] ease-out"
+                  : "transition-opacity duration-300"
               }`}
-              style={{ transform: `scaleY(${isRevealed ? 1 : 0})` }}
-            />
-          </div>
-
-          <div
-            className="absolute inset-x-[9%] top-[29px] hidden h-[3px] rounded-full bg-[#ded6e8] lg:block"
-            aria-hidden="true"
-          >
-            <span
-              className={`block h-full w-full rounded-full bg-[#EC911F] ${
-                isArabic ? "origin-right" : "origin-left"
-              } ${
-                prefersReducedMotion
-                  ? "transition-none"
-                  : "transition-transform duration-[1100ms] ease-out"
-              }`}
-              style={{ transform: `scaleX(${isRevealed ? 1 : 0})` }}
-            />
-          </div>
-
-          <ol className="relative grid gap-6 lg:grid-cols-5 lg:gap-5">
-            {content.steps.map((step, index) => (
-              <li
-                key={step.title}
-                className={`relative grid grid-cols-[56px_minmax(0,1fr)] items-start gap-4 lg:block lg:text-center ${
+              style={{
+                opacity: isRevealed ? 1 : 0,
+                transitionDelay: prefersReducedMotion ? "0ms" : "140ms",
+              }}
+              aria-hidden="true"
+            >
+              <span
+                className={`block h-full w-full origin-top rounded-full bg-[#EC911F] ${
                   prefersReducedMotion
                     ? "transition-none"
-                    : "transition-[opacity,transform] duration-[400ms] ease-out"
+                    : "transition-transform duration-[900ms] ease-out"
                 }`}
                 style={{
-                  opacity: isRevealed ? 1 : 0,
-                  transform: `translateY(${isRevealed ? 0 : 6}px)`,
-                  transitionDelay: prefersReducedMotion
-                    ? "0ms"
-                    : `${180 + index * 90}ms`,
+                  transform: `scaleY(${isRevealed ? 1 : 0})`,
+                  transitionDelay: prefersReducedMotion ? "0ms" : "240ms",
                 }}
-              >
-                <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-[#391B68]/15 bg-white text-[15px] font-black tabular-nums text-[#EC911F] shadow-[0_8px_20px_rgba(57,27,104,0.1)] lg:mx-auto lg:h-[60px] lg:w-[60px]">
-                  {String(index + 1).padStart(2, "0")}
-                </div>
+              />
+            </div>
 
-                <div className="pt-0.5 lg:pt-4">
-                  <div className="mb-2 flex items-center justify-start gap-2 text-[#391B68] lg:justify-center">
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#ece6f3] text-[#391B68]">
-                      <StepIconGraphic icon={step.icon} />
-                    </span>
-                    <h3 className="text-[18px] font-black leading-[1.3] text-[#391B68]">
-                      {step.title}
-                    </h3>
-                  </div>
-                  <p
-                    className={`max-w-[390px] text-[14.5px] font-bold leading-[1.65] text-[#6d6578] lg:mx-auto lg:max-w-[215px] lg:text-[14px] ${
-                      isArabic
-                        ? "text-right lg:text-right"
-                        : "text-left lg:text-left"
-                    }`}
+            <div
+              className={`absolute inset-x-[10%] top-[30px] hidden h-1 rounded-full bg-[#ded6e8] lg:block ${
+                prefersReducedMotion
+                  ? "transition-none"
+                  : "transition-opacity duration-300"
+              }`}
+              style={{
+                opacity: isRevealed ? 1 : 0,
+                transitionDelay: prefersReducedMotion ? "0ms" : "140ms",
+              }}
+              aria-hidden="true"
+            >
+              <span
+                className={`block h-full w-full rounded-full bg-[#EC911F] ${
+                  isArabic ? "origin-right" : "origin-left"
+                } ${
+                  prefersReducedMotion
+                    ? "transition-none"
+                    : "transition-transform duration-[900ms] ease-out"
+                }`}
+                style={{
+                  transform: `scaleX(${isRevealed ? 1 : 0})`,
+                  transitionDelay: prefersReducedMotion ? "0ms" : "240ms",
+                }}
+              />
+            </div>
+
+            <ol className="relative grid gap-[22px] lg:grid-cols-5 lg:gap-0">
+              {content.steps.map((step, index) => {
+                const isDestination = index === content.steps.length - 1;
+
+                return (
+                  <li
+                    key={step.title}
+                    className="relative grid grid-cols-[52px_minmax(0,1fr)] items-start gap-3 lg:block"
                   >
-                    <RichText parts={step.description} />
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
+                    <div
+                      className={`relative z-10 flex h-[52px] w-[52px] items-center justify-center rounded-full border text-[16px] font-black tabular-nums shadow-[0_8px_20px_rgba(57,27,104,0.12)] lg:mx-auto lg:h-16 lg:w-16 lg:text-[17px] ${
+                        isDestination
+                          ? "border-[#EC911F] bg-[#EC911F] text-white shadow-[0_10px_24px_rgba(236,145,31,0.25)]"
+                          : "border-[#391B68]/25 bg-white text-[#EC911F]"
+                      } ${
+                        prefersReducedMotion
+                          ? "transition-none"
+                          : "transition-[opacity,transform] duration-[350ms] ease-out"
+                      }`}
+                      style={{
+                        opacity: isRevealed ? 1 : 0,
+                        transform: `translateY(${isRevealed ? 0 : 6}px)`,
+                        transitionDelay: prefersReducedMotion
+                          ? "0ms"
+                          : `${300 + index * 70}ms`,
+                      }}
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </div>
 
-        <div className="mx-auto mt-7 flex max-w-[1120px] flex-col gap-4 border-t border-[#391B68]/12 pt-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-          <div className={isArabic ? "text-right" : "text-left"}>
-            <p className="text-[20px] font-black leading-[1.35] text-[#391B68] sm:text-[22px]">
-              {content.ctaSupport}
-            </p>
-            <p className="mt-1 text-[13.5px] font-bold leading-[1.55] text-[#6d6578] sm:text-[14px]">
-              {content.reassurance}
-            </p>
+                    <div
+                      className={`pt-0.5 lg:pt-[18px] ${
+                        prefersReducedMotion
+                          ? "transition-none"
+                          : "transition-[opacity,transform] duration-[350ms] ease-out"
+                      }`}
+                      style={{
+                        opacity: isRevealed ? 1 : 0,
+                        transform: `translateY(${isRevealed ? 0 : 6}px)`,
+                        transitionDelay: prefersReducedMotion
+                          ? "0ms"
+                          : `${390 + index * 70}ms`,
+                      }}
+                    >
+                      <div className="mb-2 flex items-center justify-start gap-2.5 text-[#391B68]">
+                        <span
+                          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] text-[#391B68] ${
+                            isDestination
+                              ? "bg-[#EC911F]/15"
+                              : "bg-[#ece6f3]"
+                          }`}
+                        >
+                          <StepIconGraphic icon={step.icon} />
+                        </span>
+                        <h3 className="text-[18px] font-black leading-[1.35] text-[#391B68] lg:text-[19px]">
+                          {step.title}
+                        </h3>
+                      </div>
+                      <p
+                        className={`max-w-[390px] text-[14.5px] font-bold leading-[1.65] text-[#6d6578] lg:max-w-[205px] lg:text-[15px] ${
+                          isArabic ? "text-right" : "text-left"
+                        }`}
+                      >
+                        <RichText parts={step.description} />
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
-          <CtaLink
-            href={bookingHref}
-            locale={locale}
-            source="registration_steps"
-            className="h-[54px] w-full shrink-0 !rounded-[16px] !bg-[#EC911F] px-7 text-[16px] shadow-[0_12px_26px_rgba(236,145,31,0.24)] hover:!bg-[#EC911F] hover:brightness-95 lg:w-auto"
+
+          <div
+            className={`mt-6 flex flex-col gap-4 rounded-[20px] border border-[#391B68]/10 bg-[#F8F6FB] p-4 sm:p-5 lg:mt-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:p-4 ${
+              prefersReducedMotion
+                ? "transition-none"
+                : "transition-[opacity,transform] duration-[350ms] ease-out"
+            }`}
+            style={{
+              opacity: isRevealed ? 1 : 0,
+              transform: `translateY(${isRevealed ? 0 : 6}px)`,
+              transitionDelay: prefersReducedMotion ? "0ms" : "780ms",
+            }}
           >
-            {content.cta}
-          </CtaLink>
+            <div className={isArabic ? "text-right" : "text-left"}>
+              <p className="text-[21px] font-black leading-[1.32] text-[#391B68] sm:text-[23px] lg:text-[24px]">
+                {content.ctaSupport}
+              </p>
+              <p className="mt-1.5 text-[13.5px] font-bold leading-[1.55] text-[#6d6578] sm:text-[14px]">
+                {content.reassurance}
+              </p>
+            </div>
+            <CtaLink
+              href={bookingHref}
+              locale={locale}
+              source="registration_steps"
+              className="h-[54px] w-full shrink-0 !rounded-[16px] !bg-[#EC911F] px-7 text-[16px] shadow-[0_12px_26px_rgba(236,145,31,0.24)] hover:!bg-[#EC911F] hover:brightness-95 lg:w-auto"
+            >
+              {content.cta}
+            </CtaLink>
+          </div>
         </div>
       </div>
     </section>
