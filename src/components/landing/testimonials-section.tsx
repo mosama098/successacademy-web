@@ -1,7 +1,13 @@
 "use client";
 
 import Script from "next/script";
-import { createElement, useEffect, useRef, useState } from "react";
+import {
+  createElement,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CtaLink } from "@/components/ui/cta-link";
 import { bookingHref, type LandingSectionProps } from "./types";
 
@@ -24,6 +30,7 @@ type TestimonialsContent = {
   videoLabel: string;
   soundOn: string;
   soundOff: string;
+  ctaHeadline: string;
   ctaSupport: string;
   cta: string;
   privacy: string;
@@ -55,7 +62,9 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     videoLabel: "تجارب طلاب حقيقية",
     soundOn: "تشغيل الصوت",
     soundOff: "كتم الصوت",
-    ctaSupport: "جاهز تبدأ قصتك أنت؟",
+    ctaHeadline: "جاهز تبدأ قصتك أنت؟",
+    ctaSupport:
+      "ابدأ من مستواك الحقيقي، وإحنا نساعدك نحدد الطريق المناسب لهدفك.",
     cta: "ابدأ بتقييم مستواك مجانًا",
     privacy:
       "تم اختصار بعض الرسائل مع الحفاظ على معناها، وإخفاء البيانات الشخصية حفاظًا على خصوصية الطلاب.",
@@ -104,6 +113,27 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
           { text: "Online Programme", ltr: true },
         ],
       },
+      {
+        category: [{ text: "تجربة أونلاين" }],
+        quote: [
+          {
+            text: "دي كانت أول مرة أخد كورس أونلاين، وكانت من أحلى التجارب… وكانوا معانا في كل خطوة.",
+          },
+        ],
+        source: [
+          { text: "طالبة – " },
+          { text: "Online Programme", ltr: true },
+        ],
+      },
+      {
+        category: [{ text: "تعلم عملي" }],
+        quote: [
+          {
+            text: "الشرح كان بسيط، والأنشطة كانت ممتعة وساعدتني أفتكر الكلمات وأستخدمها بسهولة.",
+          },
+        ],
+        source: [{ text: "طالبة في " }, { text: "Success Academy", ltr: true }],
+      },
     ],
   },
   en: {
@@ -115,7 +145,9 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     videoLabel: "Real Student Stories",
     soundOn: "Turn Sound On",
     soundOff: "Mute",
-    ctaSupport: "Ready to start your own story?",
+    ctaHeadline: "Ready to Start Your Own Story?",
+    ctaSupport:
+      "Start from your real level, and we’ll help you choose the right path for your goal.",
     cta: "Start Your Free Assessment",
     privacy:
       "Some messages have been shortened without changing their meaning, and personal details have been hidden to protect student privacy.",
@@ -155,6 +187,24 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
           },
         ],
         source: [{ text: "Online Programme Student" }],
+      },
+      {
+        category: [{ text: "Online Experience" }],
+        quote: [
+          {
+            text: "This was my first online course, and it became one of my best experiences. The team supported us at every step.",
+          },
+        ],
+        source: [{ text: "Online Programme Student" }],
+      },
+      {
+        category: [{ text: "Practical Learning" }],
+        quote: [
+          {
+            text: "The explanations were simple, and the activities helped me remember and use new words more easily.",
+          },
+        ],
+        source: [{ text: "Success Academy Student" }],
       },
     ],
   },
@@ -223,16 +273,89 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
   );
 }
 
+function CarouselArrow({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {direction === "left" ? (
+        <>
+          <path d="m15 18-6-6 6-6" />
+          <path d="M21 12H9" />
+        </>
+      ) : (
+        <>
+          <path d="m9 18 6-6-6-6" />
+          <path d="M3 12h12" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export function TestimonialsSection({ locale }: LandingSectionProps) {
   const content = testimonialsContent[locale];
   const isArabic = locale === "ar";
+  const testimonials = [content.featured, ...content.supporting];
   const playerRef = useRef<WistiaPlayerElement | null>(null);
   const videoFrameRef = useRef<HTMLDivElement>(null);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const carouselHoveredRef = useRef(false);
+  const carouselFocusedRef = useRef(false);
   const isVisibleRef = useRef(false);
   const isPlayerReadyRef = useRef(false);
   const isMutedRef = useRef(true);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncMotionPreference = () => setPrefersReducedMotion(media.matches);
+
+    syncMotionPreference();
+    media.addEventListener("change", syncMotionPreference);
+
+    return () => media.removeEventListener("change", syncMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    const syncVisibility = () =>
+      setIsPageVisible(document.visibilityState === "visible");
+
+    syncVisibility();
+    document.addEventListener("visibilitychange", syncVisibility);
+
+    return () =>
+      document.removeEventListener("visibilitychange", syncVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion || isCarouselPaused || !isPageVisible) return;
+
+    const interval = window.setInterval(() => {
+      setActiveTestimonial(
+        (current) => (current + 1) % testimonials.length,
+      );
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [
+    isCarouselPaused,
+    isPageVisible,
+    prefersReducedMotion,
+    testimonials.length,
+  ]);
 
   useEffect(() => {
     const frame = videoFrameRef.current;
@@ -331,6 +454,50 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
         // The sound state remains valid even if playback is momentarily blocked.
       }
     }
+  };
+
+
+  const showPreviousTestimonial = () => {
+    setActiveTestimonial(
+      (current) => (current - 1 + testimonials.length) % testimonials.length,
+    );
+  };
+
+  const showNextTestimonial = () => {
+    setActiveTestimonial((current) => (current + 1) % testimonials.length);
+  };
+
+  const handleCarouselPointerDown = (
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    swipeStartRef.current = { x: event.clientX, y: event.clientY };
+    setIsCarouselPaused(true);
+  };
+
+  const handleCarouselPointerUp = (
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+
+    if (start) {
+      const deltaX = event.clientX - start.x;
+      const deltaY = event.clientY - start.y;
+
+      if (Math.abs(deltaX) >= 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        const movedTowardNext = isArabic ? deltaX > 0 : deltaX < 0;
+
+        if (movedTowardNext) {
+          showNextTestimonial();
+        } else {
+          showPreviousTestimonial();
+        }
+      }
+    }
+
+    setIsCarouselPaused(
+      carouselHoveredRef.current || carouselFocusedRef.current,
+    );
   };
 
   return (
@@ -454,79 +621,188 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
           className={`${isArabic ? "lg:col-start-2" : "lg:col-start-1"} lg:row-start-2`}
           dir={isArabic ? "rtl" : "ltr"}
         >
-          <article className="relative overflow-hidden rounded-[23px] border border-[#EC911F]/25 bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_18px_42px_rgba(10,3,22,0.22)] sm:p-5">
-            <span
-              className="absolute inset-y-0 start-0 w-1.5 bg-[#EC911F]"
-              aria-hidden="true"
-            />
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-[13px] font-black text-[#EC911F] sm:text-[14px]">
-                <RichText parts={content.featured.category} />
-              </span>
-              <span className="text-[#391B68]/25">
-                <QuoteIcon large />
-              </span>
-            </div>
-            <blockquote className="mt-2 max-w-[680px] text-[19px] font-black leading-[1.5] sm:text-[20px] lg:text-[21px]">
-              <RichText parts={content.featured.quote} />
-            </blockquote>
-            <p className="mt-3 border-t border-[#391B68]/10 pt-2 text-[13px] font-bold text-[#6d6578]">
-              <RichText parts={content.featured.source} />
-            </p>
-          </article>
+          <div
+            className="touch-pan-y"
+            onMouseEnter={() => {
+              carouselHoveredRef.current = true;
+              setIsCarouselPaused(true);
+            }}
+            onMouseLeave={() => {
+              carouselHoveredRef.current = false;
+              setIsCarouselPaused(carouselFocusedRef.current);
+            }}
+            onFocusCapture={() => {
+              carouselFocusedRef.current = true;
+              setIsCarouselPaused(true);
+            }}
+            onBlurCapture={(event) => {
+              if (event.currentTarget.contains(event.relatedTarget)) return;
+              carouselFocusedRef.current = false;
+              setIsCarouselPaused(carouselHoveredRef.current);
+            }}
+            onPointerDown={handleCarouselPointerDown}
+            onPointerUp={handleCarouselPointerUp}
+            onPointerCancel={() => {
+              swipeStartRef.current = null;
+              setIsCarouselPaused(
+                carouselHoveredRef.current || carouselFocusedRef.current,
+              );
+            }}
+          >
+            <div
+              className="relative h-[300px] sm:h-[285px] lg:h-[275px]"
+              aria-roledescription={
+                isArabic ? "عارض شهادات الطلاب" : "testimonial carousel"
+              }
+            >
+              {testimonials.map((testimonial, index) => {
+                const position =
+                  (index - activeTestimonial + testimonials.length) %
+                  testimonials.length;
+                const isActive = position === 0;
+                const isVisibleBackCard = position === 1 || position === 2;
+                const isPreviousCard = position === testimonials.length - 1;
+                const opacity =
+                  position === 0
+                    ? 1
+                    : position === 1
+                      ? 0.7
+                      : position === 2
+                        ? 0.38
+                        : 0;
+                const transform =
+                  position === 0
+                    ? "translateY(0px) scale(1)"
+                    : position === 1
+                      ? "translateY(18px) scale(0.965)"
+                      : position === 2
+                        ? "translateY(35px) scale(0.93)"
+                        : isPreviousCard
+                          ? "translateY(-10px) scale(0.98)"
+                          : "translateY(52px) scale(0.9)";
 
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {content.supporting.slice(0, 2).map((testimonial, index) => (
-              <article
-                key={index}
-                className="rounded-[19px] border border-white/12 bg-[#F8F6FB] p-4 text-[#391B68] shadow-[0_8px_22px_rgba(10,3,22,0.15)] transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#EC911F]/35 motion-reduce:transform-none motion-reduce:transition-none sm:px-4"
+                return (
+                  <article
+                    key={index}
+                    role="group"
+                    aria-label={
+                      isArabic
+                        ? `الشهادة ${index + 1} من ${testimonials.length}`
+                        : `Testimonial ${index + 1} of ${testimonials.length}`
+                    }
+                    aria-hidden={!isActive}
+                    tabIndex={isActive ? 0 : -1}
+                    className={`absolute inset-x-0 top-0 min-h-[210px] overflow-hidden rounded-[23px] border bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_18px_42px_rgba(10,3,22,0.23)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#EC911F] sm:min-h-[200px] sm:p-6 lg:min-h-[185px] lg:px-7 lg:py-6 ${
+                      isActive
+                        ? "border-[#EC911F]/32"
+                        : "border-white/16"
+                    } ${
+                      prefersReducedMotion
+                        ? "transition-none"
+                        : "transition-[transform,opacity] duration-[650ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    }`}
+                    style={{
+                      opacity,
+                      pointerEvents: isActive ? "auto" : "none",
+                      transform,
+                      zIndex: isActive ? 30 : isVisibleBackCard ? 20 - position : 0,
+                    }}
+                  >
+                    <span
+                      className="absolute inset-y-0 start-0 w-1.5 bg-[#EC911F]"
+                      aria-hidden="true"
+                    />
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
+                        <RichText parts={testimonial.category} />
+                      </span>
+                      <span className="text-[#391B68]/22">
+                        <QuoteIcon />
+                      </span>
+                    </div>
+                    <blockquote className="mt-2 text-[17px] font-black leading-[1.55] sm:text-[19px] lg:text-[21px]">
+                      <RichText parts={testimonial.quote} />
+                    </blockquote>
+                    <p className="mt-3 border-t border-[#391B68]/10 pt-2 text-[13px] font-bold text-[#6d6578] sm:text-[14px]">
+                      <RichText parts={testimonial.source} />
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="mt-1 flex items-center justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={showPreviousTestimonial}
+                aria-label={
+                  isArabic ? "عرض الشهادة السابقة" : "Previous testimonial"
+                }
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/10 text-white transition-[background-color,border-color] duration-200 hover:border-[#EC911F]/50 hover:bg-white/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] motion-reduce:transition-none"
               >
-                <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
-                  <RichText parts={testimonial.category} />
-                </span>
-                <blockquote className="mt-1.5 text-[16px] font-black leading-[1.5]">
-                  <RichText parts={testimonial.quote} />
-                </blockquote>
-                <p className="mt-2 text-[12px] font-bold text-[#716878] sm:text-[13px]">
-                  <RichText parts={testimonial.source} />
-                </p>
-              </article>
-            ))}
+                <CarouselArrow direction={isArabic ? "right" : "left"} />
+              </button>
+
+              <div
+                className="flex items-center gap-0.5"
+                aria-label={isArabic ? "موضع الشهادة" : "Testimonial position"}
+              >
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setActiveTestimonial(index)}
+                    aria-label={
+                      isArabic
+                        ? `عرض الشهادة ${index + 1} من ${testimonials.length}`
+                        : `Show testimonial ${index + 1} of ${testimonials.length}`
+                    }
+                    aria-current={
+                      index === activeTestimonial ? "true" : undefined
+                    }
+                    className="group inline-flex h-11 w-7 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#EC911F]"
+                  >
+                    <span
+                      className={`block rounded-full transition-[background-color,width] duration-200 ${
+                        index === activeTestimonial
+                          ? "h-2 w-5 bg-[#EC911F]"
+                          : "h-2 w-2 bg-white/35 group-hover:bg-white/65"
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={showNextTestimonial}
+                aria-label={isArabic ? "عرض الشهادة التالية" : "Next testimonial"}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/10 text-white transition-[background-color,border-color] duration-200 hover:border-[#EC911F]/50 hover:bg-white/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] motion-reduce:transition-none"
+              >
+                <CarouselArrow direction={isArabic ? "left" : "right"} />
+              </button>
+            </div>
           </div>
 
-          <article className="relative mt-2.5 overflow-hidden rounded-[19px] border border-white/12 bg-[#eee9f5] px-5 py-3 text-[#391B68] shadow-[0_8px_22px_rgba(10,3,22,0.14)] sm:px-5 sm:py-3">
-            <span
-              className="absolute inset-y-0 start-0 w-1 bg-[#EC911F]"
-              aria-hidden="true"
-            />
-            <div className="sm:flex sm:items-center sm:justify-between sm:gap-8">
-              <div className="min-w-0 flex-1">
-                <span className="text-[12px] font-black text-[#EC911F] sm:text-[13px]">
-                  <RichText parts={content.supporting[2].category} />
-                </span>
-                <blockquote className="mt-1 text-[16px] font-black leading-[1.5] sm:text-[17px]">
-                  <RichText parts={content.supporting[2].quote} />
-                </blockquote>
-              </div>
-              <p className="mt-2 shrink-0 text-[12px] font-bold text-[#716878] sm:mt-0 sm:text-[13px]">
-                <RichText parts={content.supporting[2].source} />
-              </p>
-            </div>
-          </article>
-
-          <p className="mt-3 max-w-[700px] text-[12px] font-bold leading-[1.55] text-white/68 sm:text-[13px]">
+          <p className="mt-2.5 max-w-[700px] text-[12px] font-bold leading-[1.55] text-white/72 sm:text-[13px]">
             {content.privacy}
           </p>
 
-          <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-start sm:gap-4">
-            <p className="text-[15px] font-black text-white sm:text-[16px]">
-              {content.ctaSupport}
-            </p>
+          <div className="mt-3.5 rounded-[24px] border border-[#EC911F]/24 bg-[#F8F6FB] p-5 text-[#391B68] shadow-[0_14px_34px_rgba(10,3,22,0.2)] sm:flex sm:min-h-[118px] sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-5">
+            <div className="min-w-0">
+              <h3 className="text-[27px] font-black leading-[1.18] sm:text-[30px] lg:text-[32px]">
+                {content.ctaHeadline}
+              </h3>
+              <p className="mt-2 max-w-[500px] text-[14px] font-bold leading-[1.55] text-[#6d6578] sm:text-[15px]">
+                {content.ctaSupport}
+              </p>
+            </div>
             <CtaLink
               href={bookingHref}
               locale={locale}
               source="student_testimonials"
-              className="h-[52px] w-full shrink-0 rounded-[16px] px-7 text-[16px] shadow-[0_10px_24px_rgba(236,145,31,0.28)] sm:w-auto"
+              className="mt-4 h-[54px] w-full shrink-0 rounded-[17px] px-7 text-[16px] shadow-[0_11px_26px_rgba(236,145,31,0.3)] sm:mt-0 sm:w-auto"
             >
               {content.cta}
             </CtaLink>
@@ -536,3 +812,4 @@ export function TestimonialsSection({ locale }: LandingSectionProps) {
     </section>
   );
 }
+
