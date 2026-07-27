@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { LandingSectionProps } from "./types";
 
@@ -211,58 +212,6 @@ function TrainerIcon({
   );
 }
 
-function ClassroomPlaceholder({ label }: { label: string }) {
-  return (
-    <div
-      role="img"
-      aria-label={label}
-      className="relative flex aspect-[5/4] w-full items-center justify-center overflow-hidden rounded-[28px] border border-[#391B68]/12 bg-[#eee9f4] shadow-[0_24px_55px_rgba(57,27,104,0.14)] lg:aspect-[4/5] lg:rounded-[32px]"
-    >
-      <svg
-        className="h-[58%] w-[68%] text-[#391B68]"
-        viewBox="0 0 320 300"
-        fill="none"
-        aria-hidden="true"
-      >
-        <rect
-          x="54"
-          y="32"
-          width="212"
-          height="134"
-          rx="18"
-          fill="white"
-          stroke="currentColor"
-          strokeWidth="5"
-        />
-        <path
-          d="M94 79h77M94 103h112M94 127h58"
-          stroke="#EC911F"
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
-        <circle cx="225" cy="92" r="18" fill="#391B68" />
-        <path
-          d="M197 152c3-27 13-41 29-41 17 0 27 14 30 41"
-          fill="#d9cfe5"
-          stroke="#391B68"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        <circle cx="103" cy="211" r="20" fill="#EC911F" />
-        <circle cx="160" cy="222" r="20" fill="#391B68" />
-        <circle cx="218" cy="211" r="20" fill="#EC911F" />
-        <path
-          d="M70 274c3-30 14-45 33-45s30 15 33 45M127 280c3-31 14-47 33-47s30 16 33 47M185 274c3-30 14-45 33-45s30 15 33 45"
-          fill="white"
-          stroke="#391B68"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-      </svg>
-    </div>
-  );
-}
-
 export function TrainersSection({ locale }: LandingSectionProps) {
   const content = trainerContent[locale];
   const isArabic = locale === "ar";
@@ -361,11 +310,35 @@ export function TrainersSection({ locale }: LandingSectionProps) {
           </header>
 
           <div
-            className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} ${motionClass} mx-auto w-full max-w-[620px] lg:row-span-2 lg:row-start-1 lg:max-w-[400px] lg:self-stretch`}
+            className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} ${motionClass} relative mx-auto flex h-[320px] w-full max-w-[620px] items-end justify-center overflow-visible sm:h-[420px] md:h-[460px] lg:row-span-2 lg:row-start-1 lg:h-[540px] lg:max-w-none lg:self-end`}
             dir={isArabic ? "rtl" : "ltr"}
             style={revealStyle(80)}
           >
-            <ClassroomPlaceholder label={content.imageAlt} />
+            <div className="relative h-full max-w-full aspect-[1122/1402] overflow-visible">
+              <Image
+                src="/images/trainer-model.png"
+                alt={content.imageAlt}
+                fill
+                sizes="(min-width: 1024px) 38vw, 100vw"
+                className="object-contain object-bottom"
+              />
+              <span
+                className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[8%] bg-gradient-to-b from-[#FBFAFC] to-transparent"
+                aria-hidden="true"
+              />
+              <span
+                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[10%] bg-gradient-to-t from-[#FBFAFC] to-transparent"
+                aria-hidden="true"
+              />
+              <span
+                className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[8%] bg-gradient-to-r from-[#FBFAFC] to-transparent"
+                aria-hidden="true"
+              />
+              <span
+                className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[8%] bg-gradient-to-l from-[#FBFAFC] to-transparent"
+                aria-hidden="true"
+              />
+            </div>
           </div>
 
           <div
