@@ -8,6 +8,7 @@ import { ProblemSection } from "@/components/landing/problem-section";
 import { RegistrationStepsSection } from "@/components/landing/registration-steps-section";
 import { SectionShell } from "@/components/landing/section-shell";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
+import { TrainersSection } from "@/components/landing/trainers-section";
 import { VideoPreviewSection } from "@/components/landing/video-preview-section";
 import { PageTracker } from "@/components/page-tracker";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
@@ -33,6 +34,7 @@ export function LandingPage({ locale }: LandingPageProps) {
       <HeroSection locale={locale} copy={copy} />
       <VideoPreviewSection locale={locale} copy={copy} />
       <ProblemSection locale={locale} copy={copy} />
+      <TrainersSection locale={locale} copy={copy} />
       <JourneySection locale={locale} copy={copy} />
       <TestimonialsSection locale={locale} copy={copy} />
       <RegistrationStepsSection locale={locale} copy={copy} />
