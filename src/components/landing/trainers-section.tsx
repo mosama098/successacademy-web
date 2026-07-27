@@ -265,12 +265,12 @@ export function TrainersSection({ locale }: LandingSectionProps) {
     <section
       ref={sectionRef}
       id="trainers"
-      className="relative overflow-hidden bg-[#FBFAFC] px-5 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-10"
+      className="relative overflow-hidden bg-[#FBFAFC] px-5 pb-[116px] pt-12 sm:px-6 sm:pb-[120px] sm:pt-14 lg:px-8 lg:py-10"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div className="mx-auto max-w-[1240px]">
         <div
-          className={`grid gap-7 lg:grid-rows-[auto_auto] lg:gap-x-12 lg:gap-y-0 ${
+          className={`grid gap-5 sm:gap-6 lg:grid-rows-[auto_auto] lg:gap-7 lg:gap-x-12 lg:gap-y-0 ${
             isArabic
               ? "lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)]"
               : "lg:grid-cols-[minmax(0,0.62fr)_minmax(0,0.38fr)]"
@@ -282,12 +282,12 @@ export function TrainersSection({ locale }: LandingSectionProps) {
             dir={isArabic ? "rtl" : "ltr"}
             style={revealStyle(0)}
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#391B68]/10 bg-[#eee9f4] px-4 py-2 text-[13px] font-black text-[#391B68] sm:text-[14px]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#391B68]/10 bg-[#eee9f4] px-3.5 py-1.5 text-[13px] font-black text-[#391B68] sm:px-4 sm:py-2 sm:text-[14px]">
               <TrainerIcon icon="team" className="h-4 w-4 text-[#EC911F]" />
               {content.badge}
             </span>
             <h2
-              className={`mt-4 max-w-[760px] text-[32px] font-black leading-[1.18] text-[#391B68] sm:text-[40px] lg:leading-[1.15] ${
+              className={`mt-4 max-w-[760px] text-[clamp(32px,8.4vw,36px)] font-black leading-[1.2] text-[#391B68] sm:text-[38px] md:text-[40px] lg:leading-[1.15] ${
                 isArabic ? "lg:text-[42px]" : "lg:text-[40px]"
               }`}
             >
@@ -310,7 +310,7 @@ export function TrainersSection({ locale }: LandingSectionProps) {
           </header>
 
           <div
-            className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} ${motionClass} relative mx-auto flex h-[320px] w-full max-w-[620px] items-end justify-center overflow-visible sm:h-[420px] md:h-[460px] lg:row-span-2 lg:row-start-1 lg:h-[540px] lg:max-w-none lg:self-end`}
+            className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} ${motionClass} relative mx-auto flex h-[clamp(280px,calc(50vw+100px),310px)] w-full max-w-[620px] items-end justify-center overflow-visible sm:h-[380px] md:h-[400px] lg:row-span-2 lg:row-start-1 lg:h-[540px] lg:max-w-none lg:self-end`}
             dir={isArabic ? "rtl" : "ltr"}
             style={revealStyle(80)}
           >
@@ -345,21 +345,21 @@ export function TrainersSection({ locale }: LandingSectionProps) {
             className={`${isArabic ? "lg:col-start-2" : "lg:col-start-1"} min-w-0`}
             dir={isArabic ? "rtl" : "ltr"}
           >
-            <div className="grid grid-cols-2 gap-3 lg:mt-4 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:mt-4 lg:grid-cols-3">
               {content.stats.map((stat, index) => (
                 <div
                   key={stat.value}
-                  className={`${motionClass} flex min-h-[88px] gap-2.5 rounded-[18px] border border-[#391B68]/10 bg-white px-3 py-3 shadow-[0_8px_22px_rgba(57,27,104,0.06)] sm:items-center sm:px-4 ${
+                  className={`${motionClass} flex min-h-[80px] gap-2.5 rounded-[18px] border border-[#391B68]/10 bg-white px-3 py-3 shadow-[0_8px_22px_rgba(57,27,104,0.06)] sm:items-center sm:px-4 lg:min-h-[88px] ${
                     index === 2
                       ? "col-span-2 flex-row items-center lg:col-span-1"
-                      : "flex-col items-start sm:flex-row"
+                      : "flex-row items-center"
                   }`}
                   style={revealStyle(140 + index * 60)}
                 >
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eee9f4] text-[#391B68]">
                     <TrainerIcon icon={stat.icon} />
                   </span>
-                  <strong className="min-w-0 text-[18px] font-black leading-[1.2] text-[#391B68] sm:text-[19px] lg:text-[20px]">
+                  <strong className="min-w-0 text-[19px] font-black leading-[1.2] text-[#391B68] lg:text-[20px]">
                     <span className="[unicode-bidi:isolate]" dir="ltr">
                       {stat.value}
                     </span>
@@ -370,7 +370,7 @@ export function TrainersSection({ locale }: LandingSectionProps) {
             </div>
 
             <div
-              className={`${motionClass} mt-4`}
+              className={`${motionClass} mt-5 sm:mt-6 lg:mt-4`}
               style={revealStyle(340)}
             >
               <h3 className="max-w-[680px] text-[24px] font-black leading-[1.35] text-[#391B68]">
@@ -381,18 +381,18 @@ export function TrainersSection({ locale }: LandingSectionProps) {
               </p>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:gap-2.5">
+            <div className="mt-5 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-3 lg:mt-4 lg:gap-2.5">
               {content.points.map((point, index) => (
                 <article
                   key={`${point.title}${point.ltrToken ?? ""}`}
-                  className={`${motionClass} flex gap-3 rounded-[19px] border border-[#dcd3e8] bg-white px-4 py-4 lg:p-[14px]`}
+                  className={`${motionClass} flex gap-3 rounded-[19px] border border-[#dcd3e8] bg-white px-4 py-3.5 sm:p-[15px] lg:p-[14px]`}
                   style={revealStyle(420 + index * 55)}
                 >
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eee9f4] text-[#391B68]">
                     <TrainerIcon icon={point.icon} />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-[16px] font-black leading-[1.35] text-[#391B68] sm:text-[17px] lg:text-[16px]">
+                    <h3 className="text-[17px] font-black leading-[1.35] text-[#391B68] lg:text-[16px]">
                       {point.ltrToken ? (
                         <>
                           <span
@@ -418,7 +418,7 @@ export function TrainersSection({ locale }: LandingSectionProps) {
         </div>
 
         <div
-          className={`${motionClass} mt-6 rounded-[20px] bg-[#391B68] px-5 py-[18px] text-center text-[19px] font-black leading-[1.55] text-white shadow-[0_16px_34px_rgba(57,27,104,0.16)] sm:px-7 sm:text-[21px] lg:mt-4 lg:py-3.5 lg:text-[22px]`}
+          className={`${motionClass} mt-7 rounded-[20px] bg-[#391B68] px-5 py-[18px] text-center text-[19px] font-black leading-[1.55] text-white shadow-[0_16px_34px_rgba(57,27,104,0.16)] sm:px-7 sm:text-[21px] lg:mt-4 lg:py-3.5 lg:text-[22px]`}
           style={revealStyle(680)}
         >
           {content.closingLead}
