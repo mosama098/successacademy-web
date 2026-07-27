@@ -11,7 +11,6 @@ export type FormState = {
   phone: string;
   email: string;
   learningGoal: string;
-  currentLevel: string;
   preferredLearningMode: string;
   preferredAssessmentTime: string;
   notes: string;
@@ -26,7 +25,6 @@ export const initialState: FormState = {
   phone: "",
   email: "",
   learningGoal: "",
-  currentLevel: "",
   preferredLearningMode: "",
   preferredAssessmentTime: "",
   notes: "",

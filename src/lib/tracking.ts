@@ -45,12 +45,6 @@ export function trackFormStart(payload: TrackingPayload = {}) {
   tiktokEvent("ClickButton", payload);
 }
 
-export function trackFormStepChange(payload: TrackingPayload = {}) {
-  googleEvent("lead_form_step_change", payload);
-  metaEvent("LeadFormStepChange", payload);
-  tiktokEvent("LeadFormStepChange", payload);
-}
-
 export function trackFormSubmit(payload: TrackingPayload = {}) {
   googleEvent("generate_lead", payload);
   metaEvent("Lead", payload, true);

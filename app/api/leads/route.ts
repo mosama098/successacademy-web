@@ -18,6 +18,7 @@ const requiredFields: Array<keyof LeadRequest> = [
   "fullName",
   "phone",
   "learningGoal",
+  "preferredLearningMode",
   "preferredAssessmentTime",
 ];
 

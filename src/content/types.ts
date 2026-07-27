@@ -62,10 +62,15 @@ export type LandingContent = {
   };
   delivery: {
     title: string;
+    subtitle: string;
     onlineLabel: string;
     online: string;
+    onlineBullets: string[];
     branchLabel: string;
     branch: string;
+    branchBullets: string[];
+    cta: string;
+    note: string;
   };
   successManager: {
     title: string;
@@ -87,18 +92,16 @@ export type LandingContent = {
     }>;
   };
   form: {
+    badge: string;
     title: string;
     subtitle: string;
-    benefitTitle: string;
-    benefitItems: string[];
-    stepOne: string;
-    stepTwo: string;
+    trustItems: string[];
+    optional: string;
     labels: {
       fullName: string;
       phone: string;
       email: string;
       learningGoal: string;
-      currentLevel: string;
       preferredLearningMode: string;
       preferredAssessmentTime: string;
       notes: string;
@@ -111,25 +114,34 @@ export type LandingContent = {
       notes: string;
     };
     learningGoalOptions: Option[];
-    currentLevelOptions: Option[];
     learningModeOptions: Option[];
     assessmentTimeOptions: Option[];
     errors: {
       fullName: string;
       phone: string;
+      email: string;
       learningGoal: string;
+      preferredLearningMode: string;
       preferredAssessmentTime: string;
       consent: string;
-      submit: string;
     };
     buttons: {
-      next: string;
-      back: string;
       submit: string;
       loading: string;
-      success: string;
     };
-    fallback: string;
+    reassurance: string;
+    success: {
+      title: string;
+      message: string;
+      whatsapp: string;
+      back: string;
+    };
+    failure: {
+      title: string;
+      messageLead: string;
+      whatsapp: string;
+      messageTail: string;
+    };
   };
   thankYou: {
     title: string;
@@ -146,6 +158,21 @@ export type LandingContent = {
     slogan: string;
     rights: string;
     whatsapp: string;
+    requestCall: string;
+    quickLinksTitle: string;
+    quickLinks: {
+      problem: string;
+      journey: string;
+      assessment: string;
+      faq: string;
+    };
+    contactTitle: string;
+    socialTitle: string;
+    languageTitle: string;
+    languages: {
+      ar: string;
+      en: string;
+    };
   };
 };
 
