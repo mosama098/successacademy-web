@@ -438,11 +438,11 @@ function TrustPanel({
 }) {
   return (
     <aside
-      className={`${className} flex h-full flex-col bg-[#391B68] p-6 text-white sm:p-7 lg:row-start-1 lg:justify-between lg:p-8 xl:p-9`}
+      className={`${className} flex h-full flex-col bg-[#391B68] p-6 text-white sm:p-7 lg:row-start-1 lg:justify-between lg:px-8 lg:py-[34px] xl:px-9`}
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div>
-        <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-4 py-2 text-[13px] font-black text-[#b86200] sm:text-[14px]">
+        <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-4 py-2 text-[13px] font-black text-[#b86200] sm:text-[14px] lg:px-3.5 lg:py-1.5">
           {copy.badge}
         </span>
         <h2
@@ -458,7 +458,7 @@ function TrustPanel({
           {copy.subtitle}
         </p>
       </div>
-      <ul className="mt-6 grid gap-3 lg:mt-0">
+      <ul className="mt-6 grid gap-3 lg:mt-0 lg:gap-2.5">
         {copy.trustItems.map((item) => (
           <li
             key={item}
@@ -475,7 +475,7 @@ function TrustPanel({
         ))}
       </ul>
       <p
-        className="hidden border-t border-white/12 pt-4 text-[13px] font-bold leading-[1.6] text-[#e7dff0] lg:block"
+        className="hidden border-t border-white/12 pt-4 text-[13px] font-bold leading-[1.6] text-[#e7dff0] lg:block lg:pt-3.5"
         aria-hidden="true"
       >
         {copy.reassurance}
@@ -506,14 +506,14 @@ function FieldLabel({
         </span>
       ) : null}
       {optional ? (
-        <span className="rounded-full bg-[#eee9f4] px-2.5 py-1 text-[11px] font-black text-[#71667e] lg:px-2 lg:py-0.5 lg:text-[10.5px]">
+        <span className="shrink-0 rounded-full bg-[#eee9f4] px-2.5 py-1 text-[11px] font-black text-[#71667e] lg:px-2 lg:py-0.5 lg:text-[10.5px]">
           {optional}
         </span>
       ) : null}
     </>
   );
 
-  const className = `mb-2.5 flex items-center gap-2 text-[15px] font-black leading-6 text-[#391B68] sm:text-[16px] lg:text-[15px] lg:leading-5 ${
+  const className = `mb-2.5 flex items-center gap-2 text-[15px] font-black leading-6 text-[#391B68] sm:text-[16px] lg:gap-1.5 lg:text-[15px] lg:leading-5 ${
     desktopInline ? "lg:mb-0" : "lg:mb-2"
   }`;
 
