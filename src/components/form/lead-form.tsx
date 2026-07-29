@@ -37,7 +37,7 @@ const validationOrder: FieldName[] = [
 ];
 
 const inputClassName =
-  "h-[52px] w-full rounded-[14px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#80758e] hover:border-[#391B68]/35 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e] lg:h-[46px] lg:rounded-[13px] lg:text-[14.5px]";
+  "h-[52px] w-full rounded-[14px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#71667e] hover:border-[#391B68]/45 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/12 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e] lg:h-[46px] lg:rounded-[13px] lg:text-[14.5px]";
 
 export function LeadForm({ locale, copy }: LeadFormProps) {
   const [form, setForm] = useState<FormState>(initialState);
@@ -229,7 +229,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
               onSubmit={submitForm}
               onFocus={markStarted}
               noValidate
-              className="grid gap-5 lg:gap-[7px]"
+              className="grid gap-5 lg:gap-[3px]"
             >
               <input
                 type="text"
@@ -384,7 +384,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 />
               ) : null}
 
-              <div className="grid gap-3 lg:gap-2">
+              <div className="grid gap-3 lg:gap-1.5">
                 <button
                   type="submit"
                   disabled={status === "loading"}
@@ -402,6 +402,20 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                     →
                   </span>
                 </button>
+                <a
+                  href={whatsappHref}
+                  onClick={() =>
+                    trackWhatsAppClick({
+                      locale,
+                      source: "lead_form_secondary",
+                    })
+                  }
+                  className="flex min-h-[50px] w-full items-center justify-center rounded-[16px] border border-[#391B68]/45 bg-white px-5 text-center text-[15.5px] font-black leading-[1.45] text-[#391B68] outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-[#391B68] hover:bg-[#eee9f4] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15 lg:min-h-[48px] lg:rounded-[14px]"
+                >
+                  {isArabic
+                    ? "عندك سؤال؟ تواصل معانا على واتساب"
+                    : "Have a Question? Contact Us on WhatsApp"}
+                </a>
                 <p className="mx-auto max-w-[620px] text-center text-[13.5px] font-bold leading-[1.65] text-[#71667e] sm:text-[14px] lg:text-[13px] lg:leading-[1.55]">
                   {copy.reassurance}
                 </p>
@@ -619,7 +633,7 @@ function TextAreaField({
           ref={setRef}
           id={id}
           name={id}
-          className={`${inputClassName} min-h-[96px] resize-y py-4 leading-7 lg:min-h-[80px] lg:py-3 lg:leading-6`}
+          className={`${inputClassName} min-h-[96px] resize-y py-4 leading-7 lg:min-h-[72px] lg:py-2.5 lg:leading-6`}
         />
       </div>
     </div>
@@ -708,9 +722,9 @@ function ChoiceGroup({
                 className="peer sr-only"
               />
               <span
-                className={`flex min-h-[50px] cursor-pointer items-center justify-between gap-2 rounded-[14px] border px-4 py-2.5 text-start text-[14px] font-black leading-[1.45] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[44px] lg:gap-1.5 lg:rounded-[13px] lg:px-2.5 lg:py-2 lg:text-[13.5px] ${
+                className={`flex min-h-[50px] cursor-pointer items-center justify-between gap-2 rounded-[14px] border px-4 py-2.5 text-start text-[14px] font-bold leading-[1.45] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[44px] lg:gap-1.5 lg:rounded-[13px] lg:px-2.5 lg:py-2 lg:text-[13.5px] ${
                   selected
-                    ? "border-[#391B68] bg-[#eee9f4] text-[#391B68] shadow-[0_6px_16px_rgba(57,27,104,0.08)]"
+                    ? "border-[#391B68] bg-[#eee9f4] font-black text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14),0_7px_18px_rgba(57,27,104,0.1)]"
                     : error
                       ? "border-[#b4233c]/60 bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
                       : "border-[#d9d0e5] bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
@@ -762,7 +776,7 @@ function ConsentField({
     <div>
       <label
         htmlFor={id}
-        className={`flex cursor-pointer items-start gap-3 rounded-[16px] border bg-[#faf8fc] p-4 text-[14px] font-bold leading-[1.65] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/40 sm:text-[15px] lg:rounded-[13px] lg:p-3 lg:text-[14px] lg:leading-[1.55] ${
+        className={`flex cursor-pointer items-start gap-3 rounded-[16px] border bg-[#faf8fc] p-4 text-[14px] font-bold leading-[1.65] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/45 sm:text-[15px] lg:rounded-[13px] lg:p-2.5 lg:text-[14px] lg:leading-[1.55] ${
           error ? "border-[#b4233c]" : "border-[#d9d0e5]"
         }`}
       >
