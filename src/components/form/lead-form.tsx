@@ -212,7 +212,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         />
 
         <div
-          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] p-5 sm:p-7 lg:row-start-1 lg:px-6 lg:py-0`}
+          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] p-5 sm:p-7 lg:row-start-1 lg:px-6 lg:py-4`}
           dir={isArabic ? "rtl" : "ltr"}
         >
           {status === "success" ? (
@@ -229,7 +229,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
               onSubmit={submitForm}
               onFocus={markStarted}
               noValidate
-              className="grid gap-4 lg:gap-0"
+              className="grid gap-5 lg:gap-[3px]"
             >
               <input
                 type="text"
@@ -306,6 +306,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 error={errors.learningGoal}
                 required
                 gridClassName="grid-cols-1 min-[390px]:grid-cols-2"
+                narrowDesktopLabel
                 setFirstRef={(element) =>
                   setFieldRef("learningGoal", element)
                 }
@@ -321,7 +322,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 value={form.preferredLearningMode}
                 error={errors.preferredLearningMode}
                 required
-                gridClassName="grid-cols-2 [&>label:last-child]:col-span-2 sm:grid-cols-3 sm:[&>label:last-child]:col-span-1"
+                gridClassName="grid-cols-1 sm:grid-cols-3"
                 setFirstRef={(element) =>
                   setFieldRef("preferredLearningMode", element)
                 }
@@ -340,8 +341,6 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 error={errors.preferredAssessmentTime}
                 required
                 gridClassName="grid-cols-2 sm:grid-cols-3"
-                secondaryGridClassName="grid-cols-2"
-                splitAfter={3}
                 firstOptionClassName="col-span-2 sm:col-span-1"
                 setFirstRef={(element) =>
                   setFieldRef("preferredAssessmentTime", element)
@@ -352,35 +351,30 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 }
               />
 
-              <div className="border-t border-[#e3ddec] pt-3 lg:mt-0 lg:pt-1">
-                <TextAreaField
-                  id="lead-notes"
-                  label={copy.labels.notes}
-                  optional={copy.optional}
-                  placeholder={copy.placeholders.notes}
-                  value={form.notes}
-                  inputClassName={inputClassName}
-                  setRef={(element) => setFieldRef("notes", element)}
-                  onBlur={() => markTouched("notes")}
-                  onChange={(event) =>
-                    updateField("notes", event.target.value)
-                  }
-                />
-              </div>
+              <TextAreaField
+                id="lead-notes"
+                label={copy.labels.notes}
+                optional={copy.optional}
+                placeholder={copy.placeholders.notes}
+                value={form.notes}
+                desktopInlineLabel
+                inputClassName={inputClassName}
+                setRef={(element) => setFieldRef("notes", element)}
+                onBlur={() => markTouched("notes")}
+                onChange={(event) => updateField("notes", event.target.value)}
+              />
 
-              <div className="border-t border-[#e3ddec] pt-3 lg:mt-0 lg:pt-1">
-                <ConsentField
-                  id="lead-consent"
-                  label={copy.labels.consent}
-                  checked={form.consent}
-                  error={errors.consent}
-                  setRef={(element) => setFieldRef("consent", element)}
-                  onBlur={() => markTouched("consent")}
-                  onChange={(event) =>
-                    updateField("consent", event.target.checked)
-                  }
-                />
-              </div>
+              <ConsentField
+                id="lead-consent"
+                label={copy.labels.consent}
+                checked={form.consent}
+                error={errors.consent}
+                setRef={(element) => setFieldRef("consent", element)}
+                onBlur={() => markTouched("consent")}
+                onChange={(event) =>
+                  updateField("consent", event.target.checked)
+                }
+              />
 
               {errors.submit ? (
                 <SubmitError
@@ -390,7 +384,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 />
               ) : null}
 
-              <div className="grid gap-3 border-t border-[#e3ddec] pt-3 lg:mt-0 lg:gap-1.5 lg:pt-1">
+              <div className="grid gap-3 lg:gap-1.5">
                 <button
                   type="submit"
                   disabled={status === "loading"}
@@ -520,7 +514,7 @@ function FieldLabel({
   );
 
   const className = `mb-2.5 flex items-center gap-2 text-[15px] font-black leading-6 text-[#391B68] sm:text-[16px] lg:gap-1.5 lg:text-[15px] lg:leading-5 ${
-    desktopInline ? "lg:mb-0" : "lg:mb-1"
+    desktopInline ? "lg:mb-0" : "lg:mb-2"
   }`;
 
   return htmlFor ? (
@@ -655,9 +649,8 @@ function ChoiceGroup({
   error,
   required,
   gridClassName,
-  secondaryGridClassName,
-  splitAfter,
   firstOptionClassName = "",
+  narrowDesktopLabel = false,
   setFirstRef,
   onBlur,
   onChange,
@@ -670,18 +663,13 @@ function ChoiceGroup({
   error?: string;
   required?: boolean;
   gridClassName: string;
-  secondaryGridClassName?: string;
-  splitAfter?: number;
   firstOptionClassName?: string;
+  narrowDesktopLabel?: boolean;
   setFirstRef: (element: HTMLInputElement | null) => void;
   onBlur: () => void;
   onChange: (value: string) => void;
 }) {
   const errorId = `${id}-error`;
-  const optionRows =
-    splitAfter && splitAfter < options.length
-      ? [options.slice(0, splitAfter), options.slice(splitAfter)]
-      : [options];
 
   function handleBlur(event: FocusEvent<HTMLFieldSetElement>) {
     if (
@@ -695,77 +683,68 @@ function ChoiceGroup({
 
   return (
     <fieldset
-      className="min-w-0 border-t border-[#e3ddec] pt-3 lg:mt-0 lg:pt-1"
+      className={`min-w-0 lg:relative ${
+        narrowDesktopLabel ? "lg:ps-[192px]" : "lg:ps-[212px]"
+      }`}
       aria-invalid={Boolean(error)}
       aria-describedby={error ? errorId : undefined}
       onBlur={handleBlur}
     >
-      <legend className="mb-2 w-full lg:mb-1">
+      <legend
+        className={`w-full lg:absolute lg:start-0 lg:top-0 lg:pt-3 ${
+          narrowDesktopLabel ? "lg:w-[180px]" : "lg:w-[200px]"
+        }`}
+      >
         <FieldLabel required={required} desktopInline>
           {label}
         </FieldLabel>
       </legend>
-      <div className="grid gap-2.5">
-        {optionRows.map((row, rowIndex) => (
-          <div
-            key={`${id}-row-${rowIndex}`}
-            className={`grid auto-rows-fr items-stretch gap-2.5 lg:gap-2 ${
-              rowIndex === 0
-                ? gridClassName
-                : (secondaryGridClassName ?? gridClassName)
-            }`}
-          >
-            {row.map((option, index) => {
-              const optionIndex =
-                rowIndex === 0 ? index : (splitAfter ?? 0) + index;
-              const selected = value === option.value;
-              const optionId = `${id}-${option.value}`;
+      <div className={`grid gap-2.5 lg:gap-2 ${gridClassName}`}>
+        {options.map((option, index) => {
+          const selected = value === option.value;
+          const optionId = `${id}-${option.value}`;
 
-              return (
-                <label
-                  key={option.value}
-                  htmlFor={optionId}
-                  className={`h-full min-w-0 ${
-                    optionIndex === 0 ? firstOptionClassName : ""
+          return (
+            <label
+              key={option.value}
+              htmlFor={optionId}
+              className={index === 0 ? firstOptionClassName : undefined}
+            >
+              <input
+                ref={index === 0 ? setFirstRef : undefined}
+                id={optionId}
+                type="radio"
+                name={name}
+                value={option.value}
+                checked={selected}
+                onChange={() => onChange(option.value)}
+                aria-invalid={Boolean(error)}
+                className="peer sr-only"
+              />
+              <span
+                className={`flex min-h-[50px] cursor-pointer items-center justify-between gap-2 rounded-[14px] border px-4 py-2.5 text-start text-[14px] font-bold leading-[1.45] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[44px] lg:gap-1.5 lg:rounded-[13px] lg:px-2.5 lg:py-2 lg:text-[13.5px] ${
+                  selected
+                    ? "border-[#391B68] bg-[#eee9f4] font-black text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14),0_7px_18px_rgba(57,27,104,0.1)]"
+                    : error
+                      ? "border-[#b4233c]/60 bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
+                      : "border-[#d9d0e5] bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
+                }`}
+              >
+                <span>{option.label}</span>
+                <span
+                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[12px] transition-colors lg:h-4 lg:w-4 lg:text-[9px] ${
+                    selected
+                      ? "bg-[#EC911F] text-white"
+                      : "border border-[#c9bdd8] text-transparent"
                   }`}
+                  aria-hidden="true"
                 >
-                  <input
-                    ref={optionIndex === 0 ? setFirstRef : undefined}
-                    id={optionId}
-                    type="radio"
-                    name={name}
-                    value={option.value}
-                    checked={selected}
-                    onChange={() => onChange(option.value)}
-                    aria-invalid={Boolean(error)}
-                    className="peer sr-only"
-                  />
-                  <span
-                    className={`flex h-full min-h-[50px] w-full cursor-pointer items-center justify-between gap-2 rounded-[14px] border px-4 py-2.5 text-start text-[14px] font-bold leading-[1.35] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[46px] lg:gap-2 lg:rounded-[13px] lg:px-3 lg:py-2 lg:text-[14px] ${
-                      selected
-                        ? "border-[#391B68] bg-[#eee9f4] font-black text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14),0_7px_18px_rgba(57,27,104,0.1)]"
-                        : error
-                          ? "border-[#b4233c]/60 bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
-                          : "border-[#d9d0e5] bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
-                    }`}
-                  >
-                    <span className="min-w-0 flex-1">{option.label}</span>
-                    <span
-                      className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[12px] transition-colors lg:h-[18px] lg:w-[18px] lg:text-[10px] ${
-                        selected
-                          ? "bg-[#EC911F] text-white"
-                          : "border border-[#c9bdd8] text-transparent"
-                      }`}
-                      aria-hidden="true"
-                    >
-                      ✓
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        ))}
+                  ✓
+                </span>
+              </span>
+            </label>
+          );
+        })}
       </div>
       <div>
         <FieldError id={errorId} error={error} />
