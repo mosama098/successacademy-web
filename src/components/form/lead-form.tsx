@@ -37,7 +37,7 @@ const validationOrder: FieldName[] = [
 ];
 
 const inputClassName =
-  "h-14 w-full rounded-[15px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#80758e] hover:border-[#391B68]/35 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e]";
+  "h-[52px] w-full rounded-[14px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#80758e] hover:border-[#391B68]/35 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e] lg:h-[54px]";
 
 export function LeadForm({ locale, copy }: LeadFormProps) {
   const [form, setForm] = useState<FormState>(initialState);
@@ -198,10 +198,10 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div
-        className={`mx-auto grid max-w-[1240px] gap-6 lg:items-start lg:gap-8 xl:gap-10 ${
+        className={`mx-auto grid max-w-[1240px] overflow-hidden rounded-[26px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_24px_60px_rgba(57,27,104,0.12)] lg:rounded-[30px] ${
           isArabic
-            ? "lg:grid-cols-[minmax(0,0.62fr)_minmax(320px,0.38fr)]"
-            : "lg:grid-cols-[minmax(320px,0.38fr)_minmax(0,0.62fr)]"
+            ? "lg:grid-cols-[minmax(0,0.67fr)_minmax(320px,0.33fr)]"
+            : "lg:grid-cols-[minmax(320px,0.33fr)_minmax(0,0.67fr)]"
         }`}
         dir="ltr"
       >
@@ -212,7 +212,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         />
 
         <div
-          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 rounded-[26px] border border-[#dcd3e8] bg-[#fffefd] p-5 shadow-[0_22px_55px_rgba(57,27,104,0.10)] sm:p-7 lg:row-start-1 lg:rounded-[30px] lg:p-8`}
+          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] p-5 sm:p-7 lg:row-start-1 lg:p-8 xl:p-9`}
           dir={isArabic ? "rtl" : "ltr"}
         >
           {status === "success" ? (
@@ -229,7 +229,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
               onSubmit={submitForm}
               onFocus={markStarted}
               noValidate
-              className="grid gap-6"
+              className="grid gap-5 lg:gap-6"
             >
               <input
                 type="text"
@@ -385,7 +385,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="group flex h-[58px] w-full items-center justify-center gap-3 rounded-[17px] bg-[#EC911F] px-6 text-[17px] font-black text-white shadow-[0_14px_28px_rgba(236,145,31,0.28)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_17px_34px_rgba(236,145,31,0.34)] active:translate-y-0.5 active:shadow-[0_8px_18px_rgba(236,145,31,0.24)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65"
+                  className="group flex h-14 w-full items-center justify-center gap-3 rounded-[16px] bg-[#EC911F] px-6 text-[17px] font-black text-white shadow-[0_14px_28px_rgba(236,145,31,0.28)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_17px_34px_rgba(236,145,31,0.34)] active:translate-y-0.5 active:shadow-[0_8px_18px_rgba(236,145,31,0.24)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65"
                 >
                   <span aria-live="polite">
                     {status === "loading"
@@ -421,7 +421,7 @@ function TrustPanel({
 }) {
   return (
     <aside
-      className={`${className} rounded-[26px] bg-[#391B68] p-6 text-white shadow-[0_24px_55px_rgba(57,27,104,0.20)] sm:p-8 lg:row-start-1 lg:rounded-[30px] lg:p-7 xl:p-8`}
+      className={`${className} bg-[#391B68] p-6 text-white sm:p-7 lg:row-start-1 lg:p-9 xl:p-10`}
       dir={isArabic ? "rtl" : "ltr"}
     >
       <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-4 py-2 text-[13px] font-black text-[#b86200] sm:text-[14px]">
@@ -440,7 +440,7 @@ function TrustPanel({
             className="flex items-start gap-3 border-t border-white/12 pt-3 text-[14px] font-bold leading-[1.65] text-white sm:text-[15px]"
           >
             <span
-              className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#EC911F] text-sm font-black text-white"
+              className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-[#EC911F] text-sm font-black text-white lg:h-9 lg:w-9"
               aria-hidden="true"
             >
               ✓
@@ -571,7 +571,7 @@ function TextAreaField({
         ref={setRef}
         id={id}
         name={id}
-        className={`${inputClassName} min-h-[112px] resize-y py-4 leading-7`}
+        className={`${inputClassName} min-h-[96px] resize-y py-4 leading-7`}
       />
     </div>
   );
@@ -649,7 +649,7 @@ function ChoiceGroup({
                 className="peer sr-only"
               />
               <span
-                className={`flex min-h-[52px] cursor-pointer items-center justify-between gap-2 rounded-[15px] border px-4 py-3 text-start text-[14px] font-black leading-[1.45] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] ${
+                className={`flex min-h-[50px] cursor-pointer items-center justify-between gap-2 rounded-[14px] border px-4 py-2.5 text-start text-[14px] font-black leading-[1.45] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[48px] ${
                   selected
                     ? "border-[#391B68] bg-[#eee9f4] text-[#391B68] shadow-[0_6px_16px_rgba(57,27,104,0.08)]"
                     : error
@@ -853,3 +853,4 @@ function isValidPhone(value: string) {
   const digits = normalized.replace(/\D/g, "");
   return digits.length >= 8 && digits.length <= 15;
 }
+
