@@ -194,11 +194,11 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   return (
     <section
       id="lead-form"
-      className="scroll-mt-24 bg-[#f8f6fb] px-5 pb-[124px] pt-14 sm:px-6 sm:pb-[128px] sm:pt-16 lg:px-8 lg:py-8"
+      className="scroll-mt-24 bg-[#f8f6fb] px-5 pb-[124px] pt-14 sm:px-6 sm:pb-[128px] sm:pt-16 lg:px-8 lg:py-7"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div
-        className={`mx-auto grid max-w-[1160px] overflow-hidden rounded-[26px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_24px_60px_rgba(57,27,104,0.12)] lg:items-start lg:rounded-[30px] ${
+        className={`mx-auto grid max-w-[1160px] overflow-hidden rounded-[26px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_24px_60px_rgba(57,27,104,0.12)] lg:rounded-[30px] ${
           isArabic
             ? "lg:grid-cols-[minmax(0,0.68fr)_minmax(300px,0.32fr)]"
             : "lg:grid-cols-[minmax(300px,0.32fr)_minmax(0,0.68fr)]"
@@ -212,7 +212,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         />
 
         <div
-          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] p-5 sm:p-7 lg:row-start-1 lg:p-6`}
+          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] p-5 sm:p-7 lg:row-start-1 lg:px-6 lg:py-4`}
           dir={isArabic ? "rtl" : "ltr"}
         >
           {status === "success" ? (
@@ -229,7 +229,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
               onSubmit={submitForm}
               onFocus={markStarted}
               noValidate
-              className="grid gap-5 lg:gap-3.5"
+              className="grid gap-5 lg:gap-[7px]"
             >
               <input
                 type="text"
@@ -286,6 +286,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 placeholder={copy.placeholders.email}
                 value={form.email}
                 error={errors.email}
+                desktopInlineLabel
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -296,41 +297,40 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 onChange={(event) => updateField("email", event.target.value)}
               />
 
-              <div className="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-3">
-                <ChoiceGroup
-                  id="learning-goal"
-                  name="learningGoal"
-                  label={copy.labels.learningGoal}
-                  options={copy.learningGoalOptions}
-                  value={form.learningGoal}
-                  error={errors.learningGoal}
-                  required
-                  gridClassName="grid-cols-1 min-[390px]:grid-cols-2"
-                  setFirstRef={(element) =>
-                    setFieldRef("learningGoal", element)
-                  }
-                  onBlur={() => markTouched("learningGoal")}
-                  onChange={(value) => updateField("learningGoal", value)}
-                />
+              <ChoiceGroup
+                id="learning-goal"
+                name="learningGoal"
+                label={copy.labels.learningGoal}
+                options={copy.learningGoalOptions}
+                value={form.learningGoal}
+                error={errors.learningGoal}
+                required
+                gridClassName="grid-cols-1 min-[390px]:grid-cols-2"
+                narrowDesktopLabel
+                setFirstRef={(element) =>
+                  setFieldRef("learningGoal", element)
+                }
+                onBlur={() => markTouched("learningGoal")}
+                onChange={(value) => updateField("learningGoal", value)}
+              />
 
-                <ChoiceGroup
-                  id="learning-method"
-                  name="preferredLearningMode"
-                  label={copy.labels.preferredLearningMode}
-                  options={copy.learningModeOptions}
-                  value={form.preferredLearningMode}
-                  error={errors.preferredLearningMode}
-                  required
-                  gridClassName="grid-cols-1 sm:grid-cols-3"
-                  setFirstRef={(element) =>
-                    setFieldRef("preferredLearningMode", element)
-                  }
-                  onBlur={() => markTouched("preferredLearningMode")}
-                  onChange={(value) =>
-                    updateField("preferredLearningMode", value)
-                  }
-                />
-              </div>
+              <ChoiceGroup
+                id="learning-method"
+                name="preferredLearningMode"
+                label={copy.labels.preferredLearningMode}
+                options={copy.learningModeOptions}
+                value={form.preferredLearningMode}
+                error={errors.preferredLearningMode}
+                required
+                gridClassName="grid-cols-1 sm:grid-cols-3"
+                setFirstRef={(element) =>
+                  setFieldRef("preferredLearningMode", element)
+                }
+                onBlur={() => markTouched("preferredLearningMode")}
+                onChange={(value) =>
+                  updateField("preferredLearningMode", value)
+                }
+              />
 
               <ChoiceGroup
                 id="assessment-time"
@@ -340,8 +340,8 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 value={form.preferredAssessmentTime}
                 error={errors.preferredAssessmentTime}
                 required
-                gridClassName="grid-cols-2 sm:grid-cols-3 xl:grid-cols-6"
-                firstOptionClassName="col-span-2 sm:col-span-1 xl:col-span-2"
+                gridClassName="grid-cols-2 sm:grid-cols-3"
+                firstOptionClassName="col-span-2 sm:col-span-1"
                 setFirstRef={(element) =>
                   setFieldRef("preferredAssessmentTime", element)
                 }
@@ -351,65 +351,60 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 }
               />
 
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,0.43fr)_minmax(0,0.57fr)] lg:items-start lg:gap-3">
-                <TextAreaField
-                  id="lead-notes"
-                  label={copy.labels.notes}
-                  optional={copy.optional}
-                  placeholder={copy.placeholders.notes}
-                  value={form.notes}
-                  inputClassName={inputClassName}
-                  setRef={(element) => setFieldRef("notes", element)}
-                  onBlur={() => markTouched("notes")}
-                  onChange={(event) =>
-                    updateField("notes", event.target.value)
-                  }
+              <TextAreaField
+                id="lead-notes"
+                label={copy.labels.notes}
+                optional={copy.optional}
+                placeholder={copy.placeholders.notes}
+                value={form.notes}
+                desktopInlineLabel
+                inputClassName={inputClassName}
+                setRef={(element) => setFieldRef("notes", element)}
+                onBlur={() => markTouched("notes")}
+                onChange={(event) => updateField("notes", event.target.value)}
+              />
+
+              <ConsentField
+                id="lead-consent"
+                label={copy.labels.consent}
+                checked={form.consent}
+                error={errors.consent}
+                setRef={(element) => setFieldRef("consent", element)}
+                onBlur={() => markTouched("consent")}
+                onChange={(event) =>
+                  updateField("consent", event.target.checked)
+                }
+              />
+
+              {errors.submit ? (
+                <SubmitError
+                  copy={copy}
+                  locale={locale}
+                  whatsappHref={whatsappHref}
                 />
+              ) : null}
 
-                <div className="grid gap-3 lg:gap-2.5">
-                  <ConsentField
-                    id="lead-consent"
-                    label={copy.labels.consent}
-                    checked={form.consent}
-                    error={errors.consent}
-                    setRef={(element) => setFieldRef("consent", element)}
-                    onBlur={() => markTouched("consent")}
-                    onChange={(event) =>
-                      updateField("consent", event.target.checked)
-                    }
-                  />
-
-                  {errors.submit ? (
-                    <SubmitError
-                      copy={copy}
-                      locale={locale}
-                      whatsappHref={whatsappHref}
-                    />
-                  ) : null}
-
-                  <div className="grid gap-3 lg:gap-2">
-                    <button
-                      type="submit"
-                      disabled={status === "loading"}
-                      className="group flex h-14 w-full items-center justify-center gap-3 rounded-[16px] bg-[#EC911F] px-6 text-[17px] font-black text-white shadow-[0_14px_28px_rgba(236,145,31,0.28)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_17px_34px_rgba(236,145,31,0.34)] active:translate-y-0.5 active:shadow-[0_8px_18px_rgba(236,145,31,0.24)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65 lg:h-[50px] lg:rounded-[14px] lg:text-[16px]"
-                    >
-                      <span aria-live="polite">
-                        {status === "loading"
-                          ? copy.buttons.loading
-                          : copy.buttons.submit}
-                      </span>
-                      <span
-                        className="text-xl transition-transform duration-200 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                        aria-hidden="true"
-                      >
-                        →
-                      </span>
-                    </button>
-                    <p className="text-center text-[13.5px] font-bold leading-[1.65] text-[#71667e] sm:text-[14px] lg:text-[13px] lg:leading-[1.5]">
-                      {copy.reassurance}
-                    </p>
-                  </div>
-                </div>
+              <div className="grid gap-3 lg:gap-2">
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="group flex h-14 w-full items-center justify-center gap-3 rounded-[16px] bg-[#EC911F] px-6 text-[17px] font-black text-white shadow-[0_14px_28px_rgba(236,145,31,0.28)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_17px_34px_rgba(236,145,31,0.34)] active:translate-y-0.5 active:shadow-[0_8px_18px_rgba(236,145,31,0.24)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65 lg:h-[50px] lg:rounded-[14px] lg:text-[16px]"
+                >
+                  <span aria-live="polite">
+                    {status === "loading"
+                      ? copy.buttons.loading
+                      : copy.buttons.submit}
+                  </span>
+                  <span
+                    className="text-xl transition-transform duration-200 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
+                </button>
+                <p className="mx-auto max-w-[620px] text-center text-[13.5px] font-bold leading-[1.65] text-[#71667e] sm:text-[14px] lg:text-[13px] lg:leading-[1.55]">
+                  {copy.reassurance}
+                </p>
               </div>
             </form>
           )}
@@ -429,25 +424,27 @@ function TrustPanel({
 }) {
   return (
     <aside
-      className={`${className} self-start bg-[#391B68] p-6 text-white sm:p-7 lg:row-start-1 lg:p-7 xl:p-8`}
+      className={`${className} flex h-full flex-col bg-[#391B68] p-6 text-white sm:p-7 lg:row-start-1 lg:justify-between lg:p-8 xl:p-9`}
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-4 py-2 text-[13px] font-black text-[#b86200] sm:text-[14px]">
-        {copy.badge}
-      </span>
-      <h2
-        className={`mt-5 text-balance text-[30px] font-black leading-[1.2] text-white sm:text-[36px] lg:mt-3.5 lg:leading-[1.2] ${
-          isArabic
-            ? "lg:text-[32px] xl:text-[34px]"
-            : "lg:text-[30px] xl:text-[30px]"
-        }`}
-      >
-        {copy.title}
-      </h2>
-      <p className="mt-4 text-[15px] font-bold leading-[1.7] text-[#e7dff0] sm:text-[16px] lg:mt-3 lg:text-[14.5px] lg:leading-[1.65]">
-        {copy.subtitle}
-      </p>
-      <ul className="mt-6 grid gap-3 lg:mt-5">
+      <div>
+        <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-4 py-2 text-[13px] font-black text-[#b86200] sm:text-[14px]">
+          {copy.badge}
+        </span>
+        <h2
+          className={`mt-5 text-balance text-[30px] font-black leading-[1.2] text-white sm:text-[36px] lg:mt-3.5 lg:leading-[1.2] ${
+            isArabic
+              ? "lg:text-[32px] xl:text-[34px]"
+              : "lg:text-[30px] xl:text-[30px]"
+          }`}
+        >
+          {copy.title}
+        </h2>
+        <p className="mt-4 text-[15px] font-bold leading-[1.7] text-[#e7dff0] sm:text-[16px] lg:mt-3 lg:text-[14.5px] lg:leading-[1.65]">
+          {copy.subtitle}
+        </p>
+      </div>
+      <ul className="mt-6 grid gap-3 lg:mt-0">
         {copy.trustItems.map((item) => (
           <li
             key={item}
@@ -463,6 +460,12 @@ function TrustPanel({
           </li>
         ))}
       </ul>
+      <p
+        className="hidden border-t border-white/12 pt-4 text-[13px] font-bold leading-[1.6] text-[#e7dff0] lg:block"
+        aria-hidden="true"
+      >
+        {copy.reassurance}
+      </p>
     </aside>
   );
 }
@@ -472,11 +475,13 @@ function FieldLabel({
   children,
   optional,
   required,
+  desktopInline,
 }: {
   htmlFor?: string;
   children: ReactNode;
   optional?: string;
   required?: boolean;
+  desktopInline?: boolean;
 }) {
   const content = (
     <>
@@ -494,8 +499,9 @@ function FieldLabel({
     </>
   );
 
-  const className =
-    "mb-2.5 flex items-center gap-2 text-[15px] font-black leading-6 text-[#391B68] sm:text-[16px] lg:mb-2 lg:text-[15px] lg:leading-5";
+  const className = `mb-2.5 flex items-center gap-2 text-[15px] font-black leading-6 text-[#391B68] sm:text-[16px] lg:text-[15px] lg:leading-5 ${
+    desktopInline ? "lg:mb-0" : "lg:mb-2"
+  }`;
 
   return htmlFor ? (
     <label htmlFor={htmlFor} className={className}>
@@ -512,6 +518,7 @@ function TextField({
   optional,
   error,
   required,
+  desktopInlineLabel = false,
   inputClassName,
   setRef,
   ...inputProps
@@ -521,6 +528,7 @@ function TextField({
   optional?: string;
   error?: string;
   required?: boolean;
+  desktopInlineLabel?: boolean;
   inputClassName: string;
   setRef: (element: HTMLInputElement | null) => void;
   value: string;
@@ -535,24 +543,37 @@ function TextField({
   const errorId = `${id}-error`;
 
   return (
-    <div>
-      <FieldLabel htmlFor={id} optional={optional} required={required}>
+    <div
+      className={
+        desktopInlineLabel
+          ? "lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:items-center lg:gap-x-3"
+          : undefined
+      }
+    >
+      <FieldLabel
+        htmlFor={id}
+        optional={optional}
+        required={required}
+        desktopInline={desktopInlineLabel}
+      >
         {label}
       </FieldLabel>
-      <input
-        {...inputProps}
-        ref={setRef}
-        id={id}
-        name={id}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        className={`${inputClassName} ${
-          error
-            ? "border-[#b4233c] ring-2 ring-[#b4233c]/10 focus:border-[#b4233c] focus:ring-[#b4233c]/15"
-            : ""
-        }`}
-      />
-      <FieldError id={errorId} error={error} />
+      <div className="min-w-0">
+        <input
+          {...inputProps}
+          ref={setRef}
+          id={id}
+          name={id}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
+          className={`${inputClassName} ${
+            error
+              ? "border-[#b4233c] ring-2 ring-[#b4233c]/10 focus:border-[#b4233c] focus:ring-[#b4233c]/15"
+              : ""
+          }`}
+        />
+        <FieldError id={errorId} error={error} />
+      </div>
     </div>
   );
 }
@@ -561,6 +582,7 @@ function TextAreaField({
   id,
   label,
   optional,
+  desktopInlineLabel = false,
   inputClassName,
   setRef,
   ...textareaProps
@@ -568,6 +590,7 @@ function TextAreaField({
   id: string;
   label: string;
   optional: string;
+  desktopInlineLabel?: boolean;
   inputClassName: string;
   setRef: (element: HTMLTextAreaElement | null) => void;
   value: string;
@@ -576,17 +599,29 @@ function TextAreaField({
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
 }) {
   return (
-    <div>
-      <FieldLabel htmlFor={id} optional={optional}>
+    <div
+      className={
+        desktopInlineLabel
+          ? "lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start lg:gap-x-3"
+          : undefined
+      }
+    >
+      <FieldLabel
+        htmlFor={id}
+        optional={optional}
+        desktopInline={desktopInlineLabel}
+      >
         {label}
       </FieldLabel>
-      <textarea
-        {...textareaProps}
-        ref={setRef}
-        id={id}
-        name={id}
-        className={`${inputClassName} min-h-[96px] resize-y py-4 leading-7 lg:min-h-[80px] lg:py-3 lg:leading-6`}
-      />
+      <div className="min-w-0">
+        <textarea
+          {...textareaProps}
+          ref={setRef}
+          id={id}
+          name={id}
+          className={`${inputClassName} min-h-[96px] resize-y py-4 leading-7 lg:min-h-[80px] lg:py-3 lg:leading-6`}
+        />
+      </div>
     </div>
   );
 }
@@ -601,6 +636,7 @@ function ChoiceGroup({
   required,
   gridClassName,
   firstOptionClassName = "",
+  narrowDesktopLabel = false,
   setFirstRef,
   onBlur,
   onChange,
@@ -614,6 +650,7 @@ function ChoiceGroup({
   required?: boolean;
   gridClassName: string;
   firstOptionClassName?: string;
+  narrowDesktopLabel?: boolean;
   setFirstRef: (element: HTMLInputElement | null) => void;
   onBlur: () => void;
   onChange: (value: string) => void;
@@ -632,13 +669,21 @@ function ChoiceGroup({
 
   return (
     <fieldset
-      className="min-w-0"
+      className={`min-w-0 lg:relative ${
+        narrowDesktopLabel ? "lg:ps-[192px]" : "lg:ps-[212px]"
+      }`}
       aria-invalid={Boolean(error)}
       aria-describedby={error ? errorId : undefined}
       onBlur={handleBlur}
     >
-      <legend className="w-full">
-        <FieldLabel required={required}>{label}</FieldLabel>
+      <legend
+        className={`w-full lg:absolute lg:start-0 lg:top-0 lg:pt-3 ${
+          narrowDesktopLabel ? "lg:w-[180px]" : "lg:w-[200px]"
+        }`}
+      >
+        <FieldLabel required={required} desktopInline>
+          {label}
+        </FieldLabel>
       </legend>
       <div className={`grid gap-2.5 lg:gap-2 ${gridClassName}`}>
         {options.map((option, index) => {
@@ -687,7 +732,9 @@ function ChoiceGroup({
           );
         })}
       </div>
-      <FieldError id={errorId} error={error} />
+      <div>
+        <FieldError id={errorId} error={error} />
+      </div>
     </fieldset>
   );
 }
