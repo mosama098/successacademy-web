@@ -25,6 +25,18 @@ import { getLeadMetadata, getWhatsAppHref } from "@/lib/utm";
 type FieldName = Exclude<keyof FormState, "company">;
 type FocusableField = HTMLInputElement | HTMLTextAreaElement;
 type FormStatus = "idle" | "loading" | "success";
+type FormIconName =
+  | "arrow"
+  | "check"
+  | "clock"
+  | "learning"
+  | "mail"
+  | "message"
+  | "phone"
+  | "spark"
+  | "target"
+  | "user"
+  | "whatsapp";
 
 const validationOrder: FieldName[] = [
   "fullName",
@@ -37,7 +49,7 @@ const validationOrder: FieldName[] = [
 ];
 
 const inputClassName =
-  "scroll-mb-[150px] w-full rounded-[14px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#71667e] hover:border-[#391B68]/45 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/12 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e] lg:text-[15px]";
+  "scroll-mb-[148px] w-full rounded-[13px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#766b82] hover:border-[#391B68]/45 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/12 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e]";
 
 export function LeadForm({ locale, copy }: LeadFormProps) {
   const [form, setForm] = useState<FormState>(initialState);
@@ -51,6 +63,12 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   const started = useRef(false);
   const isArabic = locale === "ar";
   const whatsappHref = useMemo(() => getWhatsAppHref(locale), [locale]);
+  const learningModeOptions = copy.learningModeOptions.filter(
+    (option) => option.value !== "not_sure",
+  );
+  const assessmentTimeOptions = copy.assessmentTimeOptions.filter((option) =>
+    ["earliest", "morning", "evening"].includes(option.value),
+  );
 
   function markStarted() {
     if (started.current) return;
@@ -194,14 +212,14 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   return (
     <section
       id="lead-form"
-      className="scroll-mt-24 bg-[#f8f6fb] px-4 pb-[128px] pt-12 sm:px-6 sm:pb-[132px] sm:pt-14 lg:px-8 lg:py-12"
+      className="scroll-mt-24 bg-[#f8f6fb] px-4 pb-[124px] pt-10 sm:px-6 sm:pb-[128px] sm:pt-12 lg:px-8 lg:py-12"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div
-        className={`mx-auto grid max-w-[1200px] overflow-hidden rounded-[26px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_24px_60px_rgba(57,27,104,0.12)] lg:rounded-[30px] ${
+        className={`mx-auto grid max-w-[1160px] overflow-hidden rounded-[25px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_22px_56px_rgba(57,27,104,0.11)] lg:rounded-[30px] ${
           isArabic
-            ? "lg:grid-cols-[minmax(0,0.68fr)_minmax(320px,0.32fr)]"
-            : "lg:grid-cols-[minmax(320px,0.32fr)_minmax(0,0.68fr)]"
+            ? "lg:grid-cols-[minmax(0,0.7fr)_minmax(310px,0.3fr)]"
+            : "lg:grid-cols-[minmax(310px,0.3fr)_minmax(0,0.7fr)]"
         }`}
         dir="ltr"
       >
@@ -212,7 +230,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         />
 
         <div
-          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] px-[18px] py-[22px] sm:p-7 lg:row-start-1 lg:p-8`}
+          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] px-4 py-5 sm:p-6 lg:row-start-1`}
           dir={isArabic ? "rtl" : "ltr"}
         >
           {status === "success" ? (
@@ -243,10 +261,11 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 autoComplete="off"
               />
 
-              <div className="grid gap-5 md:grid-cols-2 md:gap-3.5">
+              <div className="grid gap-4 md:grid-cols-2 md:gap-3">
                 <TextField
                   id="lead-full-name"
                   label={copy.labels.fullName}
+                  icon="user"
                   placeholder={copy.placeholders.fullName}
                   value={form.fullName}
                   error={errors.fullName}
@@ -262,6 +281,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 <TextField
                   id="lead-phone"
                   label={copy.labels.phone}
+                  icon="phone"
                   placeholder={copy.placeholders.phone}
                   value={form.phone}
                   error={errors.phone}
@@ -279,10 +299,11 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 />
               </div>
 
-              <div className="mt-5 lg:mt-4">
+              <div className="mt-4">
                 <TextField
                   id="lead-email"
                   label={copy.labels.email}
+                  icon="mail"
                   optional={copy.optional}
                   placeholder={copy.placeholders.email}
                   value={form.email}
@@ -302,6 +323,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 id="learning-goal"
                 name="learningGoal"
                 label={copy.labels.learningGoal}
+                icon="target"
                 options={copy.learningGoalOptions}
                 value={form.learningGoal}
                 error={errors.learningGoal}
@@ -318,7 +340,8 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 id="learning-method"
                 name="preferredLearningMode"
                 label={copy.labels.preferredLearningMode}
-                options={copy.learningModeOptions}
+                icon="learning"
+                options={learningModeOptions}
                 value={form.preferredLearningMode}
                 error={errors.preferredLearningMode}
                 required
@@ -336,7 +359,8 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 id="assessment-time"
                 name="preferredAssessmentTime"
                 label={copy.labels.preferredAssessmentTime}
-                options={copy.assessmentTimeOptions}
+                icon="clock"
+                options={assessmentTimeOptions}
                 value={form.preferredAssessmentTime}
                 error={errors.preferredAssessmentTime}
                 required
@@ -350,10 +374,11 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 }
               />
 
-              <div className="mt-[18px] border-t border-[#e5deec] pt-[18px] lg:mt-4 lg:pt-4">
+              <div className="mt-4 border-t border-[#e5deec] pt-4 lg:mt-3 lg:pt-3">
                 <TextAreaField
                   id="lead-notes"
                   label={copy.labels.notes}
+                  icon="message"
                   optional={copy.optional}
                   placeholder={copy.placeholders.notes}
                   value={form.notes}
@@ -364,7 +389,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 />
               </div>
 
-              <div className="mt-[18px] border-t border-[#e5deec] pt-[18px] lg:mt-4 lg:pt-4">
+              <div className="mt-4 border-t border-[#e5deec] pt-4 lg:mt-3 lg:pt-3">
                 <ConsentField
                   id="lead-consent"
                   label={copy.labels.consent}
@@ -379,7 +404,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
               </div>
 
               {errors.submit ? (
-                <div className="mt-[18px]">
+                <div className="mt-4">
                   <SubmitError
                     copy={copy}
                     locale={locale}
@@ -388,39 +413,40 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 </div>
               ) : null}
 
-              <div className="mt-[18px] border-t border-[#e5deec] pt-[18px] lg:mt-4 lg:pt-4">
-                <button
-                  type="submit"
-                  disabled={status === "loading"}
-                  className="group flex h-[54px] w-full scroll-mb-[150px] items-center justify-center gap-3 rounded-[15px] bg-[#EC911F] px-6 text-[17px] font-black text-white shadow-[0_14px_28px_rgba(236,145,31,0.28)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_17px_34px_rgba(236,145,31,0.34)] active:translate-y-0.5 active:shadow-[0_8px_18px_rgba(236,145,31,0.24)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65"
-                >
-                  <span aria-live="polite">
-                    {status === "loading"
-                      ? copy.buttons.loading
-                      : copy.buttons.submit}
-                  </span>
-                  <span
-                    className="text-xl transition-transform duration-200 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                    aria-hidden="true"
+              <div className="mt-4 border-t border-[#e5deec] pt-4 lg:mt-3 lg:pt-3">
+                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-[1.08fr_0.92fr]">
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="group flex h-[52px] w-full scroll-mb-[148px] items-center justify-center gap-2.5 rounded-[14px] bg-[#EC911F] px-5 text-[16px] font-black text-white shadow-[0_12px_24px_rgba(236,145,31,0.26)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_15px_28px_rgba(236,145,31,0.31)] active:translate-y-0.5 active:shadow-[0_7px_16px_rgba(236,145,31,0.22)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65"
                   >
-                    →
-                      </span>
-                </button>
-                <a
-                  href={whatsappHref}
-                  onClick={() =>
-                    trackWhatsAppClick({
-                      locale,
-                      source: "lead_form_secondary",
-                    })
-                  }
-                  className="mt-2.5 flex h-[50px] w-full scroll-mb-[150px] items-center justify-center rounded-[15px] border border-[#391B68]/45 bg-white px-5 text-center text-[15.5px] font-black leading-[1.45] text-[#391B68] outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-[#391B68] hover:bg-[#eee9f4] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15"
-                >
-                  {isArabic
-                    ? "عندك سؤال؟ تواصل معانا على واتساب"
-                    : "Have a Question? Contact Us on WhatsApp"}
-                </a>
-                <p className="mx-auto mt-2.5 max-w-[620px] text-center text-[13px] font-bold leading-[1.6] text-[#71667e]">
+                    <span aria-live="polite">
+                      {status === "loading"
+                        ? copy.buttons.loading
+                        : copy.buttons.submit}
+                    </span>
+                    <FormIcon
+                      name="arrow"
+                      className="h-[18px] w-[18px] transition-transform duration-200 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+                    />
+                  </button>
+                  <a
+                    href={whatsappHref}
+                    onClick={() =>
+                      trackWhatsAppClick({
+                        locale,
+                        source: "lead_form_secondary",
+                      })
+                    }
+                    className="flex h-[52px] w-full scroll-mb-[148px] items-center justify-center gap-2.5 rounded-[14px] border border-[#391B68]/40 bg-white px-4 text-center text-[14.5px] font-black leading-[1.4] text-[#391B68] outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-[#391B68] hover:bg-[#eee9f4] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15"
+                  >
+                    <FormIcon name="whatsapp" className="h-[18px] w-[18px]" />
+                    {isArabic
+                      ? "عندك سؤال؟ تواصل معانا على واتساب"
+                      : "Have a Question? Contact Us on WhatsApp"}
+                  </a>
+                </div>
+                <p className="mx-auto mt-2.5 max-w-[620px] text-center text-[12.5px] font-bold leading-[1.55] text-[#71667e] sm:text-[13px]">
                   {copy.reassurance}
                 </p>
               </div>
@@ -442,44 +468,45 @@ function TrustPanel({
 }) {
   return (
     <aside
-      className={`${className} flex h-full flex-col bg-[#391B68] p-5 text-white sm:p-7 lg:row-start-1 lg:justify-between lg:px-9 lg:py-10`}
+      className={`${className} flex h-full flex-col bg-[#391B68] p-5 text-white sm:p-6 lg:row-start-1 lg:justify-between lg:px-8 lg:py-8`}
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div>
-        <span className="inline-flex rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-3 py-1.5 text-[13px] font-black text-[#b86200] sm:px-3.5 sm:text-[14px]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-3 py-1.5 text-[12.5px] font-black text-[#a95500] sm:text-[13px]">
+          <FormIcon name="spark" className="h-3.5 w-3.5" />
           {copy.badge}
         </span>
         <h2
-          className={`mt-4 text-balance font-black leading-[1.2] text-white sm:mt-[18px] sm:text-[32px] lg:mt-5 lg:leading-[1.2] ${
+          className={`mt-4 text-balance font-black leading-[1.2] text-white sm:text-[30px] lg:mt-[18px] lg:leading-[1.2] ${
             isArabic
-              ? "text-[30px] lg:text-[38px] xl:text-[40px]"
-              : "text-[28px] lg:text-[36px] xl:text-[38px]"
+              ? "text-[29px] lg:text-[36px] xl:text-[38px]"
+              : "text-[27px] lg:text-[34px] xl:text-[36px]"
           }`}
         >
           {copy.title}
         </h2>
-        <p className="mt-2.5 text-[13.5px] font-bold leading-[1.6] text-[#e7dff0] sm:mt-3 sm:text-[15px] sm:leading-[1.65] lg:mt-4 lg:text-[15px] lg:leading-[1.7]">
+        <p className="mt-2.5 text-[13.5px] font-bold leading-[1.6] text-[#e7dff0] sm:mt-3 sm:text-[14.5px] sm:leading-[1.65] lg:mt-3.5 lg:text-[14.5px]">
           {copy.subtitle}
         </p>
       </div>
-      <ul className="mt-[18px] grid gap-2 lg:mt-0 lg:gap-3.5">
+      <ul className="mt-4 grid gap-2 lg:mt-0 lg:gap-3">
         {copy.trustItems.map((item) => (
           <li
             key={item}
-            className="flex items-start gap-3 border-t border-white/12 pt-2 text-[13px] font-bold leading-[1.55] text-white sm:pt-2.5 sm:text-[14.5px] sm:leading-[1.6] lg:gap-3.5 lg:pt-3.5 lg:text-[14.5px]"
+            className="flex items-start gap-2.5 border-t border-white/12 pt-2 text-[13px] font-bold leading-[1.55] text-white sm:pt-2.5 sm:text-[14px] sm:leading-[1.6] lg:gap-3 lg:pt-3 lg:text-[14px]"
           >
             <span
-              className="mt-0.5 grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] bg-[#EC911F] text-sm font-black text-white sm:h-9 sm:w-9 sm:rounded-[11px] lg:h-10 lg:w-10"
+              className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-white/8 text-[#EC911F] ring-1 ring-white/12 sm:h-[34px] sm:w-[34px]"
               aria-hidden="true"
             >
-              ✓
+              <FormIcon name="check" className="h-[18px] w-[18px]" />
             </span>
             <span>{item}</span>
           </li>
         ))}
       </ul>
       <p
-        className="hidden border-t border-white/12 pt-5 text-[13.5px] font-bold leading-[1.65] text-[#e7dff0] lg:block"
+        className="hidden border-t border-white/12 pt-4 text-[13px] font-bold leading-[1.6] text-[#e7dff0] lg:block"
         aria-hidden="true"
       >
         {copy.reassurance}
@@ -488,19 +515,139 @@ function TrustPanel({
   );
 }
 
+function FormIcon({
+  name,
+  className = "h-4 w-4",
+}: {
+  name: FormIconName;
+  className?: string;
+}) {
+  let paths: ReactNode;
+
+  switch (name) {
+    case "arrow":
+      paths = (
+        <>
+          <path d="M5 12h14" />
+          <path d="m13 6 6 6-6 6" />
+        </>
+      );
+      break;
+    case "check":
+      paths = <path d="m5 12 4 4L19 7" />;
+      break;
+    case "clock":
+      paths = (
+        <>
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M12 7.5V12l3 2" />
+        </>
+      );
+      break;
+    case "learning":
+      paths = (
+        <>
+          <rect x="3.5" y="4.5" width="17" height="11.5" rx="2" />
+          <path d="M8.5 20h7M12 16v4" />
+        </>
+      );
+      break;
+    case "mail":
+      paths = (
+        <>
+          <rect x="3" y="5" width="18" height="14" rx="2.5" />
+          <path d="m4 7 8 6 8-6" />
+        </>
+      );
+      break;
+    case "message":
+      paths = (
+        <>
+          <path d="M5.5 18.5 3 21l.8-4A8 8 0 1 1 7 19.5" />
+          <path d="M8 10h8M8 14h5" />
+        </>
+      );
+      break;
+    case "phone":
+      paths = (
+        <path d="M7.2 3.5 10 7.8 8.3 10a15.3 15.3 0 0 0 5.7 5.7l2.2-1.7 4.3 2.8-.8 3.2c-.2.8-.9 1.4-1.8 1.4C9.5 20.8 3.2 14.5 2.6 6.1c-.1-.9.5-1.6 1.4-1.8l3.2-.8Z" />
+      );
+      break;
+    case "spark":
+      paths = (
+        <>
+          <path d="m12 3 1.2 3.3L16.5 7.5l-3.3 1.2L12 12l-1.2-3.3-3.3-1.2 3.3-1.2L12 3Z" />
+          <path d="m18.5 13 .7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z" />
+          <path d="m5.5 14 .6 1.5 1.4.5-1.4.6-.6 1.4-.5-1.4-1.5-.6 1.5-.5.5-1.5Z" />
+        </>
+      );
+      break;
+    case "target":
+      paths = (
+        <>
+          <circle cx="12" cy="12" r="8.5" />
+          <circle cx="12" cy="12" r="4.5" />
+          <circle cx="12" cy="12" r="1" />
+        </>
+      );
+      break;
+    case "user":
+      paths = (
+        <>
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 20c.8-4 3.1-6 7-6s6.2 2 7 6" />
+        </>
+      );
+      break;
+    case "whatsapp":
+      paths = (
+        <>
+          <path d="M5.2 18.8 3.8 22l3.4-1.1A9 9 0 1 0 5.2 18.8Z" />
+          <path d="M8.2 8.1c.7 3.5 2.3 5.1 5.8 5.8l1.7-1.5 2.2 1.1c-.4 2.2-1.7 3.1-3.8 2.8-4.9-.8-7.7-3.6-8.5-8.5-.3-2.1.6-3.4 2.8-3.8l1.1 2.2-1.3 1.9Z" />
+        </>
+      );
+      break;
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {paths}
+    </svg>
+  );
+}
+
 function FieldLabel({
   htmlFor,
   children,
+  icon,
   optional,
   required,
 }: {
   htmlFor?: string;
   children: ReactNode;
+  icon?: FormIconName;
   optional?: string;
   required?: boolean;
 }) {
   const content = (
     <>
+      {icon ? (
+        <span
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#f0ebf5] text-[#391B68]"
+          aria-hidden="true"
+        >
+          <FormIcon name={icon} className="h-4 w-4" />
+        </span>
+      ) : null}
       <span>{children}</span>
       {required ? (
         <span className="text-[#b4233c]" aria-hidden="true">
@@ -516,7 +663,7 @@ function FieldLabel({
   );
 
   const className =
-    "mb-2 flex items-center gap-2 text-[15px] font-black leading-[1.45] text-[#391B68] sm:text-[16px] lg:text-[15.5px]";
+    "mb-2 flex items-center gap-2 text-[14.5px] font-black leading-[1.45] text-[#391B68] sm:text-[15px]";
 
   return htmlFor ? (
     <label htmlFor={htmlFor} className={className}>
@@ -530,6 +677,7 @@ function FieldLabel({
 function TextField({
   id,
   label,
+  icon,
   optional,
   error,
   required,
@@ -539,6 +687,7 @@ function TextField({
 }: {
   id: string;
   label: string;
+  icon?: FormIconName;
   optional?: string;
   error?: string;
   required?: boolean;
@@ -559,6 +708,7 @@ function TextField({
     <div className="min-w-0 scroll-mb-[150px]">
       <FieldLabel
         htmlFor={id}
+        icon={icon}
         optional={optional}
         required={required}
       >
@@ -572,7 +722,7 @@ function TextField({
           name={id}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          className={`${inputClassName} h-[52px] lg:h-[50px] ${
+          className={`${inputClassName} h-[50px] ${
             error
               ? "border-[#b4233c] ring-2 ring-[#b4233c]/10 focus:border-[#b4233c] focus:ring-[#b4233c]/15"
               : ""
@@ -587,6 +737,7 @@ function TextField({
 function TextAreaField({
   id,
   label,
+  icon,
   optional,
   inputClassName,
   setRef,
@@ -594,6 +745,7 @@ function TextAreaField({
 }: {
   id: string;
   label: string;
+  icon?: FormIconName;
   optional: string;
   inputClassName: string;
   setRef: (element: HTMLTextAreaElement | null) => void;
@@ -604,7 +756,7 @@ function TextAreaField({
 }) {
   return (
     <div className="min-w-0 scroll-mb-[150px]">
-      <FieldLabel htmlFor={id} optional={optional}>
+      <FieldLabel htmlFor={id} icon={icon} optional={optional}>
         {label}
       </FieldLabel>
       <div className="min-w-0">
@@ -613,7 +765,7 @@ function TextAreaField({
           ref={setRef}
           id={id}
           name={id}
-          className={`${inputClassName} h-[120px] resize-y py-3.5 leading-7 sm:h-[112px] lg:h-[92px] lg:py-3 lg:leading-6`}
+          className={`${inputClassName} h-[108px] resize-y py-3 leading-7 sm:h-[100px] lg:h-[76px] lg:leading-6`}
         />
       </div>
     </div>
@@ -624,6 +776,7 @@ function ChoiceGroup({
   id,
   name,
   label,
+  icon,
   options,
   value,
   error,
@@ -636,6 +789,7 @@ function ChoiceGroup({
   id: string;
   name: FieldName;
   label: string;
+  icon: FormIconName;
   options: Array<{ value: string; label: string }>;
   value: string;
   error?: string;
@@ -661,33 +815,23 @@ function ChoiceGroup({
     layout === "goal"
       ? "grid-cols-1 min-[390px]:grid-cols-2"
       : layout === "method"
-        ? "grid-cols-1 lg:grid-cols-3"
-        : "grid-cols-6";
-
-  function optionClassName(index: number) {
-    if (layout !== "time") return "h-full min-w-0";
-    if (index === 0) return "col-span-6 h-full min-w-0 lg:col-span-2";
-    if (index < 3) return "col-span-3 h-full min-w-0 lg:col-span-2";
-    return "col-span-3 h-full min-w-0";
-  }
+        ? "grid-cols-1 md:grid-cols-2"
+        : "grid-cols-1 md:grid-cols-3";
 
   return (
     <fieldset
-      className="mt-[18px] min-w-0 scroll-mb-[150px] border-t border-[#e5deec] pt-[18px] lg:mt-4 lg:pt-4"
+      className="mt-4 min-w-0 scroll-mb-[148px] border-t border-[#e5deec] pt-4 lg:mt-3 lg:pt-3"
       aria-invalid={Boolean(error)}
       aria-describedby={error ? errorId : undefined}
       onBlur={handleBlur}
     >
-      <legend className="mb-2.5 w-full text-[15px] font-black leading-[1.45] text-[#391B68] sm:text-[16px] lg:text-[15.5px]">
-        <span>{label}</span>
-        {required ? (
-          <span className="ms-1 text-[#b4233c]" aria-hidden="true">
-            *
-          </span>
-        ) : null}
+      <legend className="w-full">
+        <FieldLabel icon={icon} required={required}>
+          {label}
+        </FieldLabel>
       </legend>
       <div
-        className={`grid auto-rows-fr items-stretch gap-2.5 lg:gap-3 ${gridClassName}`}
+        className={`grid auto-rows-fr items-stretch gap-2.5 ${gridClassName}`}
       >
         {options.map((option, index) => {
           const selected = value === option.value;
@@ -697,7 +841,7 @@ function ChoiceGroup({
             <label
               key={option.value}
               htmlFor={optionId}
-              className={optionClassName(index)}
+              className="h-full min-w-0"
             >
               <input
                 ref={index === 0 ? setFirstRef : undefined}
@@ -708,10 +852,10 @@ function ChoiceGroup({
                 checked={selected}
                 onChange={() => onChange(option.value)}
                 aria-invalid={Boolean(error)}
-                className="peer sr-only scroll-mb-[150px]"
+                className="peer sr-only scroll-mb-[148px]"
               />
               <span
-                className={`flex h-full min-h-[54px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-[14px] border px-3.5 py-2.5 text-start text-[15px] font-bold leading-[1.4] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 lg:min-h-[50px] lg:px-3 lg:text-[14.5px] ${
+                className={`flex h-full min-h-[52px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-[13px] border px-3.5 py-2.5 text-start text-[14.5px] font-bold leading-[1.4] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[50px] ${
                   selected
                     ? "border-[#391B68] bg-[#eee9f4] font-black text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14),0_7px_18px_rgba(57,27,104,0.1)]"
                     : error
@@ -730,7 +874,7 @@ function ChoiceGroup({
                   }`}
                   aria-hidden="true"
                 >
-                  ✓
+                  <FormIcon name="check" className="h-3.5 w-3.5" />
                 </span>
               </span>
             </label>
@@ -764,10 +908,10 @@ function ConsentField({
   const errorId = `${id}-error`;
 
   return (
-    <div className="scroll-mb-[150px]">
+    <div className="scroll-mb-[148px]">
       <label
         htmlFor={id}
-        className={`flex cursor-pointer items-start gap-3 rounded-[14px] border bg-[#faf8fc] p-4 text-[14px] font-bold leading-[1.6] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/45 sm:text-[15px] lg:p-3.5 lg:text-[14.5px] lg:leading-[1.55] ${
+        className={`flex min-h-[50px] cursor-pointer items-start gap-3 rounded-[13px] border bg-[#faf8fc] p-3.5 text-[13.5px] font-bold leading-[1.55] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/45 sm:text-[14.5px] ${
           error ? "border-[#b4233c]" : "border-[#d9d0e5]"
         }`}
       >
@@ -781,7 +925,7 @@ function ConsentField({
           onBlur={onBlur}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          className="peer sr-only scroll-mb-[150px]"
+          className="peer sr-only scroll-mb-[148px]"
         />
         <span
           className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border text-xs font-black transition-[border-color,background-color,color,box-shadow] peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 ${
@@ -791,7 +935,7 @@ function ConsentField({
           }`}
           aria-hidden="true"
         >
-          ✓
+          <FormIcon name="check" className="h-3.5 w-3.5" />
         </span>
         <span>{label}</span>
       </label>
@@ -919,4 +1063,3 @@ function isValidPhone(value: string) {
   const digits = normalized.replace(/\D/g, "");
   return digits.length >= 8 && digits.length <= 15;
 }
-
