@@ -135,27 +135,43 @@ export const enContent: LandingContent = {
     secondary: "Talk to a Success Manager",
   },
   faq: {
-    title: "Questions before you register",
+    title: "Important Questions Before You Register",
     items: [
       {
-        question: "Is the assessment inside the website?",
-        answer: "No. The assessment is external. This website is for registration and selecting a suitable time, then the Success Academy team contacts you.",
+        question: "Is the Assessment Free?",
+        answer: "Yes. The assessment is free and helps us identify your current level and recommend the right starting point before registration.",
       },
       {
-        question: "Do I need to be good at English already?",
-        answer: "No. The point of the assessment is to understand your real level and start from the right place.",
+        question: "How Does the Assessment Work?",
+        answer: "After you submit your details, our follow-up team will contact you to confirm the time and explain the assessment process.",
       },
       {
-        question: "What makes Success Academy different?",
-        answer: "You are not joining a random course. You start with assessment, a goal, the right plan, practical training, and accountability follow-up.",
+        question: "Do I Need to Be Good at English Before I Start?",
+        answer: "No. You start from your real level, whether you are a complete beginner or already have some basics and want to improve.",
       },
       {
-        question: "Is online and in-person learning available?",
-        answer: "Yes. Online training is available, and in-person options are available from the Dokki branch depending on availability.",
+        question: "Is the Training Online or In Person?",
+        answer: "You can study online or attend at our Dokki branch and choose the option that suits you best.",
       },
       {
-        question: "How much do programs start from?",
-        answer: "Programs start from 1750 EGP. Details are confirmed after understanding your level and goal.",
+        question: "What Makes Success Academy Different?",
+        answer: "Practical training, interactive activities, real conversations, Success Manager follow-up, and clear feedback on your progress.",
+      },
+      {
+        question: "Who Are the Trainers?",
+        answer: "Our team includes more than 30 trainers with over five years of training experience and CELTA or TEFL qualifications.",
+      },
+      {
+        question: "How Many Students Are in Each Group?",
+        answer: "Groups are kept limited so you can participate, practise, and receive meaningful follow-up.",
+      },
+      {
+        question: "How Long Is Each Level?",
+        answer: "Each level includes 30 training hours across 10 sessions, with each session lasting three hours.",
+      },
+      {
+        question: "How Much Do the Programmes Cost?",
+        answer: "Programmes start from EGP 1,750, and our follow-up team will explain the suitable option and available payment methods.",
       },
     ],
   },
