@@ -212,11 +212,11 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   return (
     <section
       id="lead-form"
-      className="scroll-mt-24 bg-[#f8f6fb] px-4 pb-[120px] pt-9 sm:px-6 sm:pb-[124px] sm:pt-11 lg:px-8 lg:py-9"
+      className="scroll-mt-24 bg-[#f8f6fb] px-4 pb-[112px] pt-8 sm:px-6 sm:pb-[124px] sm:pt-11 lg:px-8 lg:py-9"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div
-        className={`mx-auto grid max-w-[1000px] overflow-hidden rounded-[24px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_20px_48px_rgba(57,27,104,0.1)] lg:rounded-[27px] ${
+        className={`mx-auto grid max-w-[1000px] overflow-hidden rounded-[22px] border border-[#dcd3e8] bg-[#fffefd] shadow-[0_20px_48px_rgba(57,27,104,0.1)] sm:rounded-[24px] lg:rounded-[27px] ${
           isArabic
             ? "lg:grid-cols-[minmax(0,0.73fr)_minmax(260px,0.27fr)]"
             : "lg:grid-cols-[minmax(260px,0.27fr)_minmax(0,0.73fr)]"
@@ -230,7 +230,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         />
 
         <div
-          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] px-4 py-5 sm:p-6 lg:row-start-1 lg:px-[22px] lg:py-[19px]`}
+          className={`${isArabic ? "lg:col-start-1" : "lg:col-start-2"} min-w-0 bg-[#fffefd] px-3.5 py-4 sm:p-6 lg:row-start-1 lg:px-[22px] lg:py-[19px]`}
           dir={isArabic ? "rtl" : "ltr"}
         >
           {status === "success" ? (
@@ -261,7 +261,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 autoComplete="off"
               />
 
-              <div className="grid gap-4 md:grid-cols-2 md:gap-3">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:gap-3">
                 <TextField
                   id="lead-full-name"
                   label={copy.labels.fullName}
@@ -299,7 +299,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 />
               </div>
 
-              <div className="mt-4 lg:mt-2.5">
+              <div className="mt-3 sm:mt-4 lg:mt-2.5">
                 <TextField
                   id="lead-email"
                   label={copy.labels.email}
@@ -381,7 +381,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                   />
                 </div>
 
-                <div className="mt-4 min-w-0 border-t border-[#e5deec] pt-4 lg:col-span-2 lg:mt-2.5 lg:self-start lg:pt-2.5">
+                <div className="mt-3 min-w-0 border-t border-[#e5deec] pt-3 sm:mt-4 sm:pt-4 lg:col-span-2 lg:mt-2.5 lg:self-start lg:pt-2.5">
                   <TextAreaField
                     id="lead-notes"
                     label={copy.labels.notes}
@@ -399,7 +399,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 </div>
               </div>
 
-              <div className="mt-4 border-t border-[#e5deec] pt-4 lg:mt-2 lg:pt-2">
+              <div className="mt-3 border-t border-[#e5deec] pt-3 sm:mt-4 sm:pt-4 lg:mt-2 lg:pt-2">
                 <ConsentField
                   id="lead-consent"
                   label={copy.labels.consent}
@@ -423,12 +423,12 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 </div>
               ) : null}
 
-              <div className="mt-4 border-t border-[#e5deec] pt-4 lg:mt-2 lg:pt-2">
+              <div className="mt-3 border-t border-[#e5deec] pt-3 sm:mt-4 sm:pt-4 lg:mt-2 lg:pt-2">
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1.08fr_0.92fr]">
                   <button
                     type="submit"
                     disabled={status === "loading"}
-                    className="group flex h-[52px] w-full scroll-mb-[148px] items-center justify-center gap-2.5 rounded-[14px] bg-[#EC911F] px-5 text-[16px] font-black text-white shadow-[0_12px_24px_rgba(236,145,31,0.26)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_15px_28px_rgba(236,145,31,0.31)] active:translate-y-0.5 active:shadow-[0_7px_16px_rgba(236,145,31,0.22)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65 lg:h-[46px] lg:rounded-[13px] lg:text-[15.5px]"
+                    className="group flex h-[50px] w-full scroll-mb-[148px] items-center justify-center gap-2.5 rounded-[14px] bg-[#EC911F] px-5 text-[16px] font-black text-white shadow-[0_12px_24px_rgba(236,145,31,0.26)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_15px_28px_rgba(236,145,31,0.31)] active:translate-y-0.5 active:shadow-[0_7px_16px_rgba(236,145,31,0.22)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65 sm:h-[52px] lg:h-[46px] lg:rounded-[13px] lg:text-[15.5px]"
                   >
                     <span aria-live="polite">
                       {status === "loading"
@@ -448,7 +448,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                         source: "lead_form_secondary",
                       })
                     }
-                    className="flex h-[52px] w-full scroll-mb-[148px] items-center justify-center gap-2 rounded-[14px] border border-[#391B68]/40 bg-white px-4 text-center text-[14.5px] font-black leading-[1.4] text-[#391B68] outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-[#391B68] hover:bg-[#eee9f4] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15 lg:h-[44px] lg:rounded-[13px] lg:text-[14px]"
+                    className="flex h-[50px] w-full scroll-mb-[148px] items-center justify-center gap-2 rounded-[14px] border border-[#391B68]/40 bg-white px-4 text-center text-[14.5px] font-black leading-[1.4] text-[#391B68] outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-[#391B68] hover:bg-[#eee9f4] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15 sm:h-[52px] lg:h-[44px] lg:rounded-[13px] lg:text-[14px]"
                   >
                     <span className="inline-flex h-[19px] w-[19px] shrink-0 items-center justify-center">
                       <FormIcon
@@ -483,7 +483,7 @@ function TrustPanel({
 }) {
   return (
     <aside
-      className={`${className} flex h-full flex-col bg-[#391B68] px-5 py-4 text-white sm:p-5 lg:row-start-1 lg:justify-between lg:p-6`}
+      className={`${className} flex h-full flex-col bg-[#391B68] px-4 py-3.5 text-white sm:p-5 lg:row-start-1 lg:justify-between lg:p-6`}
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div>
@@ -494,24 +494,24 @@ function TrustPanel({
         <h2
           className={`mt-4 text-balance font-black leading-[1.2] text-white sm:text-[30px] lg:mt-3.5 lg:leading-[1.2] ${
             isArabic
-              ? "text-[29px] lg:text-[32px]"
-              : "text-[27px] lg:text-[27px]"
+              ? "text-[27px] sm:text-[30px] lg:text-[32px]"
+              : "text-[25px] sm:text-[30px] lg:text-[27px]"
           }`}
         >
           {copy.title}
         </h2>
-        <p className="mt-2.5 text-[13.5px] font-bold leading-[1.6] text-[#e7dff0] sm:mt-3 sm:text-[14px] sm:leading-[1.6] lg:mt-2.5 lg:text-[13px] lg:leading-[1.55]">
+        <p className="mt-2 text-[13px] font-bold leading-[1.55] text-[#e7dff0] sm:mt-3 sm:text-[14px] sm:leading-[1.6] lg:mt-2.5 lg:text-[13px] lg:leading-[1.55]">
           {copy.subtitle}
         </p>
       </div>
-      <ul className="mt-4 grid gap-2 lg:mt-0 lg:gap-2">
+      <ul className="mt-3 grid gap-1.5 sm:mt-4 sm:gap-2 lg:mt-0">
         {copy.trustItems.map((item) => (
           <li
             key={item}
-            className="flex items-start gap-2.5 border-t border-white/12 pt-2 text-[13px] font-bold leading-[1.55] text-white sm:pt-2.5 sm:text-[13.5px] sm:leading-[1.55] lg:pt-2.5 lg:text-[12.5px] lg:leading-[1.45]"
+            className="flex items-start gap-2.5 border-t border-white/12 pt-1.5 text-[12.5px] font-bold leading-[1.5] text-white sm:pt-2.5 sm:text-[13.5px] sm:leading-[1.55] lg:pt-2.5 lg:text-[12.5px] lg:leading-[1.45]"
           >
             <span
-              className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-white/8 text-[#EC911F] ring-1 ring-white/12"
+              className="mt-0.5 grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] bg-white/8 text-[#EC911F] ring-1 ring-white/12 sm:h-8 sm:w-8 sm:rounded-[10px]"
               aria-hidden="true"
             >
               <FormIcon name="check" className="h-[18px] w-[18px]" />
@@ -663,7 +663,7 @@ function FieldLabel({
     <>
       {icon ? (
         <span
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#f0ebf5] text-[#391B68] lg:h-6 lg:w-6 lg:rounded-md"
+          className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[#f0ebf5] text-[#391B68] sm:h-7 sm:w-7 sm:rounded-lg lg:h-6 lg:w-6 lg:rounded-md"
           aria-hidden="true"
         >
           <FormIcon name={icon} className="h-4 w-4" />
@@ -684,7 +684,7 @@ function FieldLabel({
   );
 
   const className =
-    "mb-2 flex items-center gap-2 text-[14.5px] font-black leading-[1.45] text-[#391B68] sm:text-[15px] lg:mb-1.5 lg:text-[14px]";
+    "mb-1.5 flex items-center gap-2 text-[14px] font-black leading-[1.45] text-[#391B68] sm:mb-2 sm:text-[15px] lg:mb-1.5 lg:text-[14px]";
 
   return htmlFor ? (
     <label htmlFor={htmlFor} className={className}>
@@ -743,7 +743,7 @@ function TextField({
           name={id}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          className={`${inputClassName} h-[50px] lg:h-[42px] ${
+          className={`${inputClassName} h-[48px] sm:h-[50px] lg:h-[42px] ${
             error
               ? "border-[#b4233c] ring-2 ring-[#b4233c]/10 focus:border-[#b4233c] focus:ring-[#b4233c]/15"
               : ""
@@ -786,7 +786,7 @@ function TextAreaField({
           ref={setRef}
           id={id}
           name={id}
-          className={`${inputClassName} h-[108px] resize-y py-3 leading-7 sm:h-[100px] lg:h-[68px] lg:py-2.5 lg:leading-5`}
+          className={`${inputClassName} h-[96px] resize-y py-3 leading-7 sm:h-[100px] lg:h-[68px] lg:py-2.5 lg:leading-5`}
         />
       </div>
     </div>
@@ -834,10 +834,10 @@ function ChoiceGroup({
 
   const gridClassName =
     layout === "goal"
-      ? "grid-cols-1 min-[390px]:grid-cols-2"
+      ? "grid-cols-2"
       : layout === "method"
-        ? "grid-cols-1 md:grid-cols-2"
-        : "grid-cols-1 md:grid-cols-3";
+        ? "grid-cols-2"
+        : "grid-cols-2 md:grid-cols-3";
   const desktopOptionClassName =
     layout === "time"
       ? "lg:gap-1.5 lg:px-2 lg:text-[12.5px]"
@@ -847,7 +847,7 @@ function ChoiceGroup({
 
   return (
     <fieldset
-      className="mt-4 min-w-0 scroll-mb-[148px] border-t border-[#e5deec] pt-4 lg:mt-2.5 lg:pt-2.5"
+      className="mt-3 min-w-0 scroll-mb-[148px] border-t border-[#e5deec] pt-3 sm:mt-4 sm:pt-4 lg:mt-2.5 lg:pt-2.5"
       aria-invalid={Boolean(error)}
       aria-describedby={error ? errorId : undefined}
       onBlur={handleBlur}
@@ -858,7 +858,7 @@ function ChoiceGroup({
         </FieldLabel>
       </legend>
       <div
-        className={`grid auto-rows-fr items-stretch gap-2.5 lg:gap-1.5 ${gridClassName}`}
+        className={`grid auto-rows-fr items-stretch gap-2 sm:gap-2.5 lg:gap-1.5 ${gridClassName}`}
       >
         {options.map((option, index) => {
           const selected = value === option.value;
@@ -868,7 +868,15 @@ function ChoiceGroup({
             <label
               key={option.value}
               htmlFor={optionId}
-              className="h-full min-w-0"
+              className={`h-full min-w-0 ${
+                layout === "time"
+                  ? index === 0
+                    ? "order-3 col-span-2 md:order-none md:col-span-1"
+                    : index === 1
+                      ? "order-1 md:order-none"
+                      : "order-2 md:order-none"
+                  : ""
+              }`}
             >
               <input
                 ref={index === 0 ? setFirstRef : undefined}
@@ -882,7 +890,7 @@ function ChoiceGroup({
                 className="peer sr-only scroll-mb-[148px]"
               />
               <span
-                className={`flex h-full min-h-[52px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-[13px] border px-3.5 py-2.5 text-start text-[14.5px] font-bold leading-[1.4] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:text-[15px] lg:min-h-[40px] lg:rounded-[12px] lg:py-1.5 ${desktopOptionClassName} ${
+                className={`flex h-full min-h-[50px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-[13px] border px-3 py-2 text-start text-[14px] font-bold leading-[1.4] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:min-h-[52px] sm:px-3.5 sm:py-2.5 sm:text-[15px] lg:min-h-[40px] lg:rounded-[12px] lg:py-1.5 ${desktopOptionClassName} ${
                   selected
                     ? "border-[#391B68] bg-[#eee9f4] font-black text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14),0_7px_18px_rgba(57,27,104,0.1)]"
                     : error
@@ -942,7 +950,7 @@ function ConsentField({
     <div className="scroll-mb-[148px]">
       <label
         htmlFor={id}
-        className={`flex min-h-[50px] cursor-pointer items-start gap-3 rounded-[13px] border bg-[#faf8fc] p-3.5 text-[13.5px] font-bold leading-[1.55] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/45 sm:text-[14.5px] lg:min-h-[42px] lg:gap-2.5 lg:rounded-[12px] lg:p-2.5 lg:text-[13px] lg:leading-[1.45] ${
+        className={`flex min-h-[50px] cursor-pointer items-start gap-2.5 rounded-[13px] border bg-[#faf8fc] p-3 text-[13px] font-bold leading-[1.5] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/45 sm:gap-3 sm:p-3.5 sm:text-[14.5px] lg:min-h-[42px] lg:gap-2.5 lg:rounded-[12px] lg:p-2.5 lg:text-[13px] lg:leading-[1.45] ${
           error ? "border-[#b4233c]" : "border-[#d9d0e5]"
         }`}
       >
