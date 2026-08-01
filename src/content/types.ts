@@ -91,6 +91,13 @@ export type LandingContent = {
       answer: string;
     }>;
   };
+  about: {
+    badge: string;
+    title: string;
+    description: string;
+    stats: [string, string, string];
+    slogan: string;
+  };
   form: {
     badge: string;
     title: string;
@@ -177,3 +184,4 @@ export type LandingContent = {
 };
 
 export type ContentMap = Record<Locale, LandingContent>;
+
