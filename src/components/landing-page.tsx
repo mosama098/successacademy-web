@@ -1,4 +1,5 @@
 import { LeadForm } from "@/components/lead-form";
+import { AboutSuccessAcademySection } from "@/components/landing/about-success-academy-section";
 import { FinalCtaSection } from "@/components/landing/final-cta-section";
 import { FooterSection } from "@/components/landing/footer-section";
 import { HeroSection } from "@/components/landing/hero-section";
@@ -44,9 +45,11 @@ export function LandingPage({ locale }: LandingPageProps) {
       <SectionShell id="faq" title={copy.faq.title} centered>
         <FaqAccordion items={copy.faq.items} locale={locale} />
       </SectionShell>
+      <AboutSuccessAcademySection locale={locale} copy={copy} />
       <FinalCtaSection locale={locale} copy={copy} />
       <FooterSection locale={locale} copy={copy} />
       <StickyMobileCta locale={locale} copy={copy.sticky} />
     </main>
   );
 }
+
