@@ -178,6 +178,13 @@ export const arContent: LandingContent = {
       },
     ],
   },
+  about: {
+    badge: "من نحن",
+    title: "من 2015… وإحنا بنساعدك تتعلم الإنجليزي بطريقة تقدر تستخدمها",
+    description: "Success Academy بدأت بهدف واضح: إن تعلم الإنجليزي مايبقاش مجرد محاضرات، لكن نظام عملي يساعدك تتكلم، تتدرب، وتوصل لهدفك بخطوات واضحة.",
+    stats: ["منذ 2015", "+100 ألف متدرب وثقوا فينا", "أونلاين وفرع الدقي"],
+    slogan: "Not Just A Course... A Direction",
+  },
   form: {
     badge: "ابدأ خطوتك",
     title: "ابدأ بتقييم مجاني واعرف أنسب بداية ليك",
@@ -282,3 +289,4 @@ export const arContent: LandingContent = {
     },
   },
 };
+
