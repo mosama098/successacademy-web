@@ -175,6 +175,13 @@ export const enContent: LandingContent = {
       },
     ],
   },
+  about: {
+    badge: "About Us",
+    title: "Since 2015… we’ve been helping learners use English in real life",
+    description: "Success Academy was built with one clear goal: learning English should not be just lectures, but a practical system that helps you speak, practise, and move toward your goal with clear steps.",
+    stats: ["Since 2015", "100K+ learners trusted us", "Online & Dokki Branch"],
+    slogan: "Not Just A Course... A Direction",
+  },
   form: {
     badge: "Take the First Step",
     title: "Start with a Free Assessment and Find the Right Starting Point",
@@ -279,3 +286,4 @@ export const enContent: LandingContent = {
     },
   },
 };
+
