@@ -1,59 +1,40 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CtaLink } from "@/components/ui/cta-link";
-import { alternateLocale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 import { getCallHref, getWhatsAppHref } from "@/lib/utm";
-import { BrandMark, hasLogoAsset } from "./brand-mark";
 import type { LandingSectionProps } from "./types";
 
 const socialLinks = [
   {
     label: "Facebook",
-    env: process.env.NEXT_PUBLIC_FACEBOOK_URL,
-    className: "text-[#1877F2] hover:border-[#1877F2]/55 hover:bg-[#1877F2]/5 hover:shadow-[#1877F2]/15",
+    href: process.env.NEXT_PUBLIC_FACEBOOK_URL,
+    hoverClass: "hover:border-[#1877F2]/45 hover:text-[#1877F2]",
   },
   {
     label: "Instagram",
-    env: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
-    className: "text-[#E4405F] hover:border-[#E4405F]/55 hover:bg-[#E4405F]/5 hover:shadow-[#E4405F]/15",
+    href: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
+    hoverClass: "hover:border-[#E4405F]/45 hover:text-[#E4405F]",
   },
   {
     label: "TikTok",
-    env: process.env.NEXT_PUBLIC_TIKTOK_URL,
-    className: "text-black hover:border-black/40 hover:bg-black/[0.03] hover:shadow-black/10",
+    href: process.env.NEXT_PUBLIC_TIKTOK_URL,
+    hoverClass: "hover:border-black/35 hover:text-black",
   },
   {
     label: "YouTube",
-    env: process.env.NEXT_PUBLIC_YOUTUBE_URL,
-    className: "text-[#FF0000] hover:border-[#FF0000]/55 hover:bg-[#FF0000]/5 hover:shadow-[#FF0000]/15",
+    href: process.env.NEXT_PUBLIC_YOUTUBE_URL,
+    hoverClass: "hover:border-[#FF0000]/45 hover:text-[#FF0000]",
   },
   {
     label: "LinkedIn",
-    env: process.env.NEXT_PUBLIC_LINKEDIN_URL,
-    className: "text-[#0A66C2] hover:border-[#0A66C2]/55 hover:bg-[#0A66C2]/5 hover:shadow-[#0A66C2]/15",
+    href: process.env.NEXT_PUBLIC_LINKEDIN_URL,
+    hoverClass: "hover:border-[#0A66C2]/45 hover:text-[#0A66C2]",
   },
 ];
 
-const footerLabels = {
-  ar: {
-    quickLinksTitle: "روابط سريعة",
-    contactTitle: "تواصل معنا",
-    socialTitle: "تابعنا",
-    languageTitle: "اللغة",
-    requestCall: "اطلب مكالمة",
-    languages: { ar: "العربية", en: "English" },
-  },
-  en: {
-    quickLinksTitle: "Quick links",
-    contactTitle: "Contact",
-    socialTitle: "Follow us",
-    languageTitle: "Language",
-    requestCall: "Request a call",
-    languages: { ar: "العربية", en: "English" },
-  },
-};
-
 function SocialIcon({ label }: { label: string }) {
-  const iconClass = "h-4 w-4";
+  const iconClass = "h-5 w-5";
 
   if (label === "Facebook") {
     return (
@@ -65,7 +46,7 @@ function SocialIcon({ label }: { label: string }) {
 
   if (label === "Instagram") {
     return (
-      <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
         <rect x="4" y="4" width="16" height="16" rx="5" />
         <circle cx="12" cy="12" r="3.5" />
         <path d="M16.8 7.2h.01" />
@@ -96,107 +77,219 @@ function SocialIcon({ label }: { label: string }) {
   );
 }
 
-function SocialItem({ social }: { social: { label: string; env: string | undefined; className: string } }) {
-  if (!social.env) return null;
+function SocialItem({ social }: { social: (typeof socialLinks)[number] }) {
+  const classes = `grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-[#391B68]/12 bg-white text-[#391B68] shadow-[0_6px_16px_rgba(57,27,104,0.05)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] ${social.hoverClass}`;
+
+  if (!social.href) {
+    return (
+      <span className={`${classes} opacity-45`} aria-hidden="true">
+        <SocialIcon label={social.label} />
+      </span>
+    );
+  }
 
   return (
     <a
-      href={social.env}
+      href={social.href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={social.label}
-      className={`grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white shadow-sm shadow-[#391B68]/5 transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] ${social.className}`}
+      className={classes}
     >
       <SocialIcon label={social.label} />
     </a>
   );
 }
 
+function ContactIcon({ type }: { type: "whatsapp" | "phone" | "globe" | "location" }) {
+  const className = "h-[18px] w-[18px] shrink-0";
+
+  if (type === "whatsapp") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2a9.7 9.7 0 0 0-8.4 14.6L2.3 21.7l5.2-1.4A9.7 9.7 0 1 0 12 2Zm0 17.7c-1.5 0-2.9-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A7.9 7.9 0 1 1 12 19.7Zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.1l-.7.9c-.1.2-.3.2-.5.1-1.4-.7-2.4-1.3-3.3-2.9-.2-.3.2-.4.6-1.2.1-.2 0-.4 0-.5l-.7-1.7c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1-.2-.1-.4-.2-.7-.3Z" />
+      </svg>
+    );
+  }
+
+  if (type === "phone") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+        <path d="M8.3 3.8 5.8 5c-1 .5-1.4 1.6-1 2.6 2.3 5.7 5.9 9.3 11.6 11.6 1 .4 2.1 0 2.6-1l1.2-2.5-4-2-1.4 2c-2.8-1.2-5.3-3.7-6.5-6.5l2-1.4-2-4Z" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (type === "globe") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M3.8 12h16.4M12 3.5c2.1 2.3 3.1 5.1 3.1 8.5S14.1 18.2 12 20.5C9.9 18.2 8.9 15.4 8.9 12S9.9 5.8 12 3.5Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" strokeLinejoin="round" />
+      <circle cx="12" cy="10" r="2.2" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="m6 3 5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LanguageOption({ option, locale, label }: { option: Locale; locale: Locale; label: string }) {
+  if (option === locale) {
+    return (
+      <Link
+        href={`/${option}`}
+        className="grid place-items-center rounded-[9px] bg-[#391B68] text-[13px] font-black !text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#EC911F]"
+      >
+        {label}
+      </Link>
+    );
+  }
+
+  return (
+    <CtaLink
+      href={`/${option}`}
+      locale={locale}
+      source="footer_language"
+      event="language"
+      variant="ghost"
+      className="!grid !h-auto !min-h-0 !place-items-center !rounded-[9px] !border-0 !bg-transparent !p-0 !text-[13px] !font-black !text-[#391B68] hover:!bg-[#EEE9F4] focus-visible:!outline-offset-1"
+    >
+      {label}
+    </CtaLink>
+  );
+}
+
 export function FooterSection({ locale, copy }: LandingSectionProps) {
-  const alt = alternateLocale[locale];
+  const isArabic = locale === "ar";
   const whatsappHref = getWhatsAppHref(locale);
   const callHref = getCallHref();
-  const hasLogo = hasLogoAsset();
-  const labels = footerLabels[locale];
-  const visibleSocialLinks = socialLinks.filter((social) => Boolean(social.env));
+  const footer = copy.footer;
   const quickLinks = [
-    { href: "#why", label: copy.nav.why },
-    { href: "#process", label: copy.nav.process },
-    { href: "#lead-form", label: copy.nav.assessment },
-    { href: "#faq", label: copy.nav.faq },
+    { href: "#why", label: footer.quickLinks.why },
+    { href: "#trainers", label: footer.quickLinks.trainers },
+    { href: "#registration-steps", label: footer.quickLinks.registration },
+    { href: "#lead-form", label: footer.quickLinks.assessment },
+    { href: "#faq", label: footer.quickLinks.faq },
+    { href: "#about-success-academy", label: footer.quickLinks.about },
   ];
 
   return (
-    <footer className="border-t border-slate-200 bg-white px-6 py-12 pb-24 lg:px-10 md:pb-12">
-      <div className="mx-auto grid max-w-[1180px] gap-10 text-[15px] font-bold text-slate-600 lg:grid-cols-[1.25fr_0.8fr_1fr_0.9fr]">
-        <div className="grid content-start gap-4">
-          <BrandMark slogan={copy.footer.slogan} compact placement="footer" />
-          {hasLogo ? <p className="font-black text-[#391B68]">{copy.footer.slogan}</p> : null}
-          <p className="max-w-sm leading-7">{copy.footer.rights}</p>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.quickLinksTitle}</h3>
-          <nav className="grid gap-3">
-            {quickLinks.map((link) => (
-              <a key={link.href} href={`/${locale}${link.href}`} className="transition hover:text-[#EC911F]">
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.contactTitle}</h3>
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-            <CtaLink href={whatsappHref} locale={locale} source="footer_whatsapp" event="whatsapp" className="h-[50px] px-6">
-              {copy.footer.whatsapp}
-            </CtaLink>
-            <CtaLink
-              href={callHref}
-              locale={locale}
-              source="footer_request_call"
-              event="request_call"
-              variant="secondary"
-              className="h-[50px] !border-[#391B68] !bg-white px-6 !text-[#391B68] !opacity-100 shadow-sm shadow-[#391B68]/10 hover:!border-[#391B68] hover:!bg-[#391B68]/5 hover:!text-[#391B68]"
-            >
-              {labels.requestCall}
-            </CtaLink>
-          </div>
-        </div>
-
-        <div className="grid content-start gap-7">
-          {visibleSocialLinks.length > 0 ? (
-            <div>
-              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.socialTitle}</h3>
-              <div className="flex flex-wrap gap-2.5">
-                {visibleSocialLinks.map((social) => (
-                  <SocialItem key={social.label} social={social} />
-                ))}
-              </div>
+    <footer id="site-footer" className="border-t border-[#391B68]/12 bg-[#FBFAFC] px-5 pb-[calc(110px+env(safe-area-inset-bottom))] pt-10 sm:px-6 md:pb-8 md:pt-12 lg:px-8 lg:pb-7 lg:pt-[52px]" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="mx-auto max-w-[1160px]">
+        <div className="grid gap-4 text-[14px] font-bold text-[#6B5E76] md:grid-cols-2 md:gap-8 lg:grid-cols-[1.3fr_0.95fr_1.05fr_1fr] lg:gap-9">
+          <section className="border-b border-[#391B68]/10 pb-4 text-center md:border-b-0 md:pb-0 lg:text-start" aria-labelledby={`footer-brand-${locale}`}>
+            <div className="mx-auto w-[150px] md:w-[175px] lg:mx-0 lg:w-[190px]">
+              <Image
+                src="/logo.png"
+                alt={isArabic ? "شعار Success Academy" : "Success Academy logo"}
+                width={190}
+                height={95}
+                sizes="(min-width: 1024px) 190px, 165px"
+                className="object-contain"
+                style={{ width: "100%", height: "auto" }}
+              />
             </div>
-          ) : null}
+            <h2 id={`footer-brand-${locale}`} className="mt-1 text-[18px] font-black leading-[1.4] text-[#391B68]">
+              {footer.slogan}
+            </h2>
+            <span className="mx-auto mt-2 block h-0.5 w-10 rounded-full bg-[#EC911F] lg:mx-0" aria-hidden="true" />
+            <p className="mx-auto mt-2 max-w-[310px] text-[14px] font-semibold leading-[1.6] lg:mx-0">
+              {footer.description}
+            </p>
+          </section>
 
-          <div>
-            <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#391B68]">{labels.languageTitle}</h3>
-            <div className="inline-flex rounded-full border border-[#391B68]/15 bg-white p-1 shadow-sm shadow-[#391B68]/5">
-              <Link href={`/${locale}`} className="inline-flex h-10 items-center justify-center rounded-full bg-[#391B68] px-4 text-sm font-black text-white shadow-sm shadow-[#391B68]/15">
-                {locale === "ar" ? labels.languages.ar : labels.languages.en}
-              </Link>
+          <nav className="border-b border-[#391B68]/10 pb-4 md:border-b-0 md:pb-0" aria-label={footer.quickLinksTitle}>
+            <h2 className="mb-2.5 text-[15px] font-black text-[#391B68] lg:mb-3.5">{footer.quickLinksTitle}</h2>
+            <ul className="grid grid-cols-2 gap-x-3 lg:grid-cols-1 lg:gap-y-2.5">
+              {quickLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={`/${locale}${link.href}`}
+                    className="flex min-h-10 items-center gap-2 rounded-lg px-1 text-[13.5px] font-bold leading-[1.35] text-[#665A70] transition-colors hover:text-[#EC911F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] lg:min-h-0 lg:text-[14px]"
+                  >
+                    <span className={isArabic ? "rotate-180" : ""}><ChevronIcon /></span>
+                    <span>{link.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <section className="border-b border-[#391B68]/10 pb-4 md:border-b-0 md:pb-0" aria-labelledby={`footer-contact-${locale}`}>
+            <h2 id={`footer-contact-${locale}`} className="mb-2.5 text-[15px] font-black text-[#391B68] lg:mb-3.5">{footer.contactTitle}</h2>
+            <div className="grid gap-2">
               <CtaLink
-                href={`/${alt}`}
+                href={whatsappHref}
                 locale={locale}
-                source="footer_language"
-                event="language"
+                source="footer_whatsapp"
+                event="whatsapp"
                 variant="ghost"
-                className="inline-flex h-10 items-center justify-center !border-transparent !bg-white px-4 !text-sm !font-black !text-[#391B68] !opacity-100 hover:!bg-[#391B68]/5 hover:!text-[#391B68]"
+                className="!flex !h-12 !min-h-0 !w-full !items-center !justify-center !rounded-[14px] !border-[#EC911F] !bg-[#EC911F] !px-4 !py-0 !text-[15px] !text-white !shadow-[0_8px_18px_rgba(236,145,31,0.18)] hover:!bg-[#D98113]"
               >
-                {alt === "ar" ? labels.languages.ar : labels.languages.en}
+                <span className="inline-flex items-center justify-center gap-2">
+                  <ContactIcon type="whatsapp" />
+                  {footer.whatsapp}
+                </span>
+              </CtaLink>
+              <CtaLink
+                href={callHref}
+                locale={locale}
+                source="footer_request_call"
+                event="request_call"
+                variant="ghost"
+                className="!flex !h-12 !min-h-0 !w-full !items-center !justify-center !rounded-[14px] !border-[#391B68]/35 !bg-white !px-4 !py-0 !text-[15px] !text-[#391B68] !shadow-none hover:!border-[#391B68] hover:!bg-[#EEE9F4]"
+              >
+                <span className="inline-flex items-center justify-center gap-2">
+                  <ContactIcon type="phone" />
+                  {footer.call}
+                </span>
               </CtaLink>
             </div>
-          </div>
+            <div className="mt-2.5 grid grid-cols-2 gap-2">
+              <div className="flex h-10 items-center justify-center gap-2 rounded-[11px] bg-[#EEE9F4] px-2 text-[13px] font-black text-[#391B68]">
+                <ContactIcon type="globe" />
+                <span>{footer.online}</span>
+              </div>
+              <div className="flex h-10 items-center justify-center gap-2 rounded-[11px] bg-[#EEE9F4] px-2 text-[13px] font-black text-[#391B68]">
+                <ContactIcon type="location" />
+                <span>{footer.branch}</span>
+              </div>
+            </div>
+          </section>
+
+          <section aria-labelledby={`footer-social-${locale}`}>
+            <h2 id={`footer-social-${locale}`} className="mb-2.5 text-[15px] font-black text-[#391B68] lg:mb-3.5">{footer.socialTitle}</h2>
+            <div className="flex flex-nowrap items-center gap-1.5" dir="ltr">
+              {socialLinks.map((social) => (
+                <SocialItem key={social.label} social={social} />
+              ))}
+            </div>
+
+            <h2 className="mb-2 mt-4 text-[15px] font-black text-[#391B68] lg:mb-2.5 lg:mt-5">{footer.languageTitle}</h2>
+            <div className="inline-grid h-11 w-[200px] grid-cols-2 rounded-[13px] border border-[#391B68]/15 bg-white p-1 shadow-[0_6px_16px_rgba(57,27,104,0.05)]" dir="ltr">
+              <LanguageOption option="ar" locale={locale} label={footer.languages.ar} />
+              <LanguageOption option="en" locale={locale} label={footer.languages.en} />
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-5 border-t border-[#391B68]/12 pt-4 text-center text-[13px] font-semibold leading-[1.55] text-[#776B80] lg:mt-7 lg:pt-5 lg:text-start">
+          <p>{footer.rights}</p>
         </div>
       </div>
     </footer>
   );
 }
+
