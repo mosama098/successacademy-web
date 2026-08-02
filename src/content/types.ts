@@ -95,7 +95,11 @@ export type LandingContent = {
     badge: string;
     title: string;
     description: string;
-    stats: [string, string, string];
+    stats: [
+      { value: string; label: string },
+      { value: string; label: string },
+      { value: string; label: string },
+    ];
     slogan: string;
   };
   form: {
