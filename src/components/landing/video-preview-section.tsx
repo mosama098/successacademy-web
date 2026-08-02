@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
-import { bookingHref, type LandingSectionProps } from "./types";
+import { bookingHref, type LocalizedSectionProps } from "./types";
 
 const journeyContent = {
   ar: {
@@ -112,7 +112,7 @@ function describeArc(startAngle: number, endAngle: number) {
 
 const orbitalArcs = stageAngles.map(([start, end]) => describeArc(start, end));
 
-export function VideoPreviewSection({ locale }: LandingSectionProps) {
+export function VideoPreviewSection({ locale }: LocalizedSectionProps) {
   const content = journeyContent[locale];
   const [activeStage, setActiveStage] = useState(0);
   const desktopTabRefs = useRef<Array<HTMLButtonElement | null>>([]);

@@ -64,24 +64,6 @@ textarea {
   transform: scaleX(1);
 }
 
-.strong-card {
-  border: 1px solid rgba(57, 27, 104, 0.14);
-  border-radius: 28px;
-  background: #ffffff;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-  transition:
-    transform 300ms ease,
-    border-color 300ms ease,
-    box-shadow 300ms ease,
-    background 300ms ease;
-}
-
-.strong-card:hover {
-  transform: translateY(-0.25rem);
-  border-color: rgba(236, 145, 31, 0.55);
-  box-shadow: 0 28px 70px rgba(57, 27, 104, 0.16);
-}
-
 .premium-button {
   position: relative;
   display: inline-flex;
@@ -103,7 +85,6 @@ textarea {
 }
 
 .premium-button:focus-visible,
-.funnel-input:focus-visible,
 button:focus-visible,
 a:focus-visible {
   outline: 3px solid rgba(236, 145, 31, 0.42);
@@ -153,39 +134,6 @@ a:focus-visible {
   transform: translateX(-4px);
 }
 
-.funnel-input {
-  width: 100%;
-  min-height: 52px;
-  border: 1px solid rgba(57, 27, 104, 0.22);
-  border-radius: 0.85rem;
-  background: #ffffff;
-  padding: 0.95rem 1rem;
-  color: #0f172a;
-  font-size: 16px;
-  font-weight: 700;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    background 180ms ease;
-}
-
-.funnel-input:hover {
-  border-color: rgba(236, 145, 31, 0.55);
-}
-
-.funnel-input:focus {
-  border-color: var(--orange);
-  background: #fffdfa;
-  box-shadow: 0 0 0 5px rgba(236, 145, 31, 0.13);
-  outline: none;
-}
-
-.form-error {
-  color: #b42342;
-  font-size: 15px;
-  font-weight: 900;
-}
-
 .reveal {
   transform: translateY(18px);
   opacity: 0;
@@ -220,3 +168,4 @@ a:focus-visible {
     opacity: 1;
   }
 }
+

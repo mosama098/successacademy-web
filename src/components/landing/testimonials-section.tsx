@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
-import { bookingHref, type LandingSectionProps } from "./types";
+import { bookingHref, type LocalizedSectionProps } from "./types";
 
 type TextPart = {
   text: string;
@@ -273,7 +273,7 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
   );
 }
 
-export function TestimonialsSection({ locale }: LandingSectionProps) {
+export function TestimonialsSection({ locale }: LocalizedSectionProps) {
   const content = testimonialsContent[locale];
   const isArabic = locale === "ar";
   const testimonials = [content.featured, ...content.supporting];

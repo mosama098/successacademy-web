@@ -5,10 +5,6 @@ type Card = {
   description: string;
 };
 
-type VideoCard = Card & {
-  placeholder: string;
-};
-
 type Option = {
   value: string;
   label: string;
@@ -33,50 +29,6 @@ export type LandingContent = {
     note: string;
     cardLabel: string;
     directionRows: Card[];
-  };
-  why: {
-    title: string;
-    subtitle: string;
-    items: Card[];
-  };
-  assessment: {
-    title: string;
-    description: string;
-    bullets: string[];
-    cta: string;
-  };
-  videoPreview: {
-    title: string;
-    subtitle: string;
-    cta: string;
-    placeholder: string;
-  };
-  steps: {
-    title: string;
-    subtitle: string;
-    items: Card[];
-  };
-  experienceVideos: {
-    title: string;
-    items: VideoCard[];
-  };
-  delivery: {
-    title: string;
-    subtitle: string;
-    onlineLabel: string;
-    online: string;
-    onlineBullets: string[];
-    branchLabel: string;
-    branch: string;
-    branchBullets: string[];
-    cta: string;
-    note: string;
-  };
-  successManager: {
-    title: string;
-    description: string;
-    points: string[];
-    cards: Card[];
   };
   cta: {
     title: string;

@@ -34,12 +34,12 @@ export function LandingPage({ locale }: LandingPageProps) {
       <PageTracker locale={locale} page="landing" />
       <Navbar locale={locale} copy={copy} />
       <HeroSection locale={locale} copy={copy} />
-      <VideoPreviewSection locale={locale} copy={copy} />
-      <ProblemSection locale={locale} copy={copy} />
-      <TrainersSection locale={locale} copy={copy} />
-      <JourneySection locale={locale} copy={copy} />
-      <TestimonialsSection locale={locale} copy={copy} />
-      <RegistrationStepsSection locale={locale} copy={copy} />
+      <VideoPreviewSection locale={locale} />
+      <ProblemSection locale={locale} />
+      <TrainersSection locale={locale} />
+      <JourneySection locale={locale} />
+      <TestimonialsSection locale={locale} />
+      <RegistrationStepsSection locale={locale} />
       <div id="assessment" className="scroll-mt-24">
         <LeadForm locale={locale} copy={copy.form} />
       </div>

@@ -1,5 +1,5 @@
 import { CtaLink } from "@/components/ui/cta-link";
-import { bookingHref, type LandingSectionProps } from "./types";
+import { bookingHref, type LocalizedSectionProps } from "./types";
 
 type LayerIcon = "book" | "group" | "trainer" | "session" | "project" | "clock";
 
@@ -97,7 +97,7 @@ function LayerIcon({ icon, className = "h-6 w-6" }: { icon: LayerIcon | "support
 const arabicOffsets = ["", "-translate-x-0.5 md:-translate-x-[3px] lg:-translate-x-1", "-translate-x-1 md:-translate-x-[6px] lg:-translate-x-2", "-translate-x-1 md:-translate-x-[6px] lg:-translate-x-2", "-translate-x-0.5 md:-translate-x-[3px] lg:-translate-x-1", ""];
 const englishOffsets = ["", "translate-x-0.5 md:translate-x-[3px] lg:translate-x-1", "translate-x-1 md:translate-x-[6px] lg:translate-x-2", "translate-x-1 md:translate-x-[6px] lg:translate-x-2", "translate-x-0.5 md:translate-x-[3px] lg:translate-x-1", ""];
 
-export function ProblemSection({ locale }: LandingSectionProps) {
+export function ProblemSection({ locale }: LocalizedSectionProps) {
   const content = stackContent[locale];
   const isArabic = locale === "ar";
   const offsets = isArabic ? arabicOffsets : englishOffsets;

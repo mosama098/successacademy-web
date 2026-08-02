@@ -12,7 +12,7 @@ export function Navbar({ locale, copy }: { locale: Locale; copy: LandingContent 
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-6 py-4 lg:px-10">
         <Link href={`/${locale}`} className="flex items-center gap-3" aria-label="Success Academy">
-          <BrandMark slogan={copy.footer.slogan} />
+          <BrandMark />
         </Link>
 
         <div className="hidden items-center gap-7 text-[15px] font-black text-slate-700 md:flex">
@@ -34,3 +34,4 @@ export function Navbar({ locale, copy }: { locale: Locale; copy: LandingContent 
     </header>
   );
 }
+

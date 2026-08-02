@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar">
+    <html lang="ar" data-scroll-behavior="smooth">
       <body>
         {children}
         <TrackingScripts />
@@ -22,3 +22,4 @@ export default function RootLayout({
     </html>
   );
 }
+

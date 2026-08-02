@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
-import { bookingHref, type LandingSectionProps } from "./types";
+import { bookingHref, type LocalizedSectionProps } from "./types";
 
 type StepIcon = "details" | "schedule" | "assessment" | "result" | "start";
 
@@ -258,7 +258,7 @@ function StepIconGraphic({ icon }: { icon: StepIcon }) {
 
 export function RegistrationStepsSection({
   locale,
-}: LandingSectionProps) {
+}: LocalizedSectionProps) {
   const content = registrationContent[locale];
   const isArabic = locale === "ar";
   const sectionRef = useRef<HTMLElement>(null);
@@ -492,3 +492,4 @@ export function RegistrationStepsSection({
     </section>
   );
 }
+

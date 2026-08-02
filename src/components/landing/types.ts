@@ -6,4 +6,7 @@ export type LandingSectionProps = {
   copy: LandingContent;
 };
 
+export type LocalizedSectionProps = Pick<LandingSectionProps, "locale">;
+
 export const bookingHref = "#lead-form";
+

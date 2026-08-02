@@ -26,107 +26,6 @@ export const enContent: LandingContent = {
       { title: "Real follow-up", description: "A team helps you stay consistent and continue." },
     ],
   },
-  why: {
-    title: "Why old methods usually stop working",
-    subtitle:
-      "Most learners start without a map. They memorize words, attend lessons, then realize they still do not feel comfortable using English.",
-    items: [
-      {
-        title: "Starting without diagnosis",
-        description: "The wrong level wastes energy. You either repeat what you already know or struggle with what is still too advanced.",
-      },
-      {
-        title: "Studying without using",
-        description: "English is not just information to memorize. You need practical training, short situations, and daily practice.",
-      },
-      {
-        title: "A course without follow-up",
-        description: "Motivation drops after the first week. Without follow-up and accountability, even good content can stop there.",
-      },
-    ],
-  },
-  assessment: {
-    title: "Before choosing any program, know where you stand",
-    description:
-      "The free assessment is the logical first step. You do not need to decide now. Register, choose a suitable time, and our follow-up team will explain the best next step.",
-    bullets: ["Quick registration without complexity", "Choose a suitable assessment time", "Get an initial plan for your level and goal"],
-    cta: "Choose Your Free Assessment Time",
-  },
-  videoPreview: {
-    title: "See the journey in one minute",
-    subtitle: "From the free level check to starting a plan that fits your level and goal.",
-    cta: "Start with a Free Level Check",
-    placeholder: "Coming soon: a video explaining the learner journey with Success Academy",
-  },
-  steps: {
-    title: "Success Academy works as a path, not just a course",
-    subtitle: "We start from your level and goal, then build a practical learning direction you can continue.",
-    items: [
-      { title: "Know your level", description: "An external assessment shows your starting point instead of guessing." },
-      { title: "Understand your goal", description: "Work, travel, study, interviews, or confidence in conversation." },
-      { title: "Build the right plan", description: "Practical training and short tasks based on your level." },
-      { title: "Train with follow-up", description: "Accountability and real language use keep you moving." },
-    ],
-  },
-  experienceVideos: {
-    title: "The experience is more than lessons",
-    items: [
-      {
-        title: "Online learning experience",
-        description: "Structured training and follow-up that help you stay consistent with a busy schedule.",
-        placeholder: "Coming soon: a video showing the online learning experience",
-      },
-      {
-        title: "Practical training and tasks",
-        description: "Short tasks and realistic situations that help you use English, not just memorize it.",
-        placeholder: "Coming soon: a video showing practical training and tasks",
-      },
-      {
-        title: "Follow-up with a Success Manager",
-        description: "Accountability and plan adjustments based on your level and goal.",
-        placeholder: "Coming soon: a video showing the Success Manager role",
-      },
-    ],
-  },
-  delivery: {
-    title: "Choose the format that helps you stay committed",
-    subtitle:
-      "Whether your schedule is packed or in-person training keeps you focused, the important part is clear, practical training with follow-up that helps you continue.",
-    onlineLabel: "Online",
-    online:
-      "A strong fit if your day is busy. Structured training, follow-up, and practical practice so it does not become just watching lessons.",
-    onlineBullets: ["Flexible time options", "Clear follow-up", "Short practice tasks"],
-    branchLabel: "Dokki branch",
-    branch:
-      "A good fit if attending in person helps you stay committed. A clear training environment, direct interaction, and available time options.",
-    branchBullets: ["Attendance that supports commitment", "Direct training and interaction", "A plan that fits your level"],
-    cta: "Find the right option for you",
-    note: "Start with the level check, then the follow-up team helps you choose what fits.",
-  },
-  successManager: {
-    title: "Follow-up is the difference between starting and continuing",
-    description:
-      "The goal is not to place you in another course and leave you alone. The goal is to help you know what to do, stay accountable, and adjust the plan when needed.",
-    points: ["Accountability follow-up", "Short tasks", "Real language use", "Plan adjustments when needed"],
-    cards: [
-      {
-        title: "Accountability follow-up",
-        description: "Someone follows your progress and reminds you what needs to happen next.",
-      },
-      {
-        title: "Short tasks",
-        description: "Simple ongoing applications that make training practical.",
-      },
-      {
-        title: "Real language use",
-        description: "Situations and practice that help you use English instead of only memorizing it.",
-      },
-      {
-        title: "Plan adjustments",
-        description: "If your pace or focus needs to change, the plan can be adjusted with you.",
-      },
-    ],
-  },
   cta: {
     title: "Start with a free level check before choosing any program",
     description:
@@ -221,14 +120,11 @@ export const enContent: LandingContent = {
     learningModeOptions: [
       { value: "online", label: "Online" },
       { value: "dokki", label: "Dokki Branch" },
-      { value: "not_sure", label: "Not Sure Yet" },
     ],
     assessmentTimeOptions: [
       { value: "earliest", label: "First Available Time" },
       { value: "morning", label: "Morning" },
-      { value: "afternoon", label: "Afternoon" },
       { value: "evening", label: "Evening" },
-      { value: "weekend", label: "Weekend" },
     ],
     errors: {
       fullName: "Full name is required",

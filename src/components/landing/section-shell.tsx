@@ -26,16 +26,3 @@ export function SectionShell({
   );
 }
 
-export function StrongInfo({ title, text }: { title: string; text: string }) {
-  return (
-    <AnimatedSection>
-      <article className="strong-card h-full p-8">
-        <span className="mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#EC911F] to-[#E32F54] text-xl font-black text-white">
-          ✓
-        </span>
-        <h3 className="text-2xl font-black text-[#391B68]">{title}</h3>
-        <p className="mt-4 text-[17px] font-bold leading-8 text-slate-600">{text}</p>
-      </article>
-    </AnimatedSection>
-  );
-}

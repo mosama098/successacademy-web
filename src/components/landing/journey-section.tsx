@@ -2,7 +2,7 @@
 
 import { type KeyboardEvent, useRef, useState } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
-import { bookingHref, type LandingSectionProps } from "./types";
+import { bookingHref, type LocalizedSectionProps } from "./types";
 
 type GoalId = "work" | "university" | "travel";
 type GoalIcon = GoalId;
@@ -155,7 +155,7 @@ function RichText({ parts }: { parts: TextPart[] }) {
   );
 }
 
-export function JourneySection({ locale }: LandingSectionProps) {
+export function JourneySection({ locale }: LocalizedSectionProps) {
   const content = sectionContent[locale];
   const isArabic = locale === "ar";
   const [activeId, setActiveId] = useState<GoalId>("work");
@@ -275,3 +275,4 @@ export function JourneySection({ locale }: LandingSectionProps) {
     </section>
   );
 }
+

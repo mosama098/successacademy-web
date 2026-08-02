@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -62,13 +61,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   const fieldRefs = useRef<Partial<Record<FieldName, FocusableField>>>({});
   const started = useRef(false);
   const isArabic = locale === "ar";
-  const whatsappHref = useMemo(() => getWhatsAppHref(locale), [locale]);
-  const learningModeOptions = copy.learningModeOptions.filter(
-    (option) => option.value !== "not_sure",
-  );
-  const assessmentTimeOptions = copy.assessmentTimeOptions.filter((option) =>
-    ["earliest", "morning", "evening"].includes(option.value),
-  );
+  const whatsappHref = getWhatsAppHref(locale);
 
   function markStarted() {
     if (started.current) return;
@@ -345,7 +338,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                     name="preferredLearningMode"
                     label={copy.labels.preferredLearningMode}
                     icon="learning"
-                    options={learningModeOptions}
+                    options={copy.learningModeOptions}
                     value={form.preferredLearningMode}
                     error={errors.preferredLearningMode}
                     required
@@ -366,7 +359,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                     name="preferredAssessmentTime"
                     label={copy.labels.preferredAssessmentTime}
                     icon="clock"
-                    options={assessmentTimeOptions}
+                    options={copy.assessmentTimeOptions}
                     value={form.preferredAssessmentTime}
                     error={errors.preferredAssessmentTime}
                     required
@@ -1102,3 +1095,4 @@ function isValidPhone(value: string) {
   const digits = normalized.replace(/\D/g, "");
   return digits.length >= 8 && digits.length <= 15;
 }
+

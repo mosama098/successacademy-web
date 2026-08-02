@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import type { LandingSectionProps } from "./types";
+import type { LocalizedSectionProps } from "./types";
 
 type IconName =
   | "team"
@@ -212,7 +212,7 @@ function TrainerIcon({
   );
 }
 
-export function TrainersSection({ locale }: LandingSectionProps) {
+export function TrainersSection({ locale }: LocalizedSectionProps) {
   const content = trainerContent[locale];
   const isArabic = locale === "ar";
   const sectionRef = useRef<HTMLElement>(null);
@@ -429,3 +429,4 @@ export function TrainersSection({ locale }: LandingSectionProps) {
     </section>
   );
 }
+
