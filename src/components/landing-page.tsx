@@ -13,6 +13,7 @@ import { TrainersSection } from "@/components/landing/trainers-section";
 import { VideoPreviewSection } from "@/components/landing/video-preview-section";
 import { PageTracker } from "@/components/page-tracker";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
+import { DesktopFloatingWhatsApp } from "@/components/ui/desktop-floating-whatsapp";
 import { StickyMobileCta } from "@/components/ui/sticky-mobile-cta";
 import { content } from "@/content";
 import { localeDirection, type Locale } from "@/lib/i18n";
@@ -48,6 +49,7 @@ export function LandingPage({ locale }: LandingPageProps) {
       <AboutSuccessAcademySection locale={locale} copy={copy} />
       <FinalCtaSection locale={locale} copy={copy} />
       <FooterSection locale={locale} copy={copy} />
+      <DesktopFloatingWhatsApp locale={locale} />
       <StickyMobileCta locale={locale} copy={copy.sticky} />
     </main>
   );
