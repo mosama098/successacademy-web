@@ -177,9 +177,13 @@ export const enContent: LandingContent = {
   },
   about: {
     badge: "About Us",
-    title: "Since 2015… we’ve been helping learners use English in real life",
-    description: "Success Academy was built with one clear goal: learning English should not be just lectures, but a practical system that helps you speak, practise, and move toward your goal with clear steps.",
-    stats: ["Since 2015", "100K+ learners trusted us", "Online & Dokki Branch"],
+    title: "Since 2015… We’ve Been Helping Learners Use English in Real Life",
+    description: "Success Academy began with one clear goal: English learning should not be just lectures, but a practical system that helps you speak, practise, and move towards your goal with clear steps.",
+    stats: [
+      { value: "2015", label: "Since We Started" },
+      { value: "100K+", label: "Learners Trusted Us" },
+      { value: "Online & Dokki", label: "Learn in the Way That Suits You" },
+    ],
     slogan: "Not Just A Course... A Direction",
   },
   form: {
