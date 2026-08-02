@@ -128,7 +128,7 @@ export const enContent: LandingContent = {
     ],
     errors: {
       fullName: "Full name is required",
-      phone: "Enter a valid mobile number",
+      phone: "Please enter a valid Egyptian mobile number, such as 01012345678.",
       email: "Enter a valid email address",
       learningGoal: "Choose your English goal",
       preferredLearningMode: "Choose a learning method",
@@ -191,4 +191,3 @@ export const enContent: LandingContent = {
     },
   },
 };
-

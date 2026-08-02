@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { normalizeEgyptianMobile } from "@/lib/phone";
 
 type LeadRequest = {
   fullName?: string;
@@ -36,6 +37,11 @@ export async function POST(request: Request) {
   }
 
   const missing = requiredFields.filter((field) => !String(body[field] ?? "").trim());
+  const normalizedPhone = normalizeEgyptianMobile(String(body.phone ?? ""));
+
+  if (!normalizedPhone && !missing.includes("phone")) {
+    missing.push("phone");
+  }
 
   if (missing.length > 0 || body.consent !== true) {
     return NextResponse.json(
@@ -44,13 +50,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const webhookUrl = process.env.LEADS_WEBHOOK_URL;
+  const webhookSecret = process.env.LEADS_WEBHOOK_SECRET;
+
+  if (!webhookUrl || !webhookSecret) {
+    return NextResponse.json({ ok: false, error: "submission_unavailable" }, { status: 500 });
+  }
+
   const submittedAt = new Date().toISOString();
   const payload = {
+    secret: webhookSecret,
     status: "new_assessment_lead",
     source: "website",
     submittedAt,
     fullName: body.fullName?.trim(),
-    phone: body.phone?.trim(),
+    phone: normalizedPhone,
     email: body.email?.trim() ?? "",
     learningGoal: body.learningGoal,
     currentLevel: body.currentLevel ?? "",
@@ -73,40 +87,38 @@ export async function POST(request: Request) {
     },
   };
 
-  const webhookUrl = process.env.LEADS_WEBHOOK_URL;
-  const webhookSecret = process.env.LEADS_WEBHOOK_SECRET;
-  const isProduction = process.env.NODE_ENV === "production";
-
-  if (!webhookUrl) {
-    const message = "LEADS_WEBHOOK_URL is not configured.";
-
-    if (!isProduction) {
-      console.warn(message, payload);
-      return NextResponse.json({ ok: true, dev: true, message, lead: payload });
-    }
-
-    return NextResponse.json({ ok: false, error: "webhook_not_configured" }, { status: 500 });
-  }
-
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(webhookSecret ? { "x-leads-secret": webhookSecret } : {}),
       },
       body: JSON.stringify(payload),
       cache: "no-store",
     });
 
     if (!response.ok) {
-      console.error("Lead webhook failed", response.status, await response.text());
-      return NextResponse.json({ ok: false, error: "webhook_failed" }, { status: 502 });
+      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+    }
+
+    let result: unknown;
+
+    try {
+      result = await response.json();
+    } catch {
+      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+    }
+
+    if (!isSuccessfulWebhookResponse(result)) {
+      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
     }
 
     return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Lead webhook error", error);
-    return NextResponse.json({ ok: false, error: "webhook_error" }, { status: 502 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
   }
+}
+
+function isSuccessfulWebhookResponse(value: unknown): value is { success: true } {
+  return typeof value === "object" && value !== null && "success" in value && value.success === true;
 }

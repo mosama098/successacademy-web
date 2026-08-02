@@ -19,6 +19,7 @@ import {
   trackFormSubmit,
   trackWhatsAppClick,
 } from "@/lib/tracking";
+import { normalizeEgyptianMobile } from "@/lib/phone";
 import { getLeadMetadata, getWhatsAppHref } from "@/lib/utm";
 
 type FieldName = Exclude<keyof FormState, "company">;
@@ -81,7 +82,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
       return copy.errors.fullName;
     }
 
-    if (field === "phone" && !isValidPhone(String(value))) {
+    if (field === "phone" && !normalizeEgyptianMobile(String(value))) {
       return copy.errors.phone;
     }
 
@@ -169,13 +170,20 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
     markStarted();
     if (status === "loading" || !validateForm()) return;
 
+    const normalizedPhone = normalizeEgyptianMobile(form.phone);
+    if (!normalizedPhone) return;
+
     setStatus("loading");
 
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, metadata: getLeadMetadata(locale) }),
+        body: JSON.stringify({
+          ...form,
+          phone: normalizedPhone,
+          metadata: getLeadMetadata(locale),
+        }),
       });
 
       if (!response.ok) throw new Error("Lead submission failed");
@@ -280,7 +288,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                   error={errors.phone}
                   required
                   type="tel"
-                  inputMode="tel"
+                  inputMode="numeric"
                   autoComplete="tel"
                   inputClassName={inputClassName}
                   dir="ltr"
@@ -421,678 +429,4 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                   <button
                     type="submit"
                     disabled={status === "loading"}
-                    className="group flex h-[50px] w-full scroll-mb-[148px] items-center justify-center gap-2.5 rounded-[14px] bg-[#EC911F] px-5 text-[16px] font-black text-white shadow-[0_12px_24px_rgba(236,145,31,0.26)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_15px_28px_rgba(236,145,31,0.31)] active:translate-y-0.5 active:shadow-[0_7px_16px_rgba(236,145,31,0.22)] focus-visible:ring-4 focus-visible:ring-[#391B68]/25 disabled:cursor-not-allowed disabled:opacity-65 sm:h-[52px] lg:h-[46px] lg:rounded-[13px] lg:text-[15.5px]"
-                  >
-                    <span aria-live="polite">
-                      {status === "loading"
-                        ? copy.buttons.loading
-                        : copy.buttons.submit}
-                    </span>
-                    <FormIcon
-                      name="arrow"
-                      className="h-[18px] w-[18px] transition-transform duration-200 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                    />
-                  </button>
-                  <a
-                    href={whatsappHref}
-                    onClick={() =>
-                      trackWhatsAppClick({
-                        locale,
-                        source: "lead_form_secondary",
-                      })
-                    }
-                    className="flex h-[50px] w-full scroll-mb-[148px] items-center justify-center gap-2 rounded-[14px] border border-[#391B68]/40 bg-white px-4 text-center text-[14.5px] font-black leading-[1.4] text-[#391B68] outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 hover:border-[#391B68] hover:bg-[#eee9f4] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15 sm:h-[52px] lg:h-[44px] lg:rounded-[13px] lg:text-[14px]"
-                  >
-                    <span className="inline-flex h-[19px] w-[19px] shrink-0 items-center justify-center">
-                      <FormIcon
-                        name="whatsapp"
-                        className="h-full w-full"
-                      />
-                    </span>
-                    {isArabic
-                      ? "Ø¹Ù†Ø¯Ùƒ Ø³Ø¤Ø§Ù„ØŸ ØªÙˆØ§ØµÙ„ Ù…Ø¹Ø§Ù†Ø§ Ø¹Ù„Ù‰ ÙˆØ§ØªØ³Ø§Ø¨"
-                      : "Have a Question? Contact Us on WhatsApp"}
-                  </a>
-                </div>
-                <p className="mx-auto mt-1.5 max-w-[620px] text-center text-[12px] font-bold leading-[1.5] text-[#71667e] sm:text-[12.5px] lg:text-[11.5px]">
-                  {copy.reassurance}
-                </p>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TrustPanel({
-  copy,
-  isArabic,
-  className,
-}: Pick<LeadFormProps, "copy"> & {
-  isArabic: boolean;
-  className: string;
-}) {
-  return (
-    <aside
-      className={`${className} flex h-full flex-col bg-[#391B68] px-4 py-3.5 text-white sm:p-5 lg:row-start-1 lg:justify-between lg:p-6`}
-      dir={isArabic ? "rtl" : "ltr"}
-    >
-      <div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#EC911F]/35 bg-[#fff7e9] px-3 py-1.5 text-[12.5px] font-black text-[#a95500] sm:text-[13px]">
-          <FormIcon name="spark" className="h-3.5 w-3.5" />
-          {copy.badge}
-        </span>
-        <h2
-          className={`mt-4 text-balance font-black leading-[1.2] text-white sm:text-[30px] lg:mt-3.5 lg:leading-[1.2] ${
-            isArabic
-              ? "text-[27px] sm:text-[30px] lg:text-[32px]"
-              : "text-[25px] sm:text-[30px] lg:text-[27px]"
-          }`}
-        >
-          {copy.title}
-        </h2>
-        <p className="mt-2 text-[13px] font-bold leading-[1.55] text-[#e7dff0] sm:mt-3 sm:text-[14px] sm:leading-[1.6] lg:mt-2.5 lg:text-[13px] lg:leading-[1.55]">
-          {copy.subtitle}
-        </p>
-      </div>
-      <ul className="mt-3 grid gap-1.5 sm:mt-4 sm:gap-2 lg:mt-0">
-        {copy.trustItems.map((item) => (
-          <li
-            key={item}
-            className="flex items-start gap-2.5 border-t border-white/12 pt-1.5 text-[12.5px] font-bold leading-[1.5] text-white sm:pt-2.5 sm:text-[13.5px] sm:leading-[1.55] lg:pt-2.5 lg:text-[12.5px] lg:leading-[1.45]"
-          >
-            <span
-              className="mt-0.5 grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[9px] bg-white/8 text-[#EC911F] ring-1 ring-white/12 sm:h-8 sm:w-8 sm:rounded-[10px]"
-              aria-hidden="true"
-            >
-              <FormIcon name="check" className="h-[18px] w-[18px]" />
-            </span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-      <p
-        className="hidden border-t border-white/12 pt-2.5 text-[12px] font-bold leading-[1.45] text-[#e7dff0] lg:block"
-        aria-hidden="true"
-      >
-        {copy.reassurance}
-      </p>
-    </aside>
-  );
-}
-
-function FormIcon({
-  name,
-  className = "h-4 w-4",
-}: {
-  name: FormIconName;
-  className?: string;
-}) {
-  if (name === "whatsapp") {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className={className}
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden="true"
-      >
-        <path d="M12.04 2a9.84 9.84 0 0 0-8.4 14.96L2 22l5.17-1.61A9.94 9.94 0 0 0 12.04 22C17.53 22 22 17.52 22 12.01S17.53 2 12.04 2Zm5.83 14.1c-.25.71-1.47 1.35-2.03 1.44-.52.08-1.2.12-1.94-.12-.45-.14-1.03-.33-1.77-.65-3.11-1.34-5.14-4.55-5.3-4.76-.15-.21-1.26-1.68-1.26-3.2 0-1.52.8-2.27 1.08-2.58.28-.31.61-.39.82-.39h.59c.19 0 .44-.07.69.53.25.61.85 2.08.93 2.23.08.15.13.33.03.54-.1.21-.15.33-.31.51-.15.18-.32.4-.46.54-.15.15-.3.31-.13.61.18.31.78 1.29 1.67 2.09 1.15 1.02 2.12 1.34 2.42 1.49.3.15.48.13.66-.08.18-.21.77-.9.98-1.21.2-.31.41-.26.69-.15.28.1 1.79.84 2.1.99.31.15.51.23.59.36.08.13.08.74-.18 1.45Z" />
-      </svg>
-    );
-  }
-
-  let paths: ReactNode;
-
-  switch (name) {
-    case "arrow":
-      paths = (
-        <>
-          <path d="M5 12h14" />
-          <path d="m13 6 6 6-6 6" />
-        </>
-      );
-      break;
-    case "check":
-      paths = <path d="m5 12 4 4L19 7" />;
-      break;
-    case "clock":
-      paths = (
-        <>
-          <circle cx="12" cy="12" r="8.5" />
-          <path d="M12 7.5V12l3 2" />
-        </>
-      );
-      break;
-    case "learning":
-      paths = (
-        <>
-          <rect x="3.5" y="4.5" width="17" height="11.5" rx="2" />
-          <path d="M8.5 20h7M12 16v4" />
-        </>
-      );
-      break;
-    case "mail":
-      paths = (
-        <>
-          <rect x="3" y="5" width="18" height="14" rx="2.5" />
-          <path d="m4 7 8 6 8-6" />
-        </>
-      );
-      break;
-    case "message":
-      paths = (
-        <>
-          <path d="M5.5 18.5 3 21l.8-4A8 8 0 1 1 7 19.5" />
-          <path d="M8 10h8M8 14h5" />
-        </>
-      );
-      break;
-    case "phone":
-      paths = (
-        <path d="M7.2 3.5 10 7.8 8.3 10a15.3 15.3 0 0 0 5.7 5.7l2.2-1.7 4.3 2.8-.8 3.2c-.2.8-.9 1.4-1.8 1.4C9.5 20.8 3.2 14.5 2.6 6.1c-.1-.9.5-1.6 1.4-1.8l3.2-.8Z" />
-      );
-      break;
-    case "spark":
-      paths = (
-        <>
-          <path d="m12 3 1.2 3.3L16.5 7.5l-3.3 1.2L12 12l-1.2-3.3-3.3-1.2 3.3-1.2L12 3Z" />
-          <path d="m18.5 13 .7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z" />
-          <path d="m5.5 14 .6 1.5 1.4.5-1.4.6-.6 1.4-.5-1.4-1.5-.6 1.5-.5.5-1.5Z" />
-        </>
-      );
-      break;
-    case "target":
-      paths = (
-        <>
-          <circle cx="12" cy="12" r="8.5" />
-          <circle cx="12" cy="12" r="4.5" />
-          <circle cx="12" cy="12" r="1" />
-        </>
-      );
-      break;
-    case "user":
-      paths = (
-        <>
-          <circle cx="12" cy="8" r="3.5" />
-          <path d="M5 20c.8-4 3.1-6 7-6s6.2 2 7 6" />
-        </>
-      );
-      break;
-  }
-
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      {paths}
-    </svg>
-  );
-}
-
-function FieldLabel({
-  htmlFor,
-  children,
-  icon,
-  optional,
-  required,
-}: {
-  htmlFor?: string;
-  children: ReactNode;
-  icon?: FormIconName;
-  optional?: string;
-  required?: boolean;
-}) {
-  const content = (
-    <>
-      {icon ? (
-        <span
-          className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[#f0ebf5] text-[#391B68] sm:h-7 sm:w-7 sm:rounded-lg lg:h-6 lg:w-6 lg:rounded-md"
-          aria-hidden="true"
-        >
-          <FormIcon name={icon} className="h-4 w-4" />
-        </span>
-      ) : null}
-      <span>{children}</span>
-      {required ? (
-        <span className="text-[#b4233c]" aria-hidden="true">
-          *
-        </span>
-      ) : null}
-      {optional ? (
-        <span className="shrink-0 rounded-full bg-[#eee9f4] px-2.5 py-1 text-[11px] font-black text-[#71667e] lg:px-2 lg:py-0.5 lg:text-[10.5px]">
-          {optional}
-        </span>
-      ) : null}
-    </>
-  );
-
-  const className =
-    "mb-1.5 flex items-center gap-2 text-[14px] font-black leading-[1.45] text-[#391B68] sm:mb-2 sm:text-[15px] lg:mb-1.5 lg:text-[14px]";
-
-  return htmlFor ? (
-    <label htmlFor={htmlFor} className={className}>
-      {content}
-    </label>
-  ) : (
-    <span className={className}>{content}</span>
-  );
-}
-
-function TextField({
-  id,
-  label,
-  icon,
-  optional,
-  error,
-  required,
-  inputClassName,
-  setRef,
-  ...inputProps
-}: {
-  id: string;
-  label: string;
-  icon?: FormIconName;
-  optional?: string;
-  error?: string;
-  required?: boolean;
-  inputClassName: string;
-  setRef: (element: HTMLInputElement | null) => void;
-  value: string;
-  placeholder: string;
-  type?: string;
-  inputMode?: "text" | "tel" | "email";
-  autoComplete?: string;
-  dir?: "ltr" | "rtl";
-  onBlur: () => void;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-}) {
-  const errorId = `${id}-error`;
-
-  return (
-    <div className="min-w-0 scroll-mb-[150px]">
-      <FieldLabel
-        htmlFor={id}
-        icon={icon}
-        optional={optional}
-        required={required}
-      >
-        {label}
-      </FieldLabel>
-      <div className="min-w-0">
-        <input
-          {...inputProps}
-          ref={setRef}
-          id={id}
-          name={id}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-          className={`${inputClassName} h-[48px] sm:h-[50px] lg:h-[42px] ${
-            error
-              ? "border-[#b4233c] ring-2 ring-[#b4233c]/10 focus:border-[#b4233c] focus:ring-[#b4233c]/15"
-              : ""
-          }`}
-        />
-        <FieldError id={errorId} error={error} />
-      </div>
-    </div>
-  );
-}
-
-function TextAreaField({
-  id,
-  label,
-  icon,
-  optional,
-  inputClassName,
-  setRef,
-  ...textareaProps
-}: {
-  id: string;
-  label: string;
-  icon?: FormIconName;
-  optional: string;
-  inputClassName: string;
-  setRef: (element: HTMLTextAreaElement | null) => void;
-  value: string;
-  placeholder: string;
-  onBlur: () => void;
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-}) {
-  return (
-    <div className="min-w-0 scroll-mb-[150px]">
-      <FieldLabel htmlFor={id} icon={icon} optional={optional}>
-        {label}
-      </FieldLabel>
-      <div className="min-w-0">
-        <textarea
-          {...textareaProps}
-          ref={setRef}
-          id={id}
-          name={id}
-          className={`${inputClassName} h-[96px] resize-y py-3 leading-7 sm:h-[100px] lg:h-[68px] lg:py-2.5 lg:leading-5`}
-        />
-      </div>
-    </div>
-  );
-}
-
-function ChoiceGroup({
-  id,
-  name,
-  label,
-  icon,
-  options,
-  value,
-  error,
-  required,
-  layout,
-  setFirstRef,
-  onBlur,
-  onChange,
-}: {
-  id: string;
-  name: FieldName;
-  label: string;
-  icon: FormIconName;
-  options: Array<{ value: string; label: string }>;
-  value: string;
-  error?: string;
-  required?: boolean;
-  layout: "goal" | "method" | "time";
-  setFirstRef: (element: HTMLInputElement | null) => void;
-  onBlur: () => void;
-  onChange: (value: string) => void;
-}) {
-  const errorId = `${id}-error`;
-
-  function handleBlur(event: FocusEvent<HTMLFieldSetElement>) {
-    if (
-      event.relatedTarget instanceof Node &&
-      event.currentTarget.contains(event.relatedTarget)
-    ) {
-      return;
-    }
-    onBlur();
-  }
-
-  const gridClassName =
-    layout === "goal"
-      ? "grid-cols-2"
-      : layout === "method"
-        ? "grid-cols-2"
-        : "grid-cols-2 md:grid-cols-3";
-  const desktopOptionClassName =
-    layout === "time"
-      ? "lg:gap-1.5 lg:px-2 lg:text-[12.5px]"
-      : layout === "goal"
-        ? "lg:gap-2 lg:px-2.5 lg:py-1 lg:text-[13px]"
-        : "lg:gap-2 lg:px-2.5 lg:text-[13px]";
-
-  return (
-    <fieldset
-      className="mt-3 min-w-0 scroll-mb-[148px] border-t border-[#e5deec] pt-3 sm:mt-4 sm:pt-4 lg:mt-2.5 lg:pt-2.5"
-      aria-invalid={Boolean(error)}
-      aria-describedby={error ? errorId : undefined}
-      onBlur={handleBlur}
-    >
-      <legend className="w-full">
-        <FieldLabel icon={icon} required={required}>
-          {label}
-        </FieldLabel>
-      </legend>
-      <div
-        className={`grid auto-rows-fr items-stretch gap-2 sm:gap-2.5 lg:gap-1.5 ${gridClassName}`}
-      >
-        {options.map((option, index) => {
-          const selected = value === option.value;
-          const optionId = `${id}-${option.value}`;
-
-          return (
-            <label
-              key={option.value}
-              htmlFor={optionId}
-              className={`h-full min-w-0 ${
-                layout === "time"
-                  ? index === 0
-                    ? "order-3 col-span-2 md:order-none md:col-span-1"
-                    : index === 1
-                      ? "order-1 md:order-none"
-                      : "order-2 md:order-none"
-                  : ""
-              }`}
-            >
-              <input
-                ref={index === 0 ? setFirstRef : undefined}
-                id={optionId}
-                type="radio"
-                name={name}
-                value={option.value}
-                checked={selected}
-                onChange={() => onChange(option.value)}
-                aria-invalid={Boolean(error)}
-                className="peer sr-only scroll-mb-[148px]"
-              />
-              <span
-                className={`flex h-full min-h-[50px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-[13px] border px-3 py-2 text-start text-[14px] font-bold leading-[1.4] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 sm:min-h-[52px] sm:px-3.5 sm:py-2.5 sm:text-[15px] lg:min-h-[40px] lg:rounded-[12px] lg:py-1.5 ${desktopOptionClassName} ${
-                  selected
-                    ? "border-[#391B68] bg-[#eee9f4] font-black text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14),0_7px_18px_rgba(57,27,104,0.1)]"
-                    : error
-                      ? "border-[#b4233c]/60 bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
-                      : "border-[#d9d0e5] bg-white text-[#554760] hover:border-[#391B68]/45 hover:bg-[#faf8fc]"
-                }`}
-              >
-                <span
-                  className={`min-w-0 flex-1 text-start ${
-                    layout === "time" ? "lg:whitespace-nowrap" : ""
-                  }`}
-                >
-                  {option.label}
-                </span>
-                <span
-                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] transition-colors lg:h-[18px] lg:w-[18px] ${
-                    selected
-                      ? "bg-[#EC911F] text-white"
-                      : "border border-[#c9bdd8] text-transparent"
-                  }`}
-                  aria-hidden="true"
-                >
-                  <FormIcon name="check" className="h-3.5 w-3.5" />
-                </span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
-      <div>
-        <FieldError id={errorId} error={error} />
-      </div>
-    </fieldset>
-  );
-}
-
-function ConsentField({
-  id,
-  label,
-  checked,
-  error,
-  setRef,
-  onBlur,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  checked: boolean;
-  error?: string;
-  setRef: (element: HTMLInputElement | null) => void;
-  onBlur: () => void;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-}) {
-  const errorId = `${id}-error`;
-
-  return (
-    <div className="scroll-mb-[148px]">
-      <label
-        htmlFor={id}
-        className={`flex min-h-[50px] cursor-pointer items-start gap-2.5 rounded-[13px] border bg-[#faf8fc] p-3 text-[13px] font-bold leading-[1.5] text-[#554760] transition-[border-color,background-color,box-shadow] duration-200 hover:border-[#391B68]/45 sm:gap-3 sm:p-3.5 sm:text-[14.5px] lg:min-h-[42px] lg:gap-2.5 lg:rounded-[12px] lg:p-2.5 lg:text-[13px] lg:leading-[1.45] ${
-          error ? "border-[#b4233c]" : "border-[#d9d0e5]"
-        }`}
-      >
-        <input
-          ref={setRef}
-          id={id}
-          name="consent"
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          onBlur={onBlur}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-          className="peer sr-only scroll-mb-[148px]"
-        />
-        <span
-          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border text-xs font-black transition-[border-color,background-color,color,box-shadow] peer-focus-visible:ring-4 peer-focus-visible:ring-[#391B68]/15 lg:h-[18px] lg:w-[18px] ${
-            checked
-              ? "border-[#391B68] bg-[#391B68] text-white"
-              : "border-[#a99ab9] bg-white text-transparent"
-          }`}
-          aria-hidden="true"
-        >
-          <FormIcon name="check" className="h-3.5 w-3.5" />
-        </span>
-        <span>{label}</span>
-      </label>
-      <FieldError id={errorId} error={error} />
-    </div>
-  );
-}
-
-function FieldError({ id, error }: { id: string; error?: string }) {
-  return error ? (
-    <p
-      id={id}
-      role="alert"
-      className="mt-2 flex items-center gap-2 text-[13px] font-black leading-5 text-[#a61b35]"
-    >
-      <span
-        className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-current text-[11px]"
-        aria-hidden="true"
-      >
-        !
-      </span>
-      {error}
-    </p>
-  ) : null;
-}
-
-function SubmitError({
-  copy,
-  locale,
-  whatsappHref,
-}: Pick<LeadFormProps, "copy" | "locale"> & {
-  whatsappHref: string;
-}) {
-  return (
-    <div
-      role="alert"
-      aria-live="assertive"
-      className="rounded-[16px] border border-[#b4233c]/35 bg-[#fff4f5] p-4 text-[#86162a]"
-    >
-      <h3 className="text-[16px] font-black leading-6">
-        {copy.failure.title}
-      </h3>
-      <p className="mt-1 text-[14px] font-bold leading-6">
-        {copy.failure.messageLead}
-        <a
-          href={whatsappHref}
-          onClick={() =>
-            trackWhatsAppClick({ locale, source: "form_error" })
-          }
-          className="font-black underline decoration-2 underline-offset-2 outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-[#391B68]"
-        >
-          {copy.failure.whatsapp}
-        </a>
-        {copy.failure.messageTail}
-      </p>
-    </div>
-  );
-}
-
-function SuccessState({
-  copy,
-  isArabic,
-  locale,
-  whatsappHref,
-  onBack,
-}: Pick<LeadFormProps, "copy" | "locale"> & {
-  isArabic: boolean;
-  whatsappHref: string;
-  onBack: () => void;
-}) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex min-h-[420px] flex-col items-center justify-center py-8 text-center lg:min-h-[560px]"
-    >
-      <span
-        className="grid h-16 w-16 place-items-center rounded-[20px] bg-[#eee9f4] text-3xl font-black text-[#EC911F]"
-        aria-hidden="true"
-      >
-        âœ“
-      </span>
-      <h2 className="mt-6 text-[30px] font-black leading-[1.25] text-[#391B68] sm:text-[36px]">
-        {copy.success.title}
-      </h2>
-      <p className="mt-4 max-w-[560px] text-[15px] font-bold leading-[1.75] text-[#71667e] sm:text-[16px]">
-        {copy.success.message}
-      </p>
-      <div className="mt-8 grid w-full max-w-[520px] gap-3 sm:grid-cols-2">
-        <a
-          href={whatsappHref}
-          onClick={() =>
-            trackWhatsAppClick({ locale, source: "form_success" })
-          }
-          className="flex min-h-[54px] items-center justify-center gap-2 rounded-[16px] bg-[#EC911F] px-5 text-[15px] font-black text-white shadow-[0_12px_24px_rgba(236,145,31,0.25)] outline-none transition-[background-color,box-shadow,transform] hover:bg-[#d97f10] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/20"
-        >
-          {copy.success.whatsapp}
-          <span
-            className={isArabic ? "rotate-180" : undefined}
-            aria-hidden="true"
-          >
-            â†’
-          </span>
-        </a>
-        <button
-          type="button"
-          onClick={onBack}
-          className="min-h-[54px] rounded-[16px] border border-[#391B68]/25 bg-white px-5 text-[15px] font-black text-[#391B68] outline-none transition-[border-color,background-color,transform] hover:border-[#391B68] hover:bg-[#faf8fc] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#391B68]/15"
-        >
-          {copy.success.back}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
-function isValidPhone(value: string) {
-  const normalized = value
-    .replace(/[Ù -Ù©]/g, (digit) => String("Ù Ù¡Ù¢Ù£Ù¤Ù¥Ù¦Ù§Ù¨Ù©".indexOf(digit)))
-    .replace(/[Û°-Û¹]/g, (digit) => String("Û°Û±Û²Û³Û´ÛµÛ¶Û·Û¸Û¹".indexOf(digit)));
-  const digits = normalized.replace(/\D/g, "");
-  return digits.length >= 8 && digits.length <= 15;
-}
-
+                    className="group flex h-[50px] w-full scroll-mb-[148px] items-center justify-center gap-2.5 rounded-[14px] bg-[#EC911F] px-5 text-[16px] font-black text-white shadow-[0_12px_24px_rgba(236,145,31,0.26)] outline-none transition-[background-color,box-shadow,transform,opacity] duration-200 hover:bg-[#d97f10] hover:shadow-[0_15px_28px_rgba(236,145,31,0.31)] activeÛN¼¶‰žËkºwµçHÝ¥‘Ñ ôˆÄàˆ¡•¥¡ÐôˆÄÐˆÉàôˆÈ¸Ôˆ€¼ø(€€€€€€€€€€ñÁ…Ñ ô‰´Ð€Ü€à€Ø€à´Øˆ€¼ø(€€€€€€€€ð¼ø(€€€€€€¤ì(€€€€€‰É•…¬ì(€€€…Í”€‰µ•ÍÍ…”ˆè(€€€€€Á…Ñ¡Ì€ô€ (€€€€€€€€ðø(€€€€€€€€€€ñÁ…Ñ ô‰4Ô¸Ô€Äà¸Ô€Ì€ÈÅ°¸à´Ñà€à€À€Ä€Ä€Ü€Ää¸Ôˆ€¼ø(€€€€€€€€€€ñÁ…Ñ ô‰4à€ÄÁ á4à€ÄÑ Ôˆ€¼ø(€€€€€€€€ð¼ø(€€€€€€¤ì(€€€€€‰É•…¬ì(€€€…Í”€‰Á¡½¹”ˆè(€€€€€Á…Ñ¡Ì€ô€ (€€€€€€€€ñÁ…Ñ ô‰4Ü¸È€Ì¸Ô€ÄÀ€Ü¸à€à¸Ì€ÄÁ„ÄÔ¸Ì€ÄÔ¸Ì€À€À€À€Ô¸Ü€Ô¸Ý°È¸È´Ä¸Ü€Ð¸Ì€È¸à´¸à€Ì¸ÉŒ´¸È¸à´¸ä€Ä¸Ð´Ä¸à€Ä¸Ñä¸Ô€ÈÀ¸à€Ì¸È€ÄÐ¸Ô€È¸Ø€Ø¸ÅŒ´¸Ä´¸ä¸Ô´Ä¸Ø€Ä¸Ð´Ä¸á°Ì¸È´¸áhˆ€¼ø(€€€€€€¤ì(€€€€€‰É•…¬ì(€€€…Í”€‰ÍÁ…É¬ˆè(€€€€€Á…Ñ¡Ì€ô€ (€€€€€€€€ðø(€€€€€€€€€€ñÁ…Ñ ô‰´ÄÈ€Ì€Ä¸È€Ì¸Í0ÄØ¸Ô€Ü¸Õ°´Ì¸Ì€Ä¸É0ÄÈ€ÄÉ°´Ä¸È´Ì¸Ì´Ì¸Ì´Ä¸È€Ì¸Ì´Ä¸É0ÄÈ€Íhˆ€¼ø(€€€€€€€€€€ñÁ…Ñ ô‰´Äà¸Ô€ÄÌ€¸Ü€Ä¸à€Ä¸à¸Ü´Ä¸à¸Ü´¸Ü€Ä¸à´¸Ü´Ä¸à´Ä¸à´¸Ü€Ä¸à´¸Ü¸Ü´Ä¸áhˆ€¼ø(€€€€€€€€€€ñÁ…Ñ ô‰´Ô¸Ô€ÄÐ€¸Ø€Ä¸Ô€Ä¸Ð¸Ô´Ä¸Ð¸Ø´¸Ø€Ä¸Ð´¸Ô´Ä¸Ð´Ä¸Ô´¸Ø€Ä¸Ô´¸Ô¸Ô´Ä¸Õhˆ€¼ø(€€€€€€€€ð¼ø(€€€€€€¤ì(€€€€€‰É•…¬ì(€€€…Í”€‰Ñ…É•Ðˆè(€€€€€Á…Ñ¡Ì€ô€ (€€€€€€€€ðø(€€€€€€€€€€ñ¥É±”àôˆÄÈˆäôˆÄÈˆÈôˆà¸Ôˆ€¼ø(€€€€€€€€€€ñ¥É±”àôˆÄÈˆäôˆÄÈˆÈôˆÐ¸Ôˆ€¼ø(€€€€€€€€€€ñ¥É±”àôˆÄÈˆäôˆÄÈˆÈôˆÄˆ€¼ø(€€€€€€€€ð¼ø(€€€€€€¤ì(€€€€€‰É•…¬ì(€€€…Í”€‰ÕÍ•Èˆè(€€€€€Á…Ñ¡Ì€ô€ (€€€€€€€€ðø(€€€€€€€€€€ñ¥É±”àôˆÄÈˆäôˆàˆÈôˆÌ¸Ôˆ€¼ø(€€€€€€€€€€ñÁ…Ñ ô‰4Ô€ÈÁŒ¸à´Ð€Ì¸Ä´Ø€Ü´ÙÌØ¸È€È€Ü€Øˆ€¼ø(€€€€€€€€ð¼ø(€€€€€€¤ì(€€€€€‰É•…¬ì(€ô((€É•ÑÕÉ¸€ (€€€€ñÍÙœ(€€€€€Ù¥•Ý	½àôˆÀ€À€ÈÐ€ÈÐˆ(€€€€€™¥±°ô‰¹½¹”ˆ(€€€€€ÍÑÉ½­”ô‰ÕÉÉ•¹Ñ½±½Èˆ(€€€€€ÍÑÉ½­•]¥‘Ñ ôˆÄ¸àˆ(€€€€€ÍÑÉ½­•1¥¹•…Àô‰É½Õ¹ˆ(€€€€€ÍÑÉ½­•1¥¹•©½¥¸ô‰É½Õ¹ˆ(€€€€€±…ÍÍ9…µ”õí±…ÍÍ9…µ•ô(€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€ø(€€€€€íÁ…Ñ¡Íô(€€€€ð½ÍÙœø(€€¤ì)ô()™Õ¹Ñ¥½¸¥•±‘1…‰•°¡ì(€¡Ñµ±½È°(€¡¥±‘É•¸°(€¥½¸°(€½ÁÑ¥½¹…°°(€É•ÅÕ¥É•°)ôèì(€¡Ñµ±½ÈüèÍÑÉ¥¹œì(€¡¥±‘É•¸èI•…Ñ9½‘”ì(€¥½¸üè½Éµ%½¹9…µ”ì(€½ÁÑ¥½¹…°üèÍÑÉ¥¹œì(€É•ÅÕ¥É•üè‰½½±•…¸ì)ô¤ì(€½¹ÍÐ½¹Ñ•¹Ð€ô€ (€€€€ðø(€€€€€í¥½¸€ü€ (€€€€€€€€ñÍÁ…¸(€€€€€€€€€±…ÍÍ9…µ”ô‰É¥ ´ØÜ´ØÍ¡É¥¹¬´ÀÁ±…”µ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µµ‰œµl˜Á•‰˜ÕtÑ•áÐµlŒÌäÅØátÍ´é ´ÜÍ´éÜ´ÜÍ´éÉ½Õ¹‘•µ±œ±œé ´Ø±œéÜ´Ø±œéÉ½Õ¹‘•µµˆ(€€€€€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€€€€€ø(€€€€€€€€€€ñ½Éµ%½¸¹…µ”õí¥½¹ô±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ€¼ø(€€€€€€€€ð½ÍÁ…¸ø(€€€€€€¤€è¹Õ±±ô(€€€€€€ñÍÁ…¸ùí¡¥±‘É•¹ôð½ÍÁ…¸ø(€€€€€íÉ•ÅÕ¥É•€ü€ (€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ•áÐµlˆÐÈÌÍtˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆø(€€€€€€€€€€¨(€€€€€€€€ð½ÍÁ…¸ø(€€€€€€¤€è¹Õ±±ô(€€€€€í½ÁÑ¥½¹…°€ü€ (€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Í¡É¥¹¬´ÀÉ½Õ¹‘•µ™Õ±°‰œµl••”å˜ÑtÁà´È¸ÔÁä´ÄÑ•áÐµlÄÅÁát™½¹Ðµ‰±…¬Ñ•áÐµlŒÜÄØØÝ•t±œéÁà´È±œéÁä´À¸Ô±œéÑ•áÐµlÄÀ¸ÕÁátˆø(€€€€€€€€€í½ÁÑ¥½¹…±ô(€€€€€€€€ð½ÍÁ…¸ø(€€€€€€¤€è¹Õ±±ô(€€€€ð¼ø(€€¤ì((€½¹ÍÐ±…ÍÍ9…µ”€ô(€€€€‰µˆ´Ä¸Ô™±•à¥Ñ•µÌµ•¹Ñ•È…À´ÈÑ•áÐµlÄÑÁát™½¹Ðµ‰±…¬±•…‘¥¹œµlÄ¸ÐÕtÑ•áÐµlŒÌäÅØátÍ´éµˆ´ÈÍ´éÑ•áÐµlÄÕÁát±œéµˆ´Ä¸Ô±œéÑ•áÐµlÄÑÁátˆì((€É•ÑÕÉ¸¡Ñµ±½È€ü€ (€€€€ñ±…‰•°¡Ñµ±½Èõí¡Ñµ±½Éô±…ÍÍ9…µ”õí±…ÍÍ9…µ•ôø(€€€€€í½¹Ñ•¹Ñô(€€€€ð½±…‰•°ø(€€¤€è€ (€€€€ñÍÁ…¸±…ÍÍ9…µ”õí±…ÍÍ9…µ•ôùí½¹Ñ•¹Ñôð½ÍÁ…¸ø(€€¤ì)ô()™Õ¹Ñ¥½¸Q•áÑ¥•±¡ì(€¥°(€±…‰•°°(€¥½¸°(€½ÁÑ¥½¹…°°(€•ÉÉ½È°(€É•ÅÕ¥É•°(€¥¹ÁÕÑ±…ÍÍ9…µ”°(€Í•ÑI•˜°(€€¸¸¹¥¹ÁÕÑAÉ½ÁÌ)ôèì(€¥èÍÑÉ¥¹œì(€±…‰•°èÍÑÉ¥¹œì(€¥½¸üè½Éµ%½¹9…µ”ì(€½ÁÑ¥½¹…°üèÍÑÉ¥¹œì(€•ÉÉ½ÈüèÍÑÉ¥¹œì(€É•ÅÕ¥É•üè‰½½±•…¸ì(€¥¹ÁÕÑ±…ÍÍ9…µ”èÍÑÉ¥¹œì(€Í•ÑI•˜è€¡•±•µ•¹Ðè!Q51%¹ÁÕÑ±•µ•¹Ðð¹Õ±°¤€ôøÙ½¥ì(€Ù…±Õ”èÍÑÉ¥¹œì(€Á±…•¡½±‘•ÈèÍÑÉ¥¹œì(€ÑåÁ”üèÍÑÉ¥¹œì(€¥¹ÁÕÑ5½‘”üè€‰Ñ•áÐˆð€‰Ñ•°ˆð€‰•µ…¥°ˆð€‰¹Õµ•É¥Œˆì(€…ÕÑ½½µÁ±•Ñ”üèÍÑÉ¥¹œì(€‘¥Èüè€‰±ÑÈˆð€‰ÉÑ°ˆì(€½¹	±ÕÈè€ ¤€ôøÙ½¥ì(€½¹¡…¹”è€¡•Ù•¹Ðè¡…¹•Ù•¹Ðñ!Q51%¹ÁÕÑ±•µ•¹Ðø¤€ôøÙ½¥ì)ô¤ì(€½¹ÍÐ•ÉÉ½É%€ô€‘í¥‘ôµ•ÉÉ½É€ì((€É•ÑÕÉ¸€ (€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µ¥¸µÜ´ÀÍÉ½±°µµˆµlÄÔÁÁátˆø(€€€€€€ñ¥•±‘1…‰•°(€€€€€€€¡Ñµ±½Èõí¥‘ô(€€€€€€€¥½¸õí¥½¹ô(€€€€€€€½ÁÑ¥½¹…°õí½ÁÑ¥½¹…±ô(€€€€€€€É•ÅÕ¥É•õíÉ•ÅÕ¥É•‘ô(€€€€€€ø(€€€€€€€í±…‰•±ô(€€€€€€ð½¥•±‘1…‰•°ø(€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µ¥¸µÜ´Àˆø(€€€€€€€€ñ¥¹ÁÕÐ(€€€€€€€€€ì¸¸¹¥¹ÁÕÑAÉ½ÁÍô(€€€€€€€€€É•˜õíÍ•ÑI•™ô(€€€€€€€€€¥õí¥‘ô(€€€€€€€€€¹…µ”õí¥‘ô(€€€€€€€€€…É¥„µ¥¹Ù…±¥õí	½½±•…¸¡•ÉÉ½È¥ô(€€€€€€€€€…É¥„µ‘•ÍÉ¥‰•‘‰äõí•ÉÉ½È€ü•ÉÉ½É%€èÕ¹‘•™¥¹•‘ô(€€€€€€€€€±…ÍÍ9…µ”õí€‘í¥¹ÁÕÑ±…ÍÍ9…µ•ô µlÐáÁátÍ´é µlÔÁÁát±œé µlÐÉÁát€‘ì(€€€€€€€€€€€•ÉÉ½È(€€€€€€€€€€€€€€ü€‰‰½É‘•ÈµlˆÐÈÌÍtÉ¥¹œ´ÈÉ¥¹œµlˆÐÈÌÍt¼ÄÀ™½ÕÌé‰½É‘•ÈµlˆÐÈÌÍt™½ÕÌéÉ¥¹œµlˆÐÈÌÍt¼ÄÔˆ(€€€€€€€€€€€€€€è€ˆˆ(€€€€€€€€€õô(€€€€€€€€¼ø(€€€€€€€€ñ¥•±‘ÉÉ½È¥õí•ÉÉ½É%‘ô•ÉÉ½Èõí•ÉÉ½Éô€¼ø(€€€€€€ð½‘¥Øø(€€€€ð½‘¥Øø(€€¤ì)ô()™Õ¹Ñ¥½¸Q•áÑÉ•…¥•±¡ì(€¥°(€±…‰•°°(€¥½¸°(€½ÁÑ¥½¹…°°(€¥¹ÁÕÑ±…ÍÍ9…µ”°(€Í•ÑI•˜°(€€¸¸¹Ñ•áÑ…É•…AÉ½ÁÌ)ôèì(€¥èÍÑÉ¥¹œì(€±…‰•°èÍÑÉ¥¹œì(€¥½¸üè½Éµ%½¹9…µ”ì(€½ÁÑ¥½¹…°èÍÑÉ¥¹œì(€¥¹ÁÕÑ±…ÍÍ9…µ”èÍÑÉ¥¹œì(€Í•ÑI•˜è€¡•±•µ•¹Ðè!Q51Q•áÑÉ•…±•µ•¹Ðð¹Õ±°¤€ôøÙ½¥ì(€Ù…±Õ”èÍÑÉ¥¹œì(€Á±…•¡½±‘•ÈèÍÑÉ¥¹œì(€½¹	±ÕÈè€ ¤€ôøÙ½¥ì(€½¹¡…¹”è€¡•Ù•¹Ðè¡…¹•Ù•¹Ðñ!Q51Q•áÑÉ•…±•µ•¹Ðø¤€ôøÙ½¥ì)ô¤ì(€É•ÑÕÉ¸€ (€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µ¥¸µÜ´ÀÍÉ½±°µµˆµlÄÔÁÁátˆø(€€€€€€ñ¥•±‘1…‰•°¡Ñµ±½Èõí¥‘ô¥½¸õí¥½¹ô½ÁÑ¥½¹…°õí½ÁÑ¥½¹…±ôø(€€€€€€€í±…‰•±ô(€€€€€€ð½¥•±‘1…‰•°ø(€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µ¥¸µÜ´Àˆø(€€€€€€€€ñÑ•áÑ…É•„(€€€€€€€€€ì¸¸¹Ñ•áÑ…É•…AÉ½ÁÍô(€€€€€€€€€É•˜õíÍ•ÑI•™ô(€€€€€€€€€¥õí¥‘ô(€€€€€€€€€¹…µ”õí¥‘ô(€€€€€€€€€±…ÍÍ9…µ”õí€‘í¥¹ÁÕÑ±…ÍÍ9…µ•ô µläÙÁátÉ•Í¥é”µäÁä´Ì±•…‘¥¹œ´ÜÍ´é µlÄÀÁÁát±œé µlØáÁát±œéÁä´È¸Ô±œé±•…‘¥¹œ´Õô(€€€€€€€€¼ø(€€€€€€ð½‘¥Øø(€€€€ð½‘¥Øø(€€¤ì)ô()™Õ¹Ñ¥½¸¡½¥•É½ÕÀ¡ì(€¥°(€¹…µ”°(€±…‰•°°(€¥½¸°(€½ÁÑ¥½¹Ì°(€Ù…±Õ”°(€•ÉÉ½È°(€É•ÅÕ¥É•°(€±…å½ÕÐ°(€Í•Ñ¥ÉÍÑI•˜°(€½¹	±ÕÈ°(€½¹¡…¹”°)ôèì(€¥èÍÑÉ¥¹œì(€¹…µ”è¥•±‘9…µ”ì(€±…‰•°èÍÑÉ¥¹œì(€¥½¸è½Éµ%½¹9…µ”ì(€½ÁÑ¥½¹ÌèÉÉ…äñìÙ…±Õ”èÍÑÉ¥¹œì±…‰•°èÍÑÉ¥¹œôøì(€Ù…±Õ”èÍÑÉ¥¹œì(€•ÉÉ½ÈüèÍÑÉ¥¹œì(€É•ÅÕ¥É•üè‰½½±•…¸ì(€±…å½ÕÐè€‰½…°ˆð€‰µ•Ñ¡½ˆð€‰Ñ¥µ”ˆì(€Í•Ñ¥ÉÍÑI•˜è€¡•±•µ•¹Ðè!Q51%¹ÁÕÑ±•µ•¹Ðð¹Õ±°¤€ôøÙ½¥ì(€½¹	±ÕÈè€ ¤€ôøÙ½¥ì(€½¹¡…¹”è€¡Ù…±Õ”èÍÑÉ¥¹œ¤€ôøÙ½¥ì)ô¤ì(€½¹ÍÐ•ÉÉ½É%€ô€‘í¥‘ôµ•ÉÉ½É€ì((€™Õ¹Ñ¥½¸¡…¹‘±•	±ÕÈ¡•Ù•¹Ðè½ÕÍÙ•¹Ðñ!Q51¥•±‘M•Ñ±•µ•¹Ðø¤ì(€€€¥˜€ (€€€€€•Ù•¹Ð¹É•±…Ñ•‘Q…É•Ð¥¹ÍÑ…¹•½˜9½‘”€˜˜(€€€€€•Ù•¹Ð¹ÕÉÉ•¹ÑQ…É•Ð¹½¹Ñ…¥¹Ì¡•Ù•¹Ð¹É•±…Ñ•‘Q…É•Ð¤(€€€€¤ì(€€€€€É•ÑÕÉ¸ì(€€€ô(€€€½¹	±ÕÈ ¤ì(€ô((€½¹ÍÐÉ¥‘±…ÍÍ9…µ”€ô(€€€±…å½ÕÐ€ôôô€‰½…°ˆ(€€€€€€ü€‰É¥µ½±Ì´Èˆ(€€€€€€è±…å½ÕÐ€ôôô€‰µ•Ñ¡½ˆ(€€€€€€€€ü€‰É¥µ½±Ì´Èˆ(€€€€€€€€è€‰É¥µ½±Ì´ÈµéÉ¥µ½±Ì´Ìˆì(€½¹ÍÐ‘•Í­Ñ½Á=ÁÑ¥½¹±…ÍÍ9…µ”€ô(€€€±…å½ÕÐ€ôôô€‰Ñ¥µ”ˆ(€€€€€€ü€‰±œé…À´Ä¸Ô±œéÁà´È±œéÑ•áÐµlÄÈ¸ÕÁátˆ(€€€€€€è±…å½ÕÐ€ôôô€‰½…°ˆ(€€€€€€€€ü€‰±œé…À´È±œéÁà´È¸Ô±œéÁä´Ä±œéÑ•áÐµlÄÍÁátˆ(€€€€€€€€è€‰±œé…À´È±œéÁà´È¸Ô±œéÑ•áÐµlÄÍÁátˆì((€É•ÑÕÉ¸€ (€€€€ñ™¥•±‘Í•Ð(€€€€€±…ÍÍ9…µ”ô‰µÐ´Ìµ¥¸µÜ´ÀÍÉ½±°µµˆµlÄÐáÁát‰½É‘•ÈµÐ‰½É‘•Èµl”Õ‘••tÁÐ´ÌÍ´éµÐ´ÐÍ´éÁÐ´Ð±œéµÐ´È¸Ô±œéÁÐ´È¸Ôˆ(€€€€€…É¥„µ¥¹Ù…±¥õí	½½±•…¸¡•ÉÉ½È¥ô(€€€€€…É¥„µ‘•ÍÉ¥‰•‘‰äõí•ÉÉ½È€ü•ÉÉ½É%€èÕ¹‘•™¥¹•‘ô(€€€€€½¹	±ÕÈõí¡…¹‘±•	±ÕÉô(€€€€ø(€€€€€€ñ±••¹±…ÍÍ9…µ”ô‰Üµ™Õ±°ˆø(€€€€€€€€ñ¥•±‘1…‰•°¥½¸õí¥½¹ôÉ•ÅÕ¥É•õíÉ•ÅÕ¥É•‘ôø(€€€€€€€€€í±…‰•±ô(€€€€€€€€ð½¥•±‘1…‰•°ø(€€€€€€ð½±••¹ø(€€€€€€ñ‘¥Ø(€€€€€€€±…ÍÍ9…µ”õíÉ¥…ÕÑ¼µÉ½ÝÌµ™È¥Ñ•µÌµÍÑÉ•Ñ …À´ÈÍ´é…À´È¸Ô±œé…À´Ä¸Ô€‘íÉ¥‘±…ÍÍ9…µ•õô(€€€€€€ø(€€€€€€€í½ÁÑ¥½¹Ì¹µ…À ¡½ÁÑ¥½¸°¥¹‘•à¤€ôøì(€€€€€€€€€½¹ÍÐÍ•±•Ñ•€ôÙ…±Õ”€ôôô½ÁÑ¥½¸¹Ù…±Õ”ì(€€€€€€€€€½¹ÍÐ½ÁÑ¥½¹%€ô€‘í¥‘ô´‘í½ÁÑ¥½¸¹Ù…±Õ•õ€ì((€€€€€€€€€É•ÑÕÉ¸€ (€€€€€€€€€€€€ñ±…‰•°(€€€€€€€€€€€€€­•äõí½ÁÑ¥½¸¹Ù…±Õ•ô(€€€€€€€€€€€€€¡Ñµ±½Èõí½ÁÑ¥½¹%‘ô(€€€€€€€€€€€€€±…ÍÍ9…µ”õí µ™Õ±°µ¥¸µÜ´À€‘ì(€€€€€€€€€€€€€€€±…å½ÕÐ€ôôô€‰Ñ¥µ”ˆ(€€€€€€€€€€€€€€€€€€ü¥¹‘•à€ôôô€À(€€€€€€€€€€€€€€€€€€€€ü€‰½É‘•È´Ì½°µÍÁ…¸´Èµé½É‘•Èµ¹½¹”µé½°µÍÁ…¸´Äˆ(€€€€€€€€€€€€€€€€€€€€è¥¹‘•à€ôôô€Ä(€€€€€€€€€€€€€€€€€€€€€€ü€‰½É‘•È´Äµé½É‘•Èµ¹½¹”ˆ(€€€€€€€€€€€€€€€€€€€€€€è€‰½É‘•È´Èµé½É‘•Èµ¹½¹”ˆ(€€€€€€€€€€€€€€€€€€è€ˆˆ(€€€€€€€€€€€€€õô(€€€€€€€€€€€€ø(€€€€€€€€€€€€€€ñ¥¹ÁÕÐ(€€€€€€€€€€€€€€€É•˜õí¥¹‘•à€ôôô€À€üÍ•Ñ¥ÉÍÑI•˜€èÕ¹‘•™¥¹•‘ô(€€€€€€€€€€€€€€€¥õí½ÁÑ¥½¹%‘ô(€€€€€€€€€€€€€€€ÑåÁ”ô‰É…‘¥¼ˆ(€€€€€€€€€€€€€€€¹…µ”õí¹…µ•ô(€€€€€€€€€€€€€€€Ù…±Õ”õí½ÁÑ¥½¸¹Ù…±Õ•ô(€€€€€€€€€€€€€€€¡•­•õíÍ•±•Ñ•‘ô(€€€€€€€€€€€€€€€½¹¡…¹”õì ¤€ôø½¹¡…¹”¡½ÁÑ¥½¸¹Ù…±Õ”¥ô(€€€€€€€€€€€€€€€…É¥„µ¥¹Ù…±¥õí	½½±•…¸¡•ÉÉ½È¥ô(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰Á••ÈÍÈµ½¹±äÍÉ½±°µµˆµlÄÐáÁátˆ(€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€ñÍÁ…¸(€€€€€€€€€€€€€€€±…ÍÍ9…µ”õí™±•à µ™Õ±°µ¥¸µ µlÔÁÁátÜµ™Õ±°ÕÉÍ½ÈµÁ½¥¹Ñ•È¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ‰•ÑÝ••¸…À´È¸ÔÉ½Õ¹‘•µlÄÍÁát‰½É‘•ÈÁà´ÌÁä´ÈÑ•áÐµÍÑ…ÉÐÑ•áÐµlÄÑÁát™½¹Ðµ‰½±±•…‘¥¹œµlÄ¸Ñt½ÕÑ±¥¹”µ¹½¹”ÑÉ…¹Í¥Ñ¥½¸µm‰½É‘•Èµ½±½È±‰…­É½Õ¹µ½±½È±‰½àµÍ¡…‘½Ü±½±½Ét‘ÕÉ…Ñ¥½¸´ÈÀÀÁ••Èµ™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´ÐÁ••Èµ™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÌäÅØát¼ÄÔÍ´éµ¥¸µ µlÔÉÁátÍ´éÁà´Ì¸ÔÍ´éÁä´È¸ÔÍ´éÑ•áÐµlÄÕÁát±œéµ¥¸µ µlÐÁÁát±œéÉ½Õ¹‘•µlÄÉÁát±œéÁä´Ä¸Ô€‘í‘•Í­Ñ½Á=ÁÑ¥½¹±…ÍÍ9…µ•ô€‘ì(€€€€€€€€€€€€€€€€€Í•±•Ñ•(€€€€€€€€€€€€€€€€€€€€ü€‰‰½É‘•ÈµlŒÌäÅØát‰œµl••”å˜Ñt™½¹Ðµ‰±…¬Ñ•áÐµlŒÌäÅØátÍ¡…‘½Üµm¥¹Í•Ñ|Á|Á|Á|ÅÁá}É‰„ ÔÜ°ÈÜ°ÄÀÐ°À¸ÄÐ¤°Á|ÝÁá|ÄáÁá}É‰„ ÔÜ°ÈÜ°ÄÀÐ°À¸Ä¥tˆ(€€€€€€€€€€€€€€€€€€€€è•ÉÉ½È(€€€€€€€€€€€€€€€€€€€€€€ü€‰‰½É‘•ÈµlˆÐÈÌÍt¼ØÀ‰œµÝ¡¥Ñ”Ñ•áÐµlŒÔÔÐÜØÁt¡½Ù•Èé‰½É‘•ÈµlŒÌäÅØát¼ÐÔ¡½Ù•Èé‰œµl™…˜á™tˆ(€€€€€€€€€€€€€€€€€€€€€€è€‰‰½É‘•ÈµlåÁ”Õt‰œµÝ¡¥Ñ”Ñ•áÐµlŒÔÔÐÜØÁt¡½Ù•Èé‰½É‘•ÈµlŒÌäÅØát¼ÐÔ¡½Ù•Èé‰œµl™…˜á™tˆ(€€€€€€€€€€€€€€€õô(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€ñÍÁ…¸(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”õíµ¥¸µÜ´À™±•à´ÄÑ•áÐµÍÑ…ÉÐ€‘ì(€€€€€€€€€€€€€€€€€€€±…å½ÕÐ€ôôô€‰Ñ¥µ”ˆ€ü€‰±œéÝ¡¥Ñ•ÍÁ…”µ¹½ÝÉ…Àˆ€è€ˆˆ(€€€€€€€€€€€€€€€€€õô(€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€í½ÁÑ¥½¸¹±…‰•±ô(€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€ñÍÁ…¸(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”õíÉ¥ ´ÔÜ´ÔÍ¡É¥¹¬´ÀÁ±…”µ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°Ñ•áÐµlÄÅÁátÑÉ…¹Í¥Ñ¥½¸µ½±½ÉÌ±œé µlÄáÁát±œéÜµlÄáÁát€‘ì(€€€€€€€€€€€€€€€€€€€Í•±•Ñ•(€€€€€€€€€€€€€€€€€€€€€€ü€‰‰œµläÄÅtÑ•áÐµÝ¡¥Ñ”ˆ(€€€€€€€€€€€€€€€€€€€€€€è€‰‰½É‘•È‰½É‘•ÈµlŒå‰‘átÑ•áÐµÑÉ…¹ÍÁ…É•¹Ðˆ(€€€€€€€€€€€€€€€€€õô(€€€€€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€ñ½Éµ%½¸¹…µ”ô‰¡•¬ˆ±…ÍÍ9…µ”ô‰ ´Ì¸ÔÜ´Ì¸Ôˆ€¼ø(€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€ð½±…‰•°ø(€€€€€€€€€€¤ì(€€€€€€€ô¥ô(€€€€€€ð½‘¥Øø(€€€€€€ñ‘¥Øø(€€€€€€€€ñ¥•±‘ÉÉ½È¥õí•ÉÉ½É%‘ô•ÉÉ½Èõí•ÉÉ½Éô€¼ø(€€€€€€ð½‘¥Øø(€€€€ð½™¥•±‘Í•Ðø(€€¤ì)ô()™Õ¹Ñ¥½¸½¹Í•¹Ñ¥•±¡ì(€¥°(€±…‰•°°(€¡•­•°(€•ÉÉ½È°(€Í•ÑI•˜°(€½¹	±ÕÈ°(€½¹¡…¹”°)ôèì(€¥èÍÑÉ¥¹œì(€±…‰•°èÍÑÉ¥¹œì(€¡•­•è‰½½±•…¸ì(€•ÉÉ½ÈüèÍÑÉ¥¹œì(€Í•ÑI•˜è€¡•±•µ•¹Ðè!Q51%¹ÁÕÑ±•µ•¹Ðð¹Õ±°¤€ôøÙ½¥ì(€½¹	±ÕÈè€ ¤€ôøÙ½¥ì(€½¹¡…¹”è€¡•Ù•¹Ðè¡…¹•Ù•¹Ðñ!Q51%¹ÁÕÑ±•µ•¹Ðø¤€ôøÙ½¥ì)ô¤ì(€½¹ÍÐ•ÉÉ½É%€ô€‘í¥‘ôµ•ÉÉ½É€ì((€É•ÑÕÉ¸€ (€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÉ½±°µµˆµlÄÐáÁátˆø(€€€€€€ñ±…‰•°(€€€€€€€¡Ñµ±½Èõí¥‘ô(€€€€€€€±…ÍÍ9…µ”õí™±•àµ¥¸µ µlÔÁÁátÕÉÍ½ÈµÁ½¥¹Ñ•È¥Ñ•µÌµÍÑ…ÉÐ…À´È¸ÔÉ½Õ¹‘•µlÄÍÁát‰½É‘•È‰œµl™…˜á™tÀ´ÌÑ•áÐµlÄÍÁát™½¹Ðµ‰½±±•…‘¥¹œµlÄ¸ÕtÑ•áÐµlŒÔÔÐÜØÁtÑÉ…¹Í¥Ñ¥½¸µm‰½É‘•Èµ½±½È±‰…­É½Õ¹µ½±½È±‰½àµÍ¡…‘½Ýt‘ÕÉ…Ñ¥½¸´ÈÀÀ¡½Ù•Èé‰½É‘•ÈµlŒÌäÅØát¼ÐÔÍ´é…À´ÌÍ´éÀ´Ì¸ÔÍ´éÑ•áÐµlÄÐ¸ÕÁát±œéµ¥¸µ µlÐÉÁát±œé…À´È¸Ô±œéÉ½Õ¹‘•µlÄÉÁát±œéÀ´È¸Ô±œéÑ•áÐµlÄÍÁát±œé±•…‘¥¹œµlÄ¸ÐÕt€‘ì(€€€€€€€€€•ÉÉ½È€ü€‰‰½É‘•ÈµlˆÐÈÌÍtˆ€è€‰‰½É‘•ÈµlåÁ”Õtˆ(€€€€€€€õô(€€€€€€ø(€€€€€€€€ñ¥¹ÁÕÐ(€€€€€€€€€É•˜õíÍ•ÑI•™ô(€€€€€€€€€¥õí¥‘ô(€€€€€€€€€¹…µ”ô‰½¹Í•¹Ðˆ(€€€€€€€€€ÑåÁ”ô‰¡•­‰½àˆ(€€€€€€€€€¡•­•õí¡•­•‘ô(€€€€€€€€€½¹¡…¹”õí½¹¡…¹•ô(€€€€€€€€€½¹	±ÕÈõí½¹	±ÕÉô(€€€€€€€€€…É¥„µ¥¹Ù…±¥õí	½½±•…¸¡•ÉÉ½È¥ô(€€€€€€€€€…É¥„µ‘•ÍÉ¥‰•‘‰äõí•ÉÉ½È€ü•ÉÉ½É%€èÕ¹‘•™¥¹•‘ô(€€€€€€€€€±…ÍÍ9…µ”ô‰Á••ÈÍÈµ½¹±äÍÉ½±°µµˆµlÄÐáÁátˆ(€€€€€€€€¼ø(€€€€€€€€ñÍÁ…¸(€€€€€€€€€±…ÍÍ9…µ”õíµÐ´À¸ÔÉ¥ ´ÔÜ´ÔÍ¡É¥¹¬´ÀÁ±…”µ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µµ‰½É‘•ÈÑ•áÐµáÌ™½¹Ðµ‰±…¬ÑÉ…¹Í¥Ñ¥½¸µm‰½É‘•Èµ½±½È±‰…­É½Õ¹µ½±½È±½±½È±‰½àµÍ¡…‘½ÝtÁ••Èµ™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´ÐÁ••Èµ™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÌäÅØát¼ÄÔ±œé µlÄáÁát±œéÜµlÄáÁát€‘ì(€€€€€€€€€€€¡•­•(€€€€€€€€€€€€€€ü€‰‰½É‘•ÈµlŒÌäÅØát‰œµlŒÌäÅØátÑ•áÐµÝ¡¥Ñ”ˆ(€€€€€€€€€€€€€€è€‰‰½É‘•Èµl„äå…ˆåt‰œµÝ¡¥Ñ”Ñ•áÐµÑÉ…¹ÍÁ…É•¹Ðˆ(€€€€€€€€€õô(€€€€€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€€€€€ø(€€€€€€€€€€ñ½Éµ%½¸¹…µ”ô‰¡•¬ˆ±…ÍÍ9…µ”ô‰ ´Ì¸ÔÜ´Ì¸Ôˆ€¼ø(€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€ñÍÁ…¸ùí±…‰•±ôð½ÍÁ…¸ø(€€€€€€ð½±…‰•°ø(€€€€€€ñ¥•±‘ÉÉ½È¥õí•ÉÉ½É%‘ô•ÉÉ½Èõí•ÉÉ½Éô€¼ø(€€€€ð½‘¥Øø(€€¤ì)ô()™Õ¹Ñ¥½¸¥•±‘ÉÉ½È¡ì¥°•ÉÉ½Èôèì¥èÍÑÉ¥¹œì•ÉÉ½ÈüèÍÑÉ¥¹œô¤ì(€É•ÑÕÉ¸•ÉÉ½È€ü€ (€€€€ñÀ(€€€€€¥õí¥‘ô(€€€€€É½±”ô‰…±•ÉÐˆ(€€€€€±…ÍÍ9…µ”ô‰µÐ´È™±•à¥Ñ•µÌµ•¹Ñ•È…À´ÈÑ•áÐµlÄÍÁát™½¹Ðµ‰±…¬±•…‘¥¹œ´ÔÑ•áÐµl„ØÅˆÌÕtˆ(€€€€ø(€€€€€€ñÍÁ…¸(€€€€€€€±…ÍÍ9…µ”ô‰É¥ ´ÔÜ´ÔÍ¡É¥¹¬´ÀÁ±…”µ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°‰½É‘•È‰½É‘•ÈµÕÉÉ•¹ÐÑ•áÐµlÄÅÁátˆ(€€€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€€€ø(€€€€€€€€„(€€€€€€ð½ÍÁ…¸ø(€€€€€í•ÉÉ½Éô(€€€€ð½Àø(€€¤€è¹Õ±°ì)ô()™Õ¹Ñ¥½¸MÕ‰µ¥ÑÉÉ½È¡ì(€½Áä°(€±½…±”°(€Ý¡…ÑÍ…ÁÁ!É•˜°)ôèA¥¬ñ1•…‘½ÉµAÉ½ÁÌ°€‰½Áäˆð€‰±½…±”ˆø€˜ì(€Ý¡…ÑÍ…ÁÁ!É•˜èÍÑÉ¥¹œì)ô¤ì(€É•ÑÕÉ¸€ (€€€€ñ‘¥Ø(€€€€€É½±”ô‰…±•ÉÐˆ(€€€€€…É¥„µ±¥Ù”ô‰…ÍÍ•ÉÑ¥Ù”ˆ(€€€€€±…ÍÍ9…µ”ô‰É½Õ¹‘•µlÄÙÁát‰½É‘•È‰½É‘•ÈµlˆÐÈÌÍt¼ÌÔ‰œµl™™˜Ñ˜ÕtÀ´ÐÑ•áÐµlŒàØÄØÉ…tˆ(€€€€ø(€€€€€€ñ Ì±…ÍÍ9…µ”ô‰Ñ•áÐµlÄÙÁát™½¹Ðµ‰±…¬±•…‘¥¹œ´Øˆø(€€€€€€€í½Áä¹™…¥±ÕÉ”¹Ñ¥Ñ±•ô(€€€€€€ð½ Ìø(€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´ÄÑ•áÐµlÄÑÁát™½¹Ðµ‰½±±•…‘¥¹œ´Øˆø(€€€€€€€í½Áä¹™…¥±ÕÉ”¹µ•ÍÍ…•1•…‘ô(€€€€€€€€ñ„(€€€€€€€€€¡É•˜õíÝ¡…ÑÍ…ÁÁ!É•™ô(€€€€€€€€€½¹±¥¬õì ¤€ôø(€€€€€€€€€€€ÑÉ…­]¡…ÑÍÁÁ±¥¬¡ì±½…±”°Í½ÕÉ”è€‰™½Éµ}•ÉÉ½Èˆô¤(€€€€€€€€€ô(€€€€€€€€€±…ÍÍ9…µ”ô‰™½¹Ðµ‰±…¬Õ¹‘•É±¥¹”‘•½É…Ñ¥½¸´ÈÕ¹‘•É±¥¹”µ½™™Í•Ð´È½ÕÑ±¥¹”µ¹½¹”™½ÕÌµÙ¥Í¥‰±”éÉ½Õ¹‘•™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÌäÅØátˆ(€€€€€€€€ø(€€€€€€€€€í½Áä¹™…¥±ÕÉ”¹Ý¡…ÑÍ…ÁÁô(€€€€€€€€ð½„ø(€€€€€€€í½Áä¹™…¥±ÕÉ”¹µ•ÍÍ…•Q…¥±ô(€€€€€€ð½Àø(€€€€ð½‘¥Øø(€€¤ì)ô()™Õ¹Ñ¥½¸MÕ•ÍÍMÑ…Ñ”¡ì(€½Áä°(€¥ÍÉ…‰¥Œ°(€±½…±”°(€Ý¡…ÑÍ…ÁÁ!É•˜°(€½¹	…¬°)ôèA¥¬ñ1•…‘½ÉµAÉ½ÁÌ°€‰½Áäˆð€‰±½…±”ˆø€˜ì(€¥ÍÉ…‰¥Œè‰½½±•…¸ì(€Ý¡…ÑÍ…ÁÁ!É•˜èÍÑÉ¥¹œì(€½¹	…¬è€ ¤€ôøÙ½¥ì)ô¤ì(€É•ÑÕÉ¸€ (€€€€ñ‘¥Ø(€€€€€É½±”ô‰ÍÑ…ÑÕÌˆ(€€€€€…É¥„µ±¥Ù”ô‰Á½±¥Ñ”ˆ(€€€€€±…ÍÍ9…µ”ô‰™±•àµ¥¸µ µlÐÈÁÁát™±•àµ½°¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÁä´àÑ•áÐµ•¹Ñ•È±œéµ¥¸µ µlÔØÁÁátˆ(€€€€ø(€€€€€€ñÍÁ…¸(€€€€€€€±…ÍÍ9…µ”ô‰É¥ ´ÄØÜ´ÄØÁ±…”µ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µlÈÁÁát‰œµl••”å˜ÑtÑ•áÐ´Íá°™½¹Ðµ‰±…¬Ñ•áÐµläÄÅtˆ(€€€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€€€ø(€€€€€€€ƒŠrL(€€€€€€ð½ÍÁ…¸ø(€€€€€€ñ È±…ÍÍ9…µ”ô‰µÐ´ØÑ•áÐµlÌÁÁát™½¹Ðµ‰±…¬±•…‘¥¹œµlÄ¸ÈÕtÑ•áÐµlŒÌäÅØátÍ´éÑ•áÐµlÌÙÁátˆø(€€€€€€€í½Áä¹ÍÕ•ÍÌ¹Ñ¥Ñ±•ô(€€€€€€ð½ Èø(€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´Ðµ…àµÜµlÔØÁÁátÑ•áÐµlÄÕÁát™½¹Ðµ‰½±±•…‘¥¹œµlÄ¸ÜÕtÑ•áÐµlŒÜÄØØÝ•tÍ´éÑ•áÐµlÄÙÁátˆø(€€€€€€€í½Áä¹ÍÕ•ÍÌ¹µ•ÍÍ…•ô(€€€€€€ð½Àø(€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´àÉ¥Üµ™Õ±°µ…àµÜµlÔÈÁÁát…À´ÌÍ´éÉ¥µ½±Ì´Èˆø(€€€€€€€€ñ„(€€€€€€€€€¡É•˜õíÝ¡…ÑÍ…ÁÁ!É•™ô(€€€€€€€€€½¹±¥¬õì ¤€ôø(€€€€€€€€€€€ÑÉ…­]¡…ÑÍÁÁ±¥¬¡ì±½…±”°Í½ÕÉ”è€‰™½Éµ}ÍÕ•ÍÌˆô¤(€€€€€€€€€ô(€€€€€€€€€±…ÍÍ9…µ”ô‰™±•àµ¥¸µ µlÔÑÁát¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•È…À´ÈÉ½Õ¹‘•µlÄÙÁát‰œµläÄÅtÁà´ÔÑ•áÐµlÄÕÁát™½¹Ðµ‰±…¬Ñ•áÐµÝ¡¥Ñ”Í¡…‘½ÜµlÁ|ÄÉÁá|ÈÑÁá}É‰„ ÈÌØ°ÄÐÔ°ÌÄ°À¸ÈÔ¥t½ÕÑ±¥¹”µ¹½¹”ÑÉ…¹Í¥Ñ¥½¸µm‰…­É½Õ¹µ½±½È±‰½àµÍ¡…‘½Ü±ÑÉ…¹Í™½Éµt¡½Ù•Èé‰œµläÝ˜ÄÁt…Ñ¥Ù”éÑÉ…¹Í±…Ñ”µä´À¸Ô™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´Ð™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÌäÅØát¼ÈÀˆ(€€€€€€€€ø(€€€€€€€€€í½Áä¹ÍÕ•ÍÌ¹Ý¡…ÑÍ…ÁÁô(€€€€€€€€€€ñÍÁ…¸(€€€€€€€€€€€±…ÍÍ9…µ”õí¥ÍÉ…‰¥Œ€ü€‰É½Ñ…Ñ”´ÄàÀˆ€èÕ¹‘•™¥¹•‘ô(€€€€€€€€€€€…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ(€€€€€€€€€€ø(€€€€€€€€€€€ƒŠH(€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€ð½„ø(€€€€€€€€ñ‰ÕÑÑ½¸(€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€½¹±¥¬õí½¹	…­ô(€€€€€€€€€±…ÍÍ9…µ”ô‰µ¥¸µ µlÔÑÁátÉ½Õ¹‘•µlÄÙÁát‰½É‘•È‰½É‘•ÈµlŒÌäÅØát¼ÈÔ‰œµÝ¡¥Ñ”Áà´ÔÑ•áÐµlÄÕÁát™½¹Ðµ‰±…¬Ñ•áÐµlŒÌäÅØát½ÕÑ±¥¹”µ¹½¹”ÑÉ…¹Í¥Ñ¥½¸µm‰½É‘•Èµ½±½È±‰…­É½Õ¹µ½±½È±ÑÉ…¹Í™½Éµt¡½Ù•Èé‰½É‘•ÈµlŒÌäÅØát¡½Ù•Èé‰œµl™…˜á™t…Ñ¥Ù”éÑÉ…¹Í±…Ñ”µä´À¸Ô™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´Ð™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÌäÅØát¼ÄÔˆ(€€€€€€€€ø(€€€€€€€€€í½Áä¹ÍÕ•ÍÌ¹‰…­ô(€€€€€€€€ð½‰ÕÑÑ½¸ø(€€€€€€ð½‘¥Øø(€€€€ð½‘¥Øø(€€¤ì)ô()™Õ¹Ñ¥½¸¥ÍY…±¥‘µ…¥°¡Ù…±Õ”èÍÑÉ¥¹œ¤ì(€É•ÑÕÉ¸€½ymyqÍt­myqÍt­p¹myqÍt¬¼¹Ñ•ÍÐ¡Ù…±Õ”¹ÑÉ¥´ ¤¤ì)ô(
