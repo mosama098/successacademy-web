@@ -167,15 +167,20 @@ export type LandingContent = {
   };
   footer: {
     slogan: string;
+    description: string;
     rights: string;
     whatsapp: string;
-    requestCall: string;
+    call: string;
+    online: string;
+    branch: string;
     quickLinksTitle: string;
     quickLinks: {
-      problem: string;
-      journey: string;
+      why: string;
+      trainers: string;
+      registration: string;
       assessment: string;
       faq: string;
+      about: string;
     };
     contactTitle: string;
     socialTitle: string;
