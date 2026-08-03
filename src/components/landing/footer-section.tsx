@@ -145,11 +145,11 @@ function ChevronIcon() {
   );
 }
 
-function LanguageOption({ option, locale, label }: { option: Locale; locale: Locale; label: string }) {
+function LanguageOption({ option, locale, label, href }: { option: Locale; locale: Locale; label: string; href: string }) {
   if (option === locale) {
     return (
       <Link
-        href={`/${option}`}
+        href={href}
         className="grid place-items-center rounded-[9px] bg-[#391B68] text-[13px] font-black !text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#EC911F]"
       >
         {label}
@@ -159,7 +159,7 @@ function LanguageOption({ option, locale, label }: { option: Locale; locale: Loc
 
   return (
     <CtaLink
-      href={`/${option}`}
+      href={href}
       locale={locale}
       source="footer_language"
       event="language"
@@ -171,7 +171,11 @@ function LanguageOption({ option, locale, label }: { option: Locale; locale: Loc
   );
 }
 
-export function FooterSection({ locale, copy }: LandingSectionProps) {
+type FooterSectionProps = LandingSectionProps & {
+  pagePath?: string;
+};
+
+export function FooterSection({ locale, copy, pagePath }: FooterSectionProps) {
   const isArabic = locale === "ar";
   const whatsappHref = getWhatsAppHref(locale);
   const callHref = getCallHref();
@@ -183,6 +187,8 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
     { href: "#lead-form", label: footer.quickLinks.assessment },
     { href: "#faq", label: footer.quickLinks.faq },
     { href: "#about-success-academy", label: footer.quickLinks.about },
+    { href: "/blog", label: footer.quickLinks.blog },
+    { href: "/business", label: footer.quickLinks.business },
   ];
 
   return (
@@ -279,17 +285,24 @@ export function FooterSection({ locale, copy }: LandingSectionProps) {
 
             <h2 className="mb-2 mt-4 text-[15px] font-black text-[#391B68] lg:mb-2.5 lg:mt-5">{footer.languageTitle}</h2>
             <div className="inline-grid h-11 w-[200px] grid-cols-2 rounded-[13px] border border-[#391B68]/15 bg-white p-1 shadow-[0_6px_16px_rgba(57,27,104,0.05)]" dir="ltr">
-              <LanguageOption option="ar" locale={locale} label={footer.languages.ar} />
-              <LanguageOption option="en" locale={locale} label={footer.languages.en} />
+              <LanguageOption option="ar" locale={locale} label={footer.languages.ar} href={pagePath ? `/ar/${pagePath}` : "/ar"} />
+              <LanguageOption option="en" locale={locale} label={footer.languages.en} href={pagePath ? `/en/${pagePath}` : "/en"} />
             </div>
           </section>
         </div>
 
-        <div className="mt-5 border-t border-[#391B68]/12 pt-4 text-center text-[13px] font-semibold leading-[1.55] text-[#776B80] lg:mt-7 lg:pt-5 lg:text-start">
+        <div className="mt-5 flex flex-col items-center justify-between gap-3 border-t border-[#391B68]/12 pt-4 text-center text-[13px] font-semibold leading-[1.55] text-[#776B80] sm:flex-row lg:mt-7 lg:pt-5 lg:text-start">
           <p>{footer.rights}</p>
+          <nav aria-label={isArabic ? "الروابط القانونية" : "Legal links"} className="flex items-center gap-4">
+            <Link className="rounded-sm hover:text-[#391B68] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]" href={`/${locale}/legal#privacy`}>
+              {footer.legalLinks.privacy}
+            </Link>
+            <Link className="rounded-sm hover:text-[#391B68] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]" href={`/${locale}/legal#terms`}>
+              {footer.legalLinks.terms}
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>
   );
 }
-

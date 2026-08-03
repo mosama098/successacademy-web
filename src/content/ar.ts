@@ -180,6 +180,12 @@ export const arContent: LandingContent = {
       assessment: "التقييم المجاني",
       faq: "الأسئلة الشائعة",
       about: "من نحن",
+      blog: "المدونة",
+      business: "تواصل الشركات",
+    },
+    legalLinks: {
+      privacy: "سياسة الخصوصية",
+      terms: "الشروط والأحكام",
     },
     contactTitle: "تواصل معنا",
     socialTitle: "تابعنا",
