@@ -29,6 +29,7 @@ npm run build
 ## Environment variables
 
 Copy `.env.example` to `.env.local` and fill only the values you need.
+Keep `.env.local` untracked, and configure the same values in the production hosting platform. Restart the local server or redeploy after changing environment variables.
 
 ```bash
 NEXT_PUBLIC_SITE_URL=
@@ -38,6 +39,11 @@ NEXT_PUBLIC_META_PIXEL_ID=
 NEXT_PUBLIC_TIKTOK_PIXEL_ID=
 NEXT_PUBLIC_WHATSAPP_NUMBER=
 NEXT_PUBLIC_CALL_NUMBER=
+NEXT_PUBLIC_FACEBOOK_URL=
+NEXT_PUBLIC_INSTAGRAM_URL=
+NEXT_PUBLIC_TIKTOK_URL=
+NEXT_PUBLIC_YOUTUBE_URL=
+NEXT_PUBLIC_LINKEDIN_URL=
 LEADS_WEBHOOK_URL=
 LEADS_WEBHOOK_SECRET=
 ```
@@ -48,13 +54,9 @@ The form submits to `/api/leads`. The API validates the lead, adds metadata and 
 
 This webhook can be connected to Google Sheets through Google Apps Script, n8n, Make, Zapier, or another automation layer. Keep Google credentials and Sheet IDs outside the frontend.
 
-If `LEADS_WEBHOOK_SECRET` is set, the API sends it as:
+`LEADS_WEBHOOK_URL` and `LEADS_WEBHOOK_SECRET` are server-only variables. The API includes the secret only in the server-to-server JSON payload sent to the webhook. Never expose either value through a `NEXT_PUBLIC_` variable.
 
-```http
-x-leads-secret: <secret>
-```
-
-If `LEADS_WEBHOOK_URL` is missing in development, the API returns a safe development response and logs the payload. In production, the API returns a configuration error so the UI can show the WhatsApp fallback.
+If either webhook variable is missing, the API returns a configuration error and does not forward or simulate a successful lead submission.
 
 ## Tracking
 
@@ -65,6 +67,6 @@ Tracking IDs are optional and loaded only when environment variables exist.
 - Meta Pixel: `NEXT_PUBLIC_META_PIXEL_ID`
 - TikTok Pixel: `NEXT_PUBLIC_TIKTOK_PIXEL_ID`
 
-If both GTM and GA4 IDs are present, GTM is used for Google loading to avoid duplicate page views.
+GA4 is currently managed through Google Tag Manager. Keep `NEXT_PUBLIC_GA4_ID` empty while the GA4 tag is installed in GTM. If both IDs are configured, the application loads GTM only and suppresses the direct GA4 loader to avoid duplicate page views.
 
 Tracked events include page view, CTA click, form start, assessment time select, successful lead submit, WhatsApp click, request call click, language switch, and FAQ open.
