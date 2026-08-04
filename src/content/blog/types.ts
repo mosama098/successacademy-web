@@ -10,7 +10,7 @@ export type BlogArticle = {
   publishDate: string;
   readingTime: string;
   category: string;
-  image?: string;
+  image: string;
   content: BlogContentBlock[];
   seoTitle: string;
   seoDescription: string;

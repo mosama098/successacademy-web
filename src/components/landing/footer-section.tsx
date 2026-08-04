@@ -181,14 +181,14 @@ export function FooterSection({ locale, copy, pagePath }: FooterSectionProps) {
   const callHref = getCallHref();
   const footer = copy.footer;
   const quickLinks = [
+    { href: "/blog", label: footer.quickLinks.blog },
+    { href: "/business", label: footer.quickLinks.business },
+    { href: "#lead-form", label: footer.quickLinks.assessment },
+    { href: "#faq", label: footer.quickLinks.faq },
     { href: "#why", label: footer.quickLinks.why },
     { href: "#trainers", label: footer.quickLinks.trainers },
     { href: "#registration-steps", label: footer.quickLinks.registration },
-    { href: "#lead-form", label: footer.quickLinks.assessment },
-    { href: "#faq", label: footer.quickLinks.faq },
     { href: "#about-success-academy", label: footer.quickLinks.about },
-    { href: "/blog", label: footer.quickLinks.blog },
-    { href: "/business", label: footer.quickLinks.business },
   ];
 
   return (

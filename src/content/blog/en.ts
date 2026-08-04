@@ -10,6 +10,7 @@ export const enBlogArticles: BlogArticle[] = [
     publishDate: "2026-08-03",
     readingTime: "6 min read",
     category: "Speaking Skills",
+    image: "/images/blog/speaking-cover.svg",
     seoTitle: "How to Improve Your English Speaking Skills | Success Academy",
     seoDescription:
       "A practical guide to improving English speaking through consistent practice, active listening, and useful feedback.",
@@ -57,6 +58,7 @@ export const enBlogArticles: BlogArticle[] = [
     publishDate: "2026-07-27",
     readingTime: "5 min read",
     category: "English Progress",
+    image: "/images/blog/progress-cover.svg",
     seoTitle: "Mistakes That Slow Down Your English Progress | Success Academy",
     seoDescription:
       "Common English learning mistakes that slow progress, with practical ways to organise practice and get clearer results.",
@@ -104,6 +106,7 @@ export const enBlogArticles: BlogArticle[] = [
     publishDate: "2026-07-20",
     readingTime: "6 min read",
     category: "Course Guidance",
+    image: "/images/blog/course-cover.svg",
     seoTitle: "How to Choose the Right English Course | Success Academy",
     seoDescription:
       "Learn the key criteria for choosing an English course that matches your level and goals, from assessment to practice and follow-up.",

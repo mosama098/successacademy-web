@@ -10,6 +10,7 @@ export const arBlogArticles: BlogArticle[] = [
     publishDate: "2026-08-03",
     readingTime: "6 دقائق قراءة",
     category: "مهارات التحدث",
+    image: "/images/blog/speaking-cover.svg",
     seoTitle: "إزاي تطور مهارة التحدث بالإنجليزي؟ | Success Academy",
     seoDescription:
       "دليل عملي لتطوير مهارة التحدث بالإنجليزي من خلال الممارسة المنتظمة، الاستماع، والتغذية الراجعة الواضحة.",
@@ -57,6 +58,7 @@ export const arBlogArticles: BlogArticle[] = [
     publishDate: "2026-07-27",
     readingTime: "5 دقائق قراءة",
     category: "تطوير المستوى",
+    image: "/images/blog/progress-cover.svg",
     seoTitle: "أخطاء بتعطلك عن تحسين مستواك في الإنجليزي | Success Academy",
     seoDescription:
       "أشهر أخطاء تعلم الإنجليزي التي تبطئ تقدمك، مع خطوات عملية لتنظيم الممارسة وتحقيق نتيجة أوضح.",
@@ -104,6 +106,7 @@ export const arBlogArticles: BlogArticle[] = [
     publishDate: "2026-07-20",
     readingTime: "6 دقائق قراءة",
     category: "اختيار البرنامج",
+    image: "/images/blog/course-cover.svg",
     seoTitle: "تختار كورس الإنجليزي المناسب ليك إزاي؟ | Success Academy",
     seoDescription:
       "تعرف على أهم معايير اختيار كورس الإنجليزي المناسب لمستواك وهدفك، من التقييم إلى الممارسة والمتابعة.",

@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: BlogPageProps) {
     title: `${copy.badge} | Success Academy`,
     description: copy.description,
     path: `/${locale}/blog`,
+    image: blogArticles[locale as Locale][0].image,
   });
 }
 

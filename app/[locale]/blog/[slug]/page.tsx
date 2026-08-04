@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     description: article.seoDescription,
     path: `/${locale}/blog/${article.slug}`,
     type: "article",
+    image: article.image,
   });
 }
 

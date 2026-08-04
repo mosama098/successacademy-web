@@ -20,6 +20,11 @@ type SitePagesContent = {
     readArticle: string;
     breadcrumbHome: string;
     breadcrumbBlog: string;
+    author: string;
+    returnToBlog: string;
+    relatedTitle: string;
+    transition: string;
+    indexCtaTitle: string;
     assessmentCta: string;
   };
   legal: {
@@ -37,12 +42,13 @@ type SitePagesContent = {
     heroTitle: string;
     heroDescription: string;
     heroCta: string;
+    heroTrust: string[];
     benefitsTitle: string;
     benefitsDescription: string;
     benefits: string[];
     audienceTitle: string;
     audienceDescription: string;
-    audience: string[];
+    audience: Array<{ title: string; description: string }>;
     processTitle: string;
     processDescription: string;
     process: Array<{ title: string; description: string }>;
@@ -72,6 +78,8 @@ type SitePagesContent = {
       };
       employeeCountOptions: BusinessOption[];
       trainingModeOptions: BusinessOption[];
+      trainingGoalOptions: BusinessOption[];
+      privacyLink: string;
       errors: {
         companyName: string;
         contactName: string;
@@ -103,6 +111,11 @@ const ar: SitePagesContent = {
     readArticle: "اقرأ المقال",
     breadcrumbHome: "الرئيسية",
     breadcrumbBlog: "المدونة",
+    author: "إعداد فريق Success Academy",
+    returnToBlog: "العودة إلى المدونة",
+    relatedTitle: "مقالات تساعدك تكمل",
+    transition: "الخطوة الأفضل بعد القراءة هي إنك تعرف مستواك الحالي وتبدأ من نقطة واضحة.",
+    indexCtaTitle: "جاهز تعرف مستواك وتبدأ بخطة أوضح؟",
     assessmentCta: "ابدأ بتقييم مستواك مجانًا",
   },
   legal: {
@@ -171,7 +184,12 @@ const ar: SitePagesContent = {
     heroTitle: "طوّر مستوى فريقك في الإنجليزي بخطة تدريب تناسب شركتك",
     heroDescription:
       "برامج تدريب عملية للشركات تساعد فرق العمل على التواصل بثقة، وتحسين الأداء، وتحقيق نتائج أوضح في بيئة العمل.",
-    heroCta: "اطلب عرض تدريب",
+    heroCta: "اطلب عرض تدريب للشركات",
+    heroTrust: [
+      "تقييم مستوى قبل البداية",
+      "أونلاين أو داخل مقر الشركة",
+      "تقارير متابعة للإدارة",
+    ],
     benefitsTitle: "تدريب مبني على احتياج فريقك",
     benefitsDescription:
       "نرتب البرنامج حول طبيعة العمل، مستوى الموظفين، والمهارات التي تحتاجها الشركة في التواصل اليومي.",
@@ -187,12 +205,12 @@ const ar: SitePagesContent = {
     audienceDescription:
       "يمكن تكييف المحتوى والمواقف التدريبية حسب مسؤوليات كل فريق داخل الشركة.",
     audience: [
-      "فرق المبيعات",
-      "فرق خدمة العملاء",
-      "فرق الموارد البشرية",
-      "فرق الإدارة",
-      "فرق العمليات",
-      "الموظفون الجدد",
+      { title: "فرق المبيعات", description: "مكالمات المبيعات، التفاوض، والعروض" },
+      { title: "فرق خدمة العملاء", description: "محادثات العملاء والتعامل مع الشكاوى" },
+      { title: "فرق الموارد البشرية", description: "المقابلات، التهيئة، والتواصل الداخلي" },
+      { title: "فرق الإدارة", description: "الاجتماعات، العروض، وتوصيل القرارات" },
+      { title: "فرق العمليات", description: "التنسيق اليومي وتعليمات العمل" },
+      { title: "الموظفون الجدد", description: "التهيئة ولغة بيئة العمل" },
     ],
     processTitle: "خطوات تعاون واضحة",
     processDescription:
@@ -238,8 +256,17 @@ const ar: SitePagesContent = {
       trainingModeOptions: [
         { value: "online", label: "أونلاين" },
         { value: "on_site", label: "داخل مقر الشركة" },
-        { value: "hybrid", label: "نظام مرن" },
+        { value: "hybrid", label: "مزيج بين الأونلاين وداخل الشركة" },
       ],
+      trainingGoalOptions: [
+        { value: "sales_negotiation", label: "المبيعات والتفاوض" },
+        { value: "customer_service", label: "خدمة العملاء" },
+        { value: "workplace_communication", label: "التواصل المهني" },
+        { value: "meetings_presentations", label: "الاجتماعات والعروض" },
+        { value: "business_writing", label: "الكتابة والإيميلات" },
+        { value: "other", label: "احتياج آخر" },
+      ],
+      privacyLink: "سياسة الخصوصية",
       errors: {
         companyName: "اسم الشركة مطلوب",
         contactName: "اسم مسؤول التواصل مطلوب",
@@ -271,6 +298,11 @@ const en: SitePagesContent = {
     readArticle: "Read Article",
     breadcrumbHome: "Home",
     breadcrumbBlog: "Blog",
+    author: "By the Success Academy Team",
+    returnToBlog: "Back to Blog",
+    relatedTitle: "Continue Reading",
+    transition: "The best next step is to understand your current level and begin from a clear starting point.",
+    indexCtaTitle: "Ready to understand your level and start with a clearer plan?",
     assessmentCta: "Start Your Free Assessment",
   },
   legal: {
@@ -339,7 +371,12 @@ const en: SitePagesContent = {
     heroTitle: "Improve Your Team’s English with Training Built for Your Business",
     heroDescription:
       "Practical corporate English programmes designed to help teams communicate confidently, improve performance, and achieve clearer workplace results.",
-    heroCta: "Request a Training Proposal",
+    heroCta: "Request a Corporate Training Proposal",
+    heroTrust: [
+      "Pre-training level assessment",
+      "Online or on-site delivery",
+      "Progress reports for management",
+    ],
     benefitsTitle: "Training Built Around Your Team",
     benefitsDescription:
       "We shape the programme around your workplace, employee levels, and the communication skills your organisation needs every day.",
@@ -355,12 +392,12 @@ const en: SitePagesContent = {
     audienceDescription:
       "Content and practice situations can be adapted to the responsibilities of each team in your organisation.",
     audience: [
-      "Sales teams",
-      "Customer service teams",
-      "HR teams",
-      "Management teams",
-      "Operations teams",
-      "New employees",
+      { title: "Sales teams", description: "Sales calls, negotiation, and presentations" },
+      { title: "Customer service teams", description: "Customer conversations and complaint handling" },
+      { title: "HR teams", description: "Interviews, onboarding, and internal communication" },
+      { title: "Management teams", description: "Meetings, presentations, and decision communication" },
+      { title: "Operations teams", description: "Daily coordination and workplace instructions" },
+      { title: "New employees", description: "Onboarding and workplace language" },
     ],
     processTitle: "A Clear Cooperation Process",
     processDescription:
@@ -406,8 +443,17 @@ const en: SitePagesContent = {
       trainingModeOptions: [
         { value: "online", label: "Online" },
         { value: "on_site", label: "On-site" },
-        { value: "hybrid", label: "Flexible" },
+        { value: "hybrid", label: "Blended online and on-site training" },
       ],
+      trainingGoalOptions: [
+        { value: "sales_negotiation", label: "Sales and negotiation" },
+        { value: "customer_service", label: "Customer service" },
+        { value: "workplace_communication", label: "Workplace communication" },
+        { value: "meetings_presentations", label: "Meetings and presentations" },
+        { value: "business_writing", label: "Business writing and email" },
+        { value: "other", label: "Other need" },
+      ],
+      privacyLink: "Privacy Policy",
       errors: {
         companyName: "Company name is required",
         contactName: "Contact name is required",

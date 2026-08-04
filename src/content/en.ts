@@ -173,7 +173,7 @@ export const enContent: LandingContent = {
     call: "Call Us",
     online: "Online",
     branch: "Dokki Branch",
-    quickLinksTitle: "Quick Links",
+    quickLinksTitle: "Website",
     quickLinks: {
       why: "Why Success Academy?",
       trainers: "Training Team",

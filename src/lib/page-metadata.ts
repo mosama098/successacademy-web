@@ -5,6 +5,7 @@ type PageMetadataInput = {
   description: string;
   path: string;
   type?: "website" | "article";
+  image?: string;
 };
 
 export function createPageMetadata({
@@ -12,6 +13,7 @@ export function createPageMetadata({
   description,
   path,
   type = "website",
+  image,
 }: PageMetadataInput): Metadata {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
   const canonical = siteUrl ? `${siteUrl}${path}` : undefined;
@@ -25,6 +27,7 @@ export function createPageMetadata({
       description,
       type,
       ...(canonical ? { url: canonical } : {}),
+      ...(canonical && image ? { images: [{ url: `${siteUrl}${image}`, alt: title }] } : {}),
     },
   };
 }

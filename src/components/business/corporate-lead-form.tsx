@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import type { BusinessFormContent } from "@/content/site-pages";
 import type { Locale } from "@/lib/i18n";
@@ -85,6 +86,13 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
     if (!form.consent) nextErrors.consent = copy.errors.consent;
 
     return nextErrors;
+  }
+
+  function addTrainingGoal(label: string) {
+    const currentGoal = form.trainingGoal.trim();
+    if (currentGoal.includes(label)) return;
+    const separator = locale === "ar" ? "، " : ", ";
+    setField("trainingGoal", currentGoal ? `${currentGoal}${separator}${label}` : label);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -254,9 +262,9 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
 
       <fieldset className="mt-5 border-t border-[#391B68]/10 pt-5">
         <legend className="text-[14.5px] font-black leading-[1.45] text-[#391B68]">{copy.labels.employeeCount} <span className="text-[#B42318]">*</span></legend>
-        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-5" dir={locale === "ar" ? "rtl" : "ltr"}>
           {copy.employeeCountOptions.map((option) => (
-            <label key={option.value} className={`flex min-h-[50px] cursor-pointer items-center justify-center rounded-[13px] border px-3 text-center text-[14px] font-black transition-colors ${form.employeeCount === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] ring-1 ring-[#391B68]/20" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
+            <label key={option.value} className={`flex min-h-[50px] cursor-pointer items-center justify-center rounded-[13px] border px-3 text-center text-[14px] font-black transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] ${form.employeeCount === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] ring-1 ring-[#391B68]/20" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
               <input
                 className="sr-only"
                 type="radio"
@@ -278,9 +286,9 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
 
       <fieldset className="mt-5 border-t border-[#391B68]/10 pt-5">
         <legend className="text-[14.5px] font-black leading-[1.45] text-[#391B68]">{copy.labels.preferredTrainingMode} <span className="text-[#B42318]">*</span></legend>
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-3" dir={locale === "ar" ? "rtl" : "ltr"}>
           {copy.trainingModeOptions.map((option) => (
-            <label key={option.value} className={`flex min-h-[50px] cursor-pointer items-center justify-center rounded-[13px] border px-3 text-center text-[14px] font-black transition-colors ${form.preferredTrainingMode === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] ring-1 ring-[#391B68]/20" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
+            <label key={option.value} className={`flex min-h-[54px] cursor-pointer items-center justify-center rounded-[13px] border px-3 text-center text-[13.5px] font-black leading-[1.4] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] ${form.preferredTrainingMode === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] ring-1 ring-[#391B68]/20" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
               <input
                 className="sr-only"
                 type="radio"
@@ -302,6 +310,23 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
 
       <div className="mt-5 border-t border-[#391B68]/10 pt-5">
         <label className={labelClass} htmlFor="corporate-training-goal">{copy.labels.trainingGoal} <span className="text-[#B42318]">*</span></label>
+        <div className="mb-3 flex flex-wrap gap-2" aria-label={copy.labels.trainingGoal}>
+          {copy.trainingGoalOptions.map((option) => {
+            const selected = form.trainingGoal.includes(option.label);
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={selected}
+                disabled={status === "loading"}
+                onClick={() => addTrainingGoal(option.label)}
+                className={`min-h-10 rounded-full border px-3 py-1.5 text-[12.5px] font-black transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68]" : "border-[#391B68]/14 bg-white text-[#675A70] hover:border-[#391B68]/35 hover:text-[#391B68]"}`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
         <textarea
           id="corporate-training-goal"
           name="trainingGoal"
@@ -332,8 +357,9 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
       </div>
 
       <div className="mt-5 border-t border-[#391B68]/10 pt-5">
-        <label className={`flex cursor-pointer items-start gap-3 rounded-[14px] border p-3.5 text-[13.5px] font-bold leading-[1.6] text-[#5E5268] ${errors.consent ? "border-[#B42318]" : "border-[#391B68]/14 bg-white"}`}>
+        <div className={`flex items-start gap-3 rounded-[14px] border p-3.5 text-[13.5px] font-bold leading-[1.6] text-[#5E5268] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] ${errors.consent ? "border-[#B42318]" : "border-[#391B68]/14 bg-white"}`}>
           <input
+            id="corporate-consent"
             type="checkbox"
             name="consent"
             data-field="consent"
@@ -344,8 +370,13 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
             aria-describedby={errors.consent ? "corporate-consent-error" : undefined}
             disabled={status === "loading"}
           />
-          <span>{copy.labels.consent}</span>
-        </label>
+          <p>
+            <label className="cursor-pointer" htmlFor="corporate-consent">{copy.labels.consent}</label>{" "}
+            <Link href={`/${locale}/legal#privacy`} className="rounded-sm font-black text-[#391B68] underline decoration-[#EC911F]/55 underline-offset-2 hover:text-[#EC911F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]">
+              {copy.privacyLink}
+            </Link>
+          </p>
+        </div>
         <FieldError id="corporate-consent-error" message={errors.consent} />
       </div>
 

@@ -163,6 +163,7 @@ function prepareCorporateLead(body: CorporateLeadRequest, request: Request) {
     payload: {
       status: "new_corporate_training_lead",
       source: "corporate_training",
+      locale: body.metadata?.locale ?? "",
       submittedAt: new Date().toISOString(),
       companyName: body.companyName?.trim(),
       contactName: body.contactName?.trim(),

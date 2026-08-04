@@ -172,9 +172,9 @@ export const arContent: LandingContent = {
     call: "اتصل بنا",
     online: "أونلاين",
     branch: "فرع الدقي",
-    quickLinksTitle: "روابط سريعة",
+    quickLinksTitle: "الموقع",
     quickLinks: {
-      why: "ليه Success Academy؟",
+      why: "ليه تختار Success Academy",
       trainers: "فريق التدريب",
       registration: "خطوات التسجيل",
       assessment: "التقييم المجاني",

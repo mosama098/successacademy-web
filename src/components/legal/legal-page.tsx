@@ -30,12 +30,12 @@ export function LegalPageContent({ locale }: { locale: Locale }) {
             className="rounded-[20px] border border-[#391B68]/12 bg-white p-4 shadow-[0_10px_30px_rgba(57,27,104,0.05)] lg:sticky lg:top-[112px]"
           >
             <p className="mb-3 px-2 text-[14px] font-black text-[#391B68]">{copy.navigationLabel}</p>
-            <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-1">
+            <ul className="grid grid-cols-1 gap-1.5 min-[430px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-1">
               {copy.sections.map((section) => (
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="flex min-h-10 items-center rounded-xl px-3 py-2 text-[13.5px] font-bold leading-[1.4] text-[#665A70] transition-colors hover:bg-[#EEE9F4] hover:text-[#391B68] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]"
+                    className="flex min-h-10 items-center rounded-xl border border-transparent px-3 py-2 text-[13.5px] font-bold leading-[1.4] text-[#665A70] transition-colors hover:border-[#391B68]/12 hover:bg-[#EEE9F4] hover:text-[#391B68] active:bg-[#DDD3E8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]"
                   >
                     {section.title}
                   </a>
@@ -52,9 +52,10 @@ export function LegalPageContent({ locale }: { locale: Locale }) {
                 className="scroll-mt-28 rounded-[20px] border border-[#391B68]/12 bg-white p-5 shadow-[0_10px_30px_rgba(57,27,104,0.045)] sm:p-7"
                 aria-labelledby={`${section.id}-heading`}
               >
-                <h2 id={`${section.id}-heading`} className="text-[24px] font-black leading-[1.4] text-[#391B68] sm:text-[27px]">
-                  {section.title}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="h-8 w-1 shrink-0 rounded-full bg-[#EC911F]" aria-hidden="true" />
+                  <h2 id={`${section.id}-heading`} className="text-[24px] font-black leading-[1.4] text-[#391B68] sm:text-[27px]">{section.title}</h2>
+                </div>
                 <div className="mt-3 grid gap-3 text-[15px] font-medium leading-[1.85] text-[#5F5369] sm:text-[16px]">
                   {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                   {section.items ? (
