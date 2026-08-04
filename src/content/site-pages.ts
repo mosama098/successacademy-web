@@ -42,6 +42,7 @@ type SitePagesContent = {
     heroTitle: string;
     heroDescription: string;
     heroCta: string;
+    heroSecondaryCta: string;
     heroTrust: string[];
     benefitsTitle: string;
     benefitsDescription: string;
@@ -67,6 +68,7 @@ type SitePagesContent = {
         trainingGoal: string;
         notes: string;
         consent: string;
+        consentSuffix: string;
       };
       placeholders: {
         companyName: string;
@@ -80,6 +82,7 @@ type SitePagesContent = {
       trainingModeOptions: BusinessOption[];
       trainingGoalOptions: BusinessOption[];
       privacyLink: string;
+      privacyReassurance: string;
       errors: {
         companyName: string;
         contactName: string;
@@ -181,10 +184,11 @@ const ar: SitePagesContent = {
   },
   business: {
     badge: "تدريب الشركات",
-    heroTitle: "طوّر مستوى فريقك في الإنجليزي بخطة تدريب تناسب شركتك",
+    heroTitle: "طوّر مستوى فريقك في الإنجليزي\nبخطة تدريب تناسب شركتك",
     heroDescription:
       "برامج تدريب عملية للشركات تساعد فرق العمل على التواصل بثقة، وتحسين الأداء، وتحقيق نتائج أوضح في بيئة العمل.",
     heroCta: "اطلب عرض تدريب للشركات",
+    heroSecondaryCta: "تحدث مع فريقنا",
     heroTrust: [
       "تقييم مستوى قبل البداية",
       "أونلاين أو داخل مقر الشركة",
@@ -225,7 +229,7 @@ const ar: SitePagesContent = {
     form: {
       badge: "ابدأ المحادثة",
       title: "احكِ لنا عن احتياج شركتك",
-      description: "املأ البيانات الأساسية، وفريقنا هيتواصل معاك لمناقشة الخطة المناسبة.",
+      description: "املأ البيانات الأساسية، وفريقنا هيتواصل معك لمناقشة الخطة المناسبة.",
       optional: "اختياري",
       labels: {
         companyName: "اسم الشركة",
@@ -236,7 +240,8 @@ const ar: SitePagesContent = {
         preferredTrainingMode: "طريقة التدريب المفضلة",
         trainingGoal: "هدف التدريب",
         notes: "ملاحظات إضافية",
-        consent: "أوافق إن فريق Success Academy يتواصل معايا بخصوص طلب تدريب الشركة.",
+        consent: "أوافق أن يتواصل معي فريق Success Academy بخصوص طلب تدريب الشركة، وفقًا لـ",
+        consentSuffix: ".",
       },
       placeholders: {
         companyName: "اكتب اسم الشركة",
@@ -267,6 +272,7 @@ const ar: SitePagesContent = {
         { value: "other", label: "احتياج آخر" },
       ],
       privacyLink: "سياسة الخصوصية",
+      privacyReassurance: "لن نشارك بياناتك مع أي طرف خارجي.",
       errors: {
         companyName: "اسم الشركة مطلوب",
         contactName: "اسم مسؤول التواصل مطلوب",
@@ -372,6 +378,7 @@ const en: SitePagesContent = {
     heroDescription:
       "Practical corporate English programmes designed to help teams communicate confidently, improve performance, and achieve clearer workplace results.",
     heroCta: "Request a Corporate Training Proposal",
+    heroSecondaryCta: "Talk to Our Team",
     heroTrust: [
       "Pre-training level assessment",
       "Online or on-site delivery",
@@ -423,7 +430,8 @@ const en: SitePagesContent = {
         preferredTrainingMode: "Preferred Training Mode",
         trainingGoal: "Training Goal",
         notes: "Additional Notes",
-        consent: "I agree to be contacted by the Success Academy team regarding this corporate training request.",
+        consent: "I agree to be contacted by the Success Academy team regarding this corporate training request, in accordance with the",
+        consentSuffix: ".",
       },
       placeholders: {
         companyName: "Enter your company name",
@@ -454,6 +462,7 @@ const en: SitePagesContent = {
         { value: "other", label: "Other need" },
       ],
       privacyLink: "Privacy Policy",
+      privacyReassurance: "We will not share your information with any external party.",
       errors: {
         companyName: "Company name is required",
         contactName: "Contact name is required",
@@ -468,7 +477,7 @@ const en: SitePagesContent = {
       loading: "Submitting Your Request…",
       success: "Your request has been received successfully. Our team will contact you to discuss your company’s needs.",
       failure: "We could not submit your request. Please try again or contact us on WhatsApp.",
-      reassurance: "Your details are used only by our corporate team and are not published or displayed publicly.",
+      reassurance: "Your information is shared only with the corporate training team and will not be published publicly.",
     },
     finalTitle: "Ready to Build the Right Training Plan for Your Team?",
     finalDescription: "Tell us what your company needs and we will organise a clear first step with you.",

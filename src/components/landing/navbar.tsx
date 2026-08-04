@@ -15,11 +15,12 @@ export function Navbar({ locale, copy, pagePath }: NavbarProps) {
   const isInternalPage = Boolean(pagePath);
   const alternateHref = pagePath ? `/${alt}/${pagePath}` : `/${alt}`;
   const internalLinks = [
-    { href: `/${locale}#why`, label: locale === "ar" ? "ليه Success Academy" : "Why Success Academy" },
-    { href: `/${locale}#registration-steps`, label: locale === "ar" ? "خطوات التسجيل" : "Registration Steps" },
+    { href: `/${locale}`, label: locale === "ar" ? "الرئيسية" : "Home" },
+    { href: `/${locale}#why`, label: locale === "ar" ? "لماذا Success Academy؟" : "Why Success Academy?" },
     { href: `/${locale}/blog`, label: locale === "ar" ? "المدونة" : "Blog" },
     { href: `/${locale}/business`, label: locale === "ar" ? "تدريب الشركات" : "Corporate Training" },
-    { href: `/${locale}#faq`, label: copy.nav.faq },
+    { href: `/${locale}#lead-form`, label: locale === "ar" ? "التقييم المجاني" : "Free Assessment" },
+    { href: `/${locale}#faq`, label: locale === "ar" ? "الأسئلة" : "FAQ" },
   ];
 
   return (
@@ -46,9 +47,11 @@ export function Navbar({ locale, copy, pagePath }: NavbarProps) {
           <CtaLink href={alternateHref} locale={locale} source="navbar_language" event="language" variant="ghost">
             {copy.nav.language}
           </CtaLink>
-          <CtaLink href={isInternalPage ? `/${locale}#lead-form` : "#lead-form"} locale={locale} source="navbar" className="hidden h-[50px] px-6 sm:inline-flex">
-            {isInternalPage ? (locale === "ar" ? "اعرف مستواك" : "Check Your Level") : copy.nav.book}
-          </CtaLink>
+          {!isInternalPage ? (
+            <CtaLink href="#lead-form" locale={locale} source="navbar" className="hidden h-[50px] px-6 sm:inline-flex">
+              {copy.nav.book}
+            </CtaLink>
+          ) : null}
         </div>
       </nav>
     </header>
