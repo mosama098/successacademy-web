@@ -3,6 +3,7 @@ import { CtaLink } from "@/components/ui/cta-link";
 import { alternateLocale, type Locale } from "@/lib/i18n";
 import type { LandingContent } from "@/content";
 import { BrandMark } from "./brand-mark";
+import { bookingHref } from "./types";
 
 type NavbarProps = {
   locale: Locale;
@@ -48,7 +49,7 @@ export function Navbar({ locale, copy, pagePath }: NavbarProps) {
             {copy.nav.language}
           </CtaLink>
           {!isInternalPage ? (
-            <CtaLink href="#lead-form" locale={locale} source="navbar" className="hidden h-[50px] px-6 sm:inline-flex">
+            <CtaLink href={bookingHref} locale={locale} source="navbar" className="hidden h-[50px] px-6 sm:inline-flex">
               {copy.nav.book}
             </CtaLink>
           ) : null}
