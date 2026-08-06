@@ -3,6 +3,7 @@ import type { BlogArticle } from "./types";
 // Add future English articles to this array and use the same slug in the Arabic file.
 export const enBlogArticles: BlogArticle[] = [
   {
+    locale: "en",
     slug: "improve-english-speaking",
     title: "How to Improve Your English Speaking Skills",
     excerpt:
@@ -11,6 +12,9 @@ export const enBlogArticles: BlogArticle[] = [
     readingTime: "6 min read",
     category: "Speaking Skills",
     image: "/images/blog/speaking-cover.svg",
+    imageAlt: "Illustration of practising spoken English",
+    featured: true,
+    published: true,
     seoTitle: "How to Improve Your English Speaking Skills | Success Academy",
     seoDescription:
       "A practical guide to improving English speaking through consistent practice, active listening, and useful feedback.",
@@ -51,6 +55,7 @@ export const enBlogArticles: BlogArticle[] = [
     ],
   },
   {
+    locale: "en",
     slug: "english-progress-mistakes",
     title: "Mistakes That Slow Down Your English Progress",
     excerpt:
@@ -59,6 +64,9 @@ export const enBlogArticles: BlogArticle[] = [
     readingTime: "5 min read",
     category: "English Progress",
     image: "/images/blog/progress-cover.svg",
+    imageAlt: "Illustration of making steady progress in English",
+    featured: false,
+    published: true,
     seoTitle: "Mistakes That Slow Down Your English Progress | Success Academy",
     seoDescription:
       "Common English learning mistakes that slow progress, with practical ways to organise practice and get clearer results.",
@@ -99,6 +107,7 @@ export const enBlogArticles: BlogArticle[] = [
     ],
   },
   {
+    locale: "en",
     slug: "choose-right-english-course",
     title: "How to Choose the Right English Course",
     excerpt:
@@ -107,6 +116,9 @@ export const enBlogArticles: BlogArticle[] = [
     readingTime: "6 min read",
     category: "Course Guidance",
     image: "/images/blog/course-cover.svg",
+    imageAlt: "Illustration of choosing the right English course",
+    featured: false,
+    published: true,
     seoTitle: "How to Choose the Right English Course | Success Academy",
     seoDescription:
       "Learn the key criteria for choosing an English course that matches your level and goals, from assessment to practice and follow-up.",

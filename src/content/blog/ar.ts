@@ -3,6 +3,7 @@ import type { BlogArticle } from "./types";
 // Add future Arabic articles to this array and use the same slug in the English file.
 export const arBlogArticles: BlogArticle[] = [
   {
+    locale: "ar",
     slug: "improve-english-speaking",
     title: "إزاي تطور مهارة التحدث بالإنجليزي؟",
     excerpt:
@@ -11,6 +12,9 @@ export const arBlogArticles: BlogArticle[] = [
     readingTime: "6 دقائق قراءة",
     category: "مهارات التحدث",
     image: "/images/blog/speaking-cover.svg",
+    imageAlt: "رسم توضيحي لممارسة التحدث بالإنجليزي",
+    featured: true,
+    published: true,
     seoTitle: "إزاي تطور مهارة التحدث بالإنجليزي؟ | Success Academy",
     seoDescription:
       "دليل عملي لتطوير مهارة التحدث بالإنجليزي من خلال الممارسة المنتظمة، الاستماع، والتغذية الراجعة الواضحة.",
@@ -51,6 +55,7 @@ export const arBlogArticles: BlogArticle[] = [
     ],
   },
   {
+    locale: "ar",
     slug: "english-progress-mistakes",
     title: "أخطاء بتعطلك عن تحسين مستواك في الإنجليزي",
     excerpt:
@@ -59,6 +64,9 @@ export const arBlogArticles: BlogArticle[] = [
     readingTime: "5 دقائق قراءة",
     category: "تطوير المستوى",
     image: "/images/blog/progress-cover.svg",
+    imageAlt: "رسم توضيحي لتطوير مستوى الإنجليزي بخطوات واضحة",
+    featured: false,
+    published: true,
     seoTitle: "أخطاء بتعطلك عن تحسين مستواك في الإنجليزي | Success Academy",
     seoDescription:
       "أشهر أخطاء تعلم الإنجليزي التي تبطئ تقدمك، مع خطوات عملية لتنظيم الممارسة وتحقيق نتيجة أوضح.",
@@ -99,6 +107,7 @@ export const arBlogArticles: BlogArticle[] = [
     ],
   },
   {
+    locale: "ar",
     slug: "choose-right-english-course",
     title: "تختار كورس الإنجليزي المناسب ليك إزاي؟",
     excerpt:
@@ -107,6 +116,9 @@ export const arBlogArticles: BlogArticle[] = [
     readingTime: "6 دقائق قراءة",
     category: "اختيار البرنامج",
     image: "/images/blog/course-cover.svg",
+    imageAlt: "رسم توضيحي لاختيار كورس الإنجليزي المناسب",
+    featured: false,
+    published: true,
     seoTitle: "تختار كورس الإنجليزي المناسب ليك إزاي؟ | Success Academy",
     seoDescription:
       "تعرف على أهم معايير اختيار كورس الإنجليزي المناسب لمستواك وهدفك، من التقييم إلى الممارسة والمتابعة.",
