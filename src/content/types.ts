@@ -133,6 +133,12 @@ export type LandingContent = {
       assessment: string;
       faq: string;
       about: string;
+      blog: string;
+      business: string;
+    };
+    legalLinks: {
+      privacy: string;
+      terms: string;
     };
     contactTitle: string;
     socialTitle: string;
@@ -145,4 +151,3 @@ export type LandingContent = {
 };
 
 export type ContentMap = Record<Locale, LandingContent>;
-

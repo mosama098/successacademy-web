@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title description">
+  <title id="title">Choosing an English course</title>
+  <desc id="description">Branded illustration of a compass and clear learning route</desc>
+  <rect width="1200" height="675" fill="#F8F5FA"/>
+  <circle cx="251" cy="338" r="190" fill="#FFFFFF" stroke="#D9CEE7" stroke-width="18"/>
+  <circle cx="251" cy="338" r="122" fill="#EEE7F4"/>
+  <path d="m317 261-42 104-91 50 42-104 91-50Z" fill="#391B68" stroke="#391B68" stroke-width="12" stroke-linejoin="round"/>
+  <path d="m226 311 49 54-91 50 42-104Z" fill="#EC911F"/>
+  <path d="M500 147h484M500 528h484" stroke="#D9CEE7" stroke-width="16" stroke-linecap="round"/>
+  <rect x="515" y="203" width="199" height="232" rx="38" fill="#391B68"/>
+  <rect x="747" y="203" width="199" height="232" rx="38" fill="#FFFFFF" stroke="#391B68" stroke-width="10"/>
+  <path d="M568 265h94M568 313h73M568 361h88" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"/>
+  <path d="M798 265h94M798 313h73" stroke="#391B68" stroke-width="16" stroke-linecap="round"/>
+  <path d="m804 371 28 27 61-65" fill="none" stroke="#EC911F" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="1029" cy="492" r="54" fill="#EC911F"/>
+  <path d="m1007 492 15 15 31-34" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

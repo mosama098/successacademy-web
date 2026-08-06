@@ -5,8 +5,24 @@ import type { LandingContent } from "@/content";
 import { BrandMark } from "./brand-mark";
 import { bookingHref } from "./types";
 
-export function Navbar({ locale, copy }: { locale: Locale; copy: LandingContent }) {
+type NavbarProps = {
+  locale: Locale;
+  copy: LandingContent;
+  pagePath?: string;
+};
+
+export function Navbar({ locale, copy, pagePath }: NavbarProps) {
   const alt = alternateLocale[locale];
+  const isInternalPage = Boolean(pagePath);
+  const alternateHref = pagePath ? `/${alt}/${pagePath}` : `/${alt}`;
+  const internalLinks = [
+    { href: `/${locale}`, label: locale === "ar" ? "الرئيسية" : "Home" },
+    { href: `/${locale}#why`, label: locale === "ar" ? "لماذا Success Academy؟" : "Why Success Academy?" },
+    { href: `/${locale}/blog`, label: locale === "ar" ? "المدونة" : "Blog" },
+    { href: `/${locale}/business`, label: locale === "ar" ? "تدريب الشركات" : "Corporate Training" },
+    { href: `/${locale}#lead-form`, label: locale === "ar" ? "التقييم المجاني" : "Free Assessment" },
+    { href: `/${locale}#faq`, label: locale === "ar" ? "الأسئلة" : "FAQ" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
@@ -15,23 +31,30 @@ export function Navbar({ locale, copy }: { locale: Locale; copy: LandingContent 
           <BrandMark />
         </Link>
 
-        <div className="hidden items-center gap-7 text-[15px] font-black text-slate-700 md:flex">
-          <a className="nav-link" href="#why">{copy.nav.why}</a>
-          <a className="nav-link" href="#process">{copy.nav.process}</a>
-          <a className="nav-link" href="#assessment">{copy.nav.assessment}</a>
-          <a className="nav-link" href="#faq">{copy.nav.faq}</a>
-        </div>
+        {isInternalPage ? (
+          <div className="hidden items-center gap-4 text-[13px] font-black text-slate-700 lg:flex">
+            {internalLinks.map((link) => <a key={link.href} className="nav-link whitespace-nowrap" href={link.href}>{link.label}</a>)}
+          </div>
+        ) : (
+          <div className="hidden items-center gap-7 text-[15px] font-black text-slate-700 md:flex">
+            <a className="nav-link" href="#why">{copy.nav.why}</a>
+            <a className="nav-link" href="#process">{copy.nav.process}</a>
+            <a className="nav-link" href="#assessment">{copy.nav.assessment}</a>
+            <a className="nav-link" href="#faq">{copy.nav.faq}</a>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
-          <CtaLink href={`/${alt}`} locale={locale} source="navbar_language" event="language" variant="ghost">
+          <CtaLink href={alternateHref} locale={locale} source="navbar_language" event="language" variant="ghost">
             {copy.nav.language}
           </CtaLink>
-          <CtaLink href={bookingHref} locale={locale} source="navbar" className="hidden h-[50px] px-6 sm:inline-flex">
-            {copy.nav.book}
-          </CtaLink>
+          {!isInternalPage ? (
+            <CtaLink href={bookingHref} locale={locale} source="navbar" className="hidden h-[50px] px-6 sm:inline-flex">
+              {copy.nav.book}
+            </CtaLink>
+          ) : null}
         </div>
       </nav>
     </header>
   );
 }
-

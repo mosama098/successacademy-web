@@ -173,7 +173,7 @@ export const enContent: LandingContent = {
     call: "Call Us",
     online: "Online",
     branch: "Dokki Branch",
-    quickLinksTitle: "Quick Links",
+    quickLinksTitle: "Website",
     quickLinks: {
       why: "Why Success Academy?",
       trainers: "Training Team",
@@ -181,6 +181,12 @@ export const enContent: LandingContent = {
       assessment: "Free Assessment",
       faq: "Frequently Asked Questions",
       about: "About Us",
+      blog: "Blog",
+      business: "Corporate Training",
+    },
+    legalLinks: {
+      privacy: "Privacy Policy",
+      terms: "Terms & Conditions",
     },
     contactTitle: "Contact Us",
     socialTitle: "Follow Us",
