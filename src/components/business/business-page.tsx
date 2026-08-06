@@ -164,23 +164,25 @@ export function BusinessPageContent({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="border-y border-[#391B68]/10 bg-[#F8F5FA] px-5 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="corporate-form-title">
-        <div className="mx-auto grid max-w-[1160px] gap-6 lg:grid-cols-[minmax(0,1.95fr)_minmax(290px,1fr)] lg:items-start lg:gap-7" dir="ltr">
-          <aside className="rounded-[21px] bg-[#391B68] p-6 text-white lg:order-2 lg:sticky lg:top-[108px] lg:p-7" dir={isArabic ? "rtl" : "ltr"}>
-            <span className="inline-flex rounded-full bg-white/10 px-3 py-1.5 text-[12.5px] font-black text-[#FFD9A4]">{copy.form.badge}</span>
-            <h2 id="corporate-form-title" className="mt-4 text-[28px] font-black leading-[1.3] sm:text-[31px]">{copy.form.title}</h2>
-            <p className="mt-3 text-[14.5px] font-semibold leading-[1.7] text-[#E7DFF1]">{copy.form.description}</p>
-            <ul className="mt-5 grid gap-2.5 border-t border-white/15 pt-5">
+      <section className="border-y border-[#391B68]/10 bg-[#F8F5FA] px-4 py-10 sm:px-6 sm:py-11 lg:px-8 lg:py-10" aria-labelledby="corporate-form-title">
+        <div className="mx-auto grid max-w-[1000px] overflow-hidden rounded-[22px] border border-[#DCD3E8] bg-[#FEFDFE] shadow-[0_20px_48px_rgba(57,27,104,0.1)] lg:grid-cols-[minmax(0,0.72fr)_minmax(260px,0.28fr)]" dir="ltr">
+          <aside className="flex h-full flex-col bg-[#391B68] p-5 text-white lg:order-2 lg:justify-between lg:p-[22px]" dir={isArabic ? "rtl" : "ltr"}>
+            <div>
+              <span className="inline-flex rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-black text-[#FFD9A4]">{copy.form.badge}</span>
+              <h2 id="corporate-form-title" className="mt-3.5 text-[26px] font-black leading-[1.28] lg:text-[24px]">{copy.form.title}</h2>
+              <p className="mt-2.5 text-[13.5px] font-semibold leading-[1.62] text-[#E7DFF1] lg:text-[13px]">{copy.form.description}</p>
+            </div>
+            <ul className="mt-4 grid gap-2 border-t border-white/15 pt-4">
               {copy.heroTrust.map((item, index) => (
-                <li key={item} className="flex items-start gap-3 text-[13.5px] font-bold leading-[1.55] text-[#F0EAF5]">
-                  <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-[9px] bg-white/10 text-[#FFD9A4]"><TrustIcon index={index} /></span>
+                <li key={item} className="flex items-start gap-2.5 text-[12.5px] font-bold leading-[1.5] text-[#F0EAF5]">
+                  <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-[8px] bg-white/10 text-[#FFD9A4]"><TrustIcon index={index} /></span>
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 border-t border-white/15 pt-4 text-[12.5px] font-bold leading-[1.6] text-[#D9CEE7]">{copy.form.privacyReassurance}</p>
+            <p className="mt-4 border-t border-white/15 pt-3 text-[12px] font-bold leading-[1.55] text-[#D9CEE7]">{copy.form.privacyReassurance}</p>
           </aside>
-          <div className="min-w-0 lg:order-1" dir={isArabic ? "rtl" : "ltr"}><CorporateLeadForm locale={locale} copy={copy.form} /></div>
+          <div className="min-w-0 bg-[#FEFDFE] lg:order-1" dir={isArabic ? "rtl" : "ltr"}><CorporateLeadForm locale={locale} copy={copy.form} /></div>
         </div>
       </section>
 

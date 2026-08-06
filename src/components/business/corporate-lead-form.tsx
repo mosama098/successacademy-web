@@ -152,7 +152,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
 
   if (status === "success") {
     return (
-      <div id="corporate-lead-form" className="grid min-h-[320px] scroll-mt-28 place-items-center rounded-[22px] border border-[#391B68]/12 bg-white p-6 text-center shadow-[0_14px_38px_rgba(57,27,104,0.07)] sm:p-9" role="status" aria-live="polite">
+      <div id="corporate-lead-form" className="grid min-h-[280px] scroll-mt-28 place-items-center bg-white p-5 text-center sm:p-7" role="status" aria-live="polite">
         <div className="max-w-[540px]">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#EEE9F4] text-[#391B68]">
             <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -165,9 +165,9 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
     );
   }
 
-  const inputClass = "h-[50px] w-full rounded-[13px] border border-[#391B68]/18 bg-white px-4 text-[15px] font-semibold text-[#391B68] outline-none transition-[border-color,box-shadow] placeholder:text-[#8C8195] focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:opacity-60";
-  const textareaClass = "w-full resize-y rounded-[13px] border border-[#391B68]/18 bg-white px-4 py-3 text-[15px] font-semibold leading-[1.6] text-[#391B68] outline-none transition-[border-color,box-shadow] placeholder:text-[#8C8195] focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:opacity-60";
-  const labelClass = "mb-1.5 block text-[14px] font-black leading-[1.45] text-[#391B68]";
+  const inputClass = "h-[48px] w-full rounded-[12px] border border-[#391B68]/18 bg-white px-3.5 text-[14.5px] font-semibold text-[#391B68] outline-none transition-[border-color,box-shadow] placeholder:text-[#8C8195] focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:opacity-60 lg:h-[42px] lg:rounded-[11px] lg:text-[13.5px]";
+  const textareaClass = "w-full resize-y rounded-[12px] border border-[#391B68]/18 bg-white px-3.5 py-2.5 text-[14px] font-semibold leading-[1.55] text-[#391B68] outline-none transition-[border-color,box-shadow] placeholder:text-[#8C8195] focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/10 disabled:cursor-not-allowed disabled:opacity-60 lg:rounded-[11px] lg:text-[13.5px]";
+  const labelClass = "mb-1.5 block text-[14px] font-black leading-[1.4] text-[#391B68] lg:mb-1 lg:text-[13.5px]";
   const selectedGoals = form.trainingGoal
     .split(locale === "ar" ? "،" : ",")
     .map((goal) => goal.trim());
@@ -178,7 +178,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
       id="corporate-lead-form"
       onSubmit={handleSubmit}
       noValidate
-      className="scroll-mt-28 rounded-[22px] border border-[#391B68]/12 bg-[#FEFDFE] p-4 shadow-[0_14px_38px_rgba(57,27,104,0.07)] sm:p-6 lg:p-7"
+      className="scroll-mt-28 bg-[#FEFDFE] p-4 sm:p-5 lg:p-[22px]"
     >
       <input
         type="text"
@@ -191,7 +191,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
         aria-hidden="true"
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:gap-2.5">
         <div>
           <label className={labelClass} htmlFor="corporate-company-name">{copy.labels.companyName} <span className="text-[#B42318]">*</span></label>
           <input
@@ -268,11 +268,11 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
         </div>
       </div>
 
-      <fieldset className="mt-4 border-t border-[#391B68]/10 pt-4">
-        <legend className="text-[14.5px] font-black leading-[1.45] text-[#391B68]">{copy.labels.employeeCount} <span className="text-[#B42318]">*</span></legend>
-        <div className="mt-2.5 grid grid-cols-2 gap-2 min-[430px]:grid-cols-3 sm:grid-cols-5" dir={locale === "ar" ? "rtl" : "ltr"}>
+      <fieldset className="mt-3 border-t border-[#391B68]/10 pt-3">
+        <legend className="text-[14px] font-black leading-[1.4] text-[#391B68] lg:text-[13.5px]">{copy.labels.employeeCount} <span className="text-[#B42318]">*</span></legend>
+        <div className="mt-2 grid grid-cols-2 gap-2 min-[430px]:grid-cols-3 sm:grid-cols-5 lg:gap-1.5" dir={locale === "ar" ? "rtl" : "ltr"}>
           {copy.employeeCountOptions.map((option) => (
-            <label key={option.value} className={`flex min-h-[50px] cursor-pointer items-center justify-center rounded-[12px] border px-2 text-center text-[13.5px] font-black transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] ${form.employeeCount === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.16)]" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
+            <label key={option.value} className={`flex min-h-[48px] cursor-pointer items-center justify-center rounded-[11px] border px-2 text-center text-[13px] font-black transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] lg:min-h-[38px] lg:rounded-[10px] lg:text-[12.5px] ${form.employeeCount === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.16)]" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
               <input
                 className="sr-only"
                 type="radio"
@@ -286,7 +286,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
                 disabled={status === "loading"}
               />
               <span className="inline-flex items-center gap-1.5">
-                <span className={`grid size-[18px] shrink-0 place-items-center rounded-full border ${form.employeeCount === option.value ? "border-[#391B68] bg-[#391B68] text-white" : "border-[#BFB3CB] text-transparent"}`}><CheckIcon /></span>
+                <span className={`grid size-[17px] shrink-0 place-items-center rounded-full border ${form.employeeCount === option.value ? "border-[#391B68] bg-[#391B68] text-white" : "border-[#BFB3CB] text-transparent"}`}><CheckIcon /></span>
                 {option.label}
               </span>
             </label>
@@ -295,11 +295,11 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
         <FieldError id="corporate-employee-count-error" message={errors.employeeCount} />
       </fieldset>
 
-      <fieldset className="mt-4 border-t border-[#391B68]/10 pt-4">
-        <legend className="text-[14.5px] font-black leading-[1.45] text-[#391B68]">{copy.labels.preferredTrainingMode} <span className="text-[#B42318]">*</span></legend>
-        <div className="mt-2.5 grid gap-2.5 sm:grid-cols-3" dir={locale === "ar" ? "rtl" : "ltr"}>
+      <fieldset className="mt-3 border-t border-[#391B68]/10 pt-3">
+        <legend className="text-[14px] font-black leading-[1.4] text-[#391B68] lg:text-[13.5px]">{copy.labels.preferredTrainingMode} <span className="text-[#B42318]">*</span></legend>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3 lg:gap-1.5" dir={locale === "ar" ? "rtl" : "ltr"}>
           {copy.trainingModeOptions.map((option) => (
-            <label key={option.value} className={`flex min-h-[54px] cursor-pointer items-center justify-center rounded-[12px] border px-3 text-center text-[13.5px] font-black leading-[1.4] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] ${form.preferredTrainingMode === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.16)]" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
+            <label key={option.value} className={`flex min-h-[50px] cursor-pointer items-center justify-center rounded-[11px] border px-2.5 text-center text-[13px] font-black leading-[1.35] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] lg:min-h-[40px] lg:rounded-[10px] lg:text-[12.5px] ${form.preferredTrainingMode === option.value ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.16)]" : "border-[#391B68]/16 bg-white text-[#675A70] hover:border-[#391B68]/40"}`}>
               <input
                 className="sr-only"
                 type="radio"
@@ -313,7 +313,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
                 disabled={status === "loading"}
               />
               <span className="inline-flex items-center gap-2">
-                <span className={`grid size-[18px] shrink-0 place-items-center rounded-full border ${form.preferredTrainingMode === option.value ? "border-[#391B68] bg-[#391B68] text-white" : "border-[#BFB3CB] text-transparent"}`}><CheckIcon /></span>
+                <span className={`grid size-[17px] shrink-0 place-items-center rounded-full border ${form.preferredTrainingMode === option.value ? "border-[#391B68] bg-[#391B68] text-white" : "border-[#BFB3CB] text-transparent"}`}><CheckIcon /></span>
                 {option.label}
               </span>
             </label>
@@ -322,9 +322,9 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
         <FieldError id="corporate-mode-error" message={errors.preferredTrainingMode} />
       </fieldset>
 
-      <div className="mt-4 border-t border-[#391B68]/10 pt-4">
+      <div className="mt-3 border-t border-[#391B68]/10 pt-3">
         <label className={labelClass} htmlFor="corporate-training-goal">{copy.labels.trainingGoal} <span className="text-[#B42318]">*</span></label>
-        <div className="mb-3 grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 lg:grid-cols-3" aria-label={copy.labels.trainingGoal}>
+        <div className="mb-2.5 grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 lg:grid-cols-3 lg:gap-1.5" aria-label={copy.labels.trainingGoal}>
           {copy.trainingGoalOptions.map((option) => {
             const selected = selectedGoals.includes(option.label);
             return (
@@ -334,10 +334,10 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
                 aria-pressed={selected}
                 disabled={status === "loading"}
                 onClick={() => toggleTrainingGoal(option.label)}
-                className={`flex min-h-[46px] w-full items-center justify-between gap-2 rounded-[12px] border px-3 py-2 text-start text-[12.5px] font-black leading-[1.4] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14)]" : "border-[#391B68]/14 bg-white text-[#675A70] hover:border-[#391B68]/35 hover:text-[#391B68]"}`}
+                className={`flex min-h-[44px] w-full items-center justify-between gap-2 rounded-[11px] border px-2.5 py-1.5 text-start text-[12.5px] font-black leading-[1.35] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] disabled:cursor-not-allowed disabled:opacity-60 lg:min-h-[38px] lg:rounded-[10px] lg:text-[12px] ${selected ? "border-[#391B68] bg-[#EEE9F4] text-[#391B68] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.14)]" : "border-[#391B68]/14 bg-white text-[#675A70] hover:border-[#391B68]/35 hover:text-[#391B68]"}`}
               >
-                <span>{option.label}</span>
-                <span className={`grid size-[18px] shrink-0 place-items-center rounded-full ${selected ? "bg-[#391B68] text-white" : "bg-[#EEE9F4] text-transparent"}`}><CheckIcon /></span>
+                <span className="text-[12.5px] leading-[1.35] lg:text-[12px]">{option.label}</span>
+                <span className={`grid size-[17px] shrink-0 place-items-center rounded-full ${selected ? "bg-[#391B68] text-white" : "bg-[#EEE9F4] text-transparent"}`}><CheckIcon /></span>
               </button>
             );
           })}
@@ -346,7 +346,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
           id="corporate-training-goal"
           name="trainingGoal"
           data-field="trainingGoal"
-          className={`${textareaClass} min-h-[100px] ${errors.trainingGoal ? "!border-[#B42318]" : ""}`}
+          className={`${textareaClass} h-[82px] min-h-[82px] lg:h-[70px] lg:min-h-[70px] ${errors.trainingGoal ? "!border-[#B42318]" : ""}`}
           value={form.trainingGoal}
           onChange={(event) => setField("trainingGoal", event.target.value)}
           aria-invalid={Boolean(errors.trainingGoal)}
@@ -357,13 +357,13 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
         <FieldError id="corporate-goal-error" message={errors.trainingGoal} />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <label className={labelClass} htmlFor="corporate-notes">{copy.labels.notes} <span className="rounded-full bg-[#EEE9F4] px-2 py-0.5 text-[11px] text-[#6B5E76]">{copy.optional}</span></label>
         <textarea
           id="corporate-notes"
           name="notes"
           data-field="notes"
-          className={`${textareaClass} min-h-[78px]`}
+          className={`${textareaClass} h-[68px] min-h-[68px] lg:h-[58px] lg:min-h-[58px]`}
           value={form.notes}
           onChange={(event) => setField("notes", event.target.value)}
           disabled={status === "loading"}
@@ -371,14 +371,14 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
         />
       </div>
 
-      <div className="mt-4 border-t border-[#391B68]/10 pt-4">
-        <div className={`flex items-start gap-3 rounded-[14px] border p-3.5 text-[13.5px] font-bold leading-[1.6] text-[#5E5268] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] ${errors.consent ? "border-[#B42318]" : "border-[#391B68]/14 bg-white"}`}>
+      <div className="mt-3 border-t border-[#391B68]/10 pt-3">
+        <div className={`flex items-start gap-2.5 rounded-[12px] border p-3 text-[13px] font-bold leading-[1.52] text-[#5E5268] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#EC911F] lg:p-2.5 lg:text-[12.5px] ${errors.consent ? "border-[#B42318]" : "border-[#391B68]/14 bg-white"}`}>
           <input
             id="corporate-consent"
             type="checkbox"
             name="consent"
             data-field="consent"
-            className="mt-0.5 size-5 shrink-0 accent-[#391B68]"
+            className="mt-0.5 size-[18px] shrink-0 accent-[#391B68]"
             checked={form.consent}
             onChange={(event) => setField("consent", event.target.checked)}
             aria-labelledby="corporate-consent-text"
@@ -398,7 +398,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
       </div>
 
       {status === "error" ? (
-        <div className="mt-4 rounded-[13px] border border-[#B42318]/25 bg-[#FEF3F2] px-4 py-3 text-[13.5px] font-bold leading-[1.55] text-[#B42318]" role="alert">
+        <div className="mt-3 rounded-[12px] border border-[#B42318]/25 bg-[#FEF3F2] px-3.5 py-2.5 text-[13px] font-bold leading-[1.5] text-[#B42318]" role="alert">
           {copy.failure}
         </div>
       ) : null}
@@ -406,11 +406,11 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
       <button
         type="submit"
         disabled={status === "loading"}
-        className="mt-5 flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-[#EC911F] px-5 text-[16px] font-black text-white shadow-[0_8px_18px_rgba(236,145,31,0.2)] transition-colors hover:bg-[#D98113] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#391B68] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-3 flex min-h-[50px] w-full items-center justify-center rounded-[13px] bg-[#EC911F] px-5 text-[15.5px] font-black text-white shadow-[0_8px_18px_rgba(236,145,31,0.2)] transition-colors hover:bg-[#D98113] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#391B68] disabled:cursor-not-allowed disabled:opacity-60 lg:min-h-[46px] lg:text-[15px]"
       >
         {status === "loading" ? copy.loading : copy.submit}
       </button>
-      <p className="mt-2.5 text-center text-[12.5px] font-semibold leading-[1.6] text-[#786C81]">{copy.reassurance}</p>
+      <p className="mt-1.5 text-center text-[12px] font-semibold leading-[1.5] text-[#786C81]">{copy.reassurance}</p>
     </form>
   );
 }
