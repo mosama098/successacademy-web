@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CorporateLeadForm } from "@/components/business/corporate-lead-form";
 import { CtaLink } from "@/components/ui/cta-link";
 import { sitePagesContent } from "@/content/site-pages";
@@ -20,41 +21,6 @@ function TrustIcon({ index }: { index: number }) {
   ];
 
   return <svg className="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">{paths[index]}</svg>;
-}
-
-function CorporateHeroVisual({ isArabic }: { isArabic: boolean }) {
-  return (
-    <svg className="h-auto w-full" viewBox="0 0 600 460" fill="none" role="img" aria-label={isArabic ? "تدريب إنجليزي احترافي لفريق عمل" : "Professional English training for a business team"}>
-      <rect x="32" y="28" width="536" height="396" rx="28" fill="#FCFBFD" stroke="#D9CEE7" strokeWidth="4" />
-      <path d="M33 82h534" stroke="#D9CEE7" strokeWidth="4" />
-      <circle cx="65" cy="55" r="7" fill="#EC911F" />
-      <circle cx="89" cy="55" r="7" fill="#D9CEE7" />
-      <circle cx="113" cy="55" r="7" fill="#391B68" opacity=".35" />
-
-      <rect x="70" y="116" width="314" height="188" rx="18" fill="white" stroke="#CFC2DD" strokeWidth="4" />
-      <path d="M100 274h250" stroke="#E7E0EC" strokeWidth="4" strokeLinecap="round" />
-      <rect x="106" y="190" width="28" height="62" rx="8" fill="#D9CEE7" />
-      <rect x="151" y="164" width="28" height="88" rx="8" fill="#8B70A8" />
-      <rect x="196" y="130" width="28" height="122" rx="8" fill="#391B68" />
-      <path d="m259 225 32-35 30 18 40-55" stroke="#EC911F" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m342 151 20-1-2 20" stroke="#EC911F" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-
-      <rect x="410" y="116" width="120" height="144" rx="16" fill="#F1ECF5" />
-      <path d="M438 150h64M438 178h48M438 206h58" stroke="#391B68" strokeWidth="8" strokeLinecap="round" opacity=".8" />
-      <path d="m443 235 12 11 27-30" stroke="#EC911F" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-
-      <circle cx="145" cy="346" r="24" fill="#6E548D" />
-      <path d="M105 406c3-40 18-60 40-60s37 20 40 60" fill="#391B68" />
-      <circle cx="258" cy="346" r="24" fill="#EC911F" />
-      <path d="M218 406c3-40 18-60 40-60s37 20 40 60" fill="#6E548D" />
-      <circle cx="371" cy="346" r="24" fill="#391B68" />
-      <path d="M331 406c3-40 18-60 40-60s37 20 40 60" fill="#EC911F" />
-
-      <circle cx="480" cy="324" r="25" fill="#391B68" />
-      <path d="M448 405v-46c0-20 13-35 32-35s32 15 32 35v46" fill="#FFFFFF" stroke="#391B68" strokeWidth="6" />
-      <path d="m474 363 10 10 22-24" stroke="#EC911F" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 function BenefitIcon({ index }: { index: number }) {
@@ -112,7 +78,17 @@ export function BusinessPageContent({ locale }: { locale: Locale }) {
               ))}
             </ul>
           </div>
-          <div className="mx-auto w-full max-w-[480px] lg:max-w-[510px]"><CorporateHeroVisual isArabic={isArabic} /></div>
+          <div className="mx-auto w-full max-w-[520px] sm:max-w-[540px] lg:max-w-[560px]">
+            <Image
+              src="/images/corporate-training-hero.png"
+              alt="Corporate English training session for employees"
+              width={1536}
+              height={1024}
+              priority
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="h-auto w-full object-contain"
+            />
+          </div>
         </div>
       </section>
 
