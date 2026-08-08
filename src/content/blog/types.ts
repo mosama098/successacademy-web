@@ -5,6 +5,23 @@ export type BlogContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "list"; items: string[] };
 
+export type StoryblokRichTextMark = {
+  type?: string;
+  attrs?: Record<string, unknown>;
+};
+
+export type StoryblokRichTextNode = {
+  type?: string;
+  text?: string;
+  attrs?: Record<string, unknown>;
+  marks?: StoryblokRichTextMark[];
+  content?: StoryblokRichTextNode[];
+};
+
+export type StoryblokRichTextDocument = StoryblokRichTextNode & {
+  type: "doc";
+};
+
 export type BlogArticle = {
   locale: Locale;
   slug: string;
@@ -18,6 +35,7 @@ export type BlogArticle = {
   featured: boolean;
   published: boolean;
   content: BlogContentBlock[];
+  storyblokBody?: StoryblokRichTextDocument;
   seoTitle: string;
   seoDescription: string;
 };

@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: BlogPageProps) {
 
   const currentLocale = locale as Locale;
   const copy = sitePagesContent[currentLocale].blog;
-  const publishedArticles = getPublishedBlogArticles(currentLocale);
+  const publishedArticles = await getPublishedBlogArticles(currentLocale);
   return createPageMetadata({
     title: `${copy.badge} | Success Academy`,
     description: copy.description,
@@ -39,7 +39,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
   if (!locales.includes(locale as Locale)) notFound();
 
   const currentLocale = locale as Locale;
-  const publishedArticles = getPublishedBlogArticles(currentLocale);
+  const publishedArticles = await getPublishedBlogArticles(currentLocale);
   const paginatedArticles = paginateBlogArticles(publishedArticles, parseRequestedPage(page));
   const pagePath = paginatedArticles.currentPage > 1 ? `blog?page=${paginatedArticles.currentPage}` : "blog";
 

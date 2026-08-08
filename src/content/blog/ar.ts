@@ -1,6 +1,6 @@
 import type { BlogArticle } from "./types";
 
-// Add future Arabic articles to this array and use the same slug in the English file.
+// Migration fallback only. New Arabic articles are published through Storyblok.
 export const arBlogArticles: BlogArticle[] = [
   {
     locale: "ar",

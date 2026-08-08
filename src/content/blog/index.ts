@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n";
+import { getStoryblokBlogArticles } from "@/lib/storyblok";
 import { arBlogArticles } from "./ar";
 import { enBlogArticles } from "./en";
 import type { BlogArticle, BlogContentBlock } from "./types";
@@ -13,12 +14,13 @@ const blogArticleRegistry = {
 } satisfies Record<Locale, BlogArticle[]>;
 
 /*
- * Publishing workflow:
- * 1. Add the complete Arabic record in ar.ts and its English counterpart in en.ts using the same slug.
+ * Local migration fallback:
+ * 1. Keep matching Arabic and English records in ar.ts and en.ts using the same slug.
  * 2. Store the local cover in public/images/blog/ and set image plus meaningful imageAlt values.
  * 3. Complete every required metadata, SEO, and content field defined by BlogArticle.
  * 4. Set published to true when ready; future publication dates remain hidden until that date.
  * 5. Set featured to true on the one article that should lead page 1. Otherwise, newest content leads.
+ * New articles should be published in Storyblok. A matching Storyblok slug overrides this fallback.
  */
 
 function getPublicationTimestamp(value: string) {
@@ -66,7 +68,7 @@ function compareArticles(left: BlogArticle, right: BlogArticle) {
   return dateDifference || left.slug.localeCompare(right.slug);
 }
 
-export function getPublishedBlogArticles(locale: Locale, now = new Date()) {
+export function getLocalPublishedBlogArticles(locale: Locale, now = new Date()) {
   const pairedLocale: Locale = locale === "ar" ? "en" : "ar";
   const pairedArticles = new Map(blogArticleRegistry[pairedLocale].map((article) => [article.slug, article]));
 
@@ -92,6 +94,47 @@ export function getPublishedBlogArticles(locale: Locale, now = new Date()) {
     .toSorted(compareArticles);
 }
 
+function isCompleteStoryblokArticle(article: BlogArticle) {
+  return (
+    article.storyblokBody?.type === "doc" &&
+    article.slug.trim().length > 0 &&
+    article.title.trim().length > 0 &&
+    article.excerpt.trim().length > 0 &&
+    article.category.trim().length > 0 &&
+    article.readingTime.trim().length > 0 &&
+    getPublicationTimestamp(article.publishDate) !== null
+  );
+}
+
+export async function getPublishedBlogArticles(locale: Locale, now = new Date()) {
+  const pairedLocale: Locale = locale === "ar" ? "en" : "ar";
+  const [localizedStoryblokArticles, pairedStoryblokArticles] = await Promise.all([
+    getStoryblokBlogArticles(locale),
+    getStoryblokBlogArticles(pairedLocale),
+  ]);
+  const pairedStoryblokSlugs = new Set(
+    pairedStoryblokArticles.filter(isCompleteStoryblokArticle).map((article) => article.slug),
+  );
+  const storyblokArticles = localizedStoryblokArticles.filter((article) => {
+    const publishTimestamp = getPublicationTimestamp(article.publishDate);
+
+    return (
+      isCompleteStoryblokArticle(article) &&
+      pairedStoryblokSlugs.has(article.slug) &&
+      publishTimestamp !== null &&
+      publishTimestamp <= now.getTime()
+    );
+  });
+  const articlesBySlug = new Map(
+    getLocalPublishedBlogArticles(locale, now).map((article) => [article.slug, article]),
+  );
+
+  // Storyblok is authoritative during migration when a published slug exists in both sources.
+  for (const article of storyblokArticles) articlesBySlug.set(article.slug, article);
+
+  return Array.from(articlesBySlug.values()).toSorted(compareArticles);
+}
+
 export function paginateBlogArticles(articles: BlogArticle[], requestedPage: number) {
   const totalPages = Math.max(1, Math.ceil(articles.length / BLOG_ARTICLES_PER_PAGE));
   const safeRequestedPage = Number.isSafeInteger(requestedPage) ? requestedPage : 1;
@@ -105,11 +148,6 @@ export function paginateBlogArticles(articles: BlogArticle[], requestedPage: num
   };
 }
 
-export const blogArticles = {
-  ar: getPublishedBlogArticles("ar"),
-  en: getPublishedBlogArticles("en"),
-} satisfies Record<Locale, BlogArticle[]>;
-
-export function getBlogArticle(locale: Locale, slug: string) {
-  return getPublishedBlogArticles(locale).find((article) => article.slug === slug);
+export async function getBlogArticle(locale: Locale, slug: string) {
+  return (await getPublishedBlogArticles(locale)).find((article) => article.slug === slug);
 }
