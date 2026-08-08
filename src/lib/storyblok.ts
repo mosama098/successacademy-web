@@ -175,8 +175,6 @@ function normalizeStory(story: StoryblokStory, locale: Locale, region: Storyblok
     image,
     imageAlt: getAssetAlt(story.content.cover_image, title),
     featured: story.content.featured === true,
-    published: true,
-    content: [],
     storyblokBody,
     seoTitle: readText(story.content.seo_title) || title,
     seoDescription: readText(story.content.seo_description) || excerpt,

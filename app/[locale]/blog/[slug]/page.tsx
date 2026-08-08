@@ -1,11 +1,7 @@
 import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/blog/blog-article";
 import { SitePageShell } from "@/components/site-page-shell";
-import {
-  getBlogArticle,
-  getLocalPublishedBlogArticles,
-  getPublishedBlogArticles,
-} from "@/content/blog";
+import { getBlogArticle, getPublishedBlogArticles } from "@/content/blog";
 import { locales, type Locale } from "@/lib/i18n";
 import { createPageMetadata } from "@/lib/page-metadata";
 
@@ -13,9 +9,13 @@ type ArticlePageProps = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
-export function generateStaticParams() {
-  return locales.flatMap((locale) =>
-    getLocalPublishedBlogArticles(locale).map((article) => ({ locale, slug: article.slug })),
+export async function generateStaticParams() {
+  const articlesByLocale = await Promise.all(
+    locales.map(async (locale) => ({ locale, articles: await getPublishedBlogArticles(locale) })),
+  );
+
+  return articlesByLocale.flatMap(({ locale, articles }) =>
+    articles.map((article) => ({ locale, slug: article.slug })),
   );
 }
 

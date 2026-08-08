@@ -64,30 +64,7 @@ export function BlogArticle({
         </div>
 
         <div className="mx-auto max-w-[760px] py-8 text-[16px] font-medium leading-[1.9] text-[#51465B] sm:py-10 sm:text-[17px]">
-          {article.storyblokBody ? (
-            <StoryblokRichText document={article.storyblokBody} />
-          ) : (
-            article.content.map((block, index) => {
-              if (block.type === "heading") {
-                return <h2 key={`${block.type}-${index}`} className="mb-3 mt-9 text-[25px] font-black leading-[1.4] text-[#391B68] sm:text-[28px]">{block.text}</h2>;
-              }
-
-              if (block.type === "list") {
-                return (
-                  <ul key={`${block.type}-${index}`} className="my-5 grid gap-3 border-s-2 border-[#DDD3E8] ps-4 sm:ps-5">
-                    {block.items.map((item) => (
-                      <li key={item} className="flex items-start gap-3">
-                        <span className="mt-[0.72em] size-2 shrink-0 rounded-full bg-[#EC911F]" aria-hidden="true" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                );
-              }
-
-              return <p key={`${block.type}-${index}`} className="my-4">{block.text}</p>;
-            })
-          )}
+          <StoryblokRichText document={article.storyblokBody} />
         </div>
 
         <aside className="mx-auto max-w-[820px] rounded-[22px] bg-[#391B68] px-5 py-7 text-center text-white sm:px-8 sm:py-8">
