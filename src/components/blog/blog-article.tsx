@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { blogArticles, type BlogArticle as BlogArticleData } from "@/content/blog";
+import type { BlogArticle as BlogArticleData } from "@/content/blog";
 import { sitePagesContent } from "@/content/site-pages";
 import type { Locale } from "@/lib/i18n";
+import { StoryblokRichText } from "./storyblok-rich-text";
 
 function formatDate(locale: Locale, value: string) {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
@@ -21,10 +22,17 @@ function ArrowIcon({ isArabic }: { isArabic: boolean }) {
   );
 }
 
-export function BlogArticle({ locale, article }: { locale: Locale; article: BlogArticleData }) {
+export function BlogArticle({
+  locale,
+  article,
+  relatedArticles,
+}: {
+  locale: Locale;
+  article: BlogArticleData;
+  relatedArticles: BlogArticleData[];
+}) {
   const copy = sitePagesContent[locale].blog;
   const isArabic = locale === "ar";
-  const relatedArticles = blogArticles[locale].filter((item) => item.slug !== article.slug).slice(0, 2);
   const separator = isArabic ? "←" : "→";
 
   return (
@@ -52,30 +60,11 @@ export function BlogArticle({ locale, article }: { locale: Locale; article: Blog
         </header>
 
         <div className="relative mt-8 aspect-[16/8.5] overflow-hidden rounded-[24px] border border-[#391B68]/12 bg-[#F3EEF7] shadow-[0_16px_44px_rgba(57,27,104,0.08)]">
-          <Image src={article.image} alt={article.title} fill priority sizes="(min-width: 1024px) 1040px, 100vw" className="object-cover" />
+          <Image src={article.image} alt={article.imageAlt} fill priority sizes="(min-width: 1024px) 1040px, 100vw" className="object-cover" />
         </div>
 
         <div className="mx-auto max-w-[760px] py-8 text-[16px] font-medium leading-[1.9] text-[#51465B] sm:py-10 sm:text-[17px]">
-          {article.content.map((block, index) => {
-            if (block.type === "heading") {
-              return <h2 key={`${block.type}-${index}`} className="mb-3 mt-9 text-[25px] font-black leading-[1.4] text-[#391B68] sm:text-[28px]">{block.text}</h2>;
-            }
-
-            if (block.type === "list") {
-              return (
-                <ul key={`${block.type}-${index}`} className="my-5 grid gap-3 border-s-2 border-[#DDD3E8] ps-4 sm:ps-5">
-                  {block.items.map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <span className="mt-[0.72em] size-2 shrink-0 rounded-full bg-[#EC911F]" aria-hidden="true" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              );
-            }
-
-            return <p key={`${block.type}-${index}`} className="my-4">{block.text}</p>;
-          })}
+          <StoryblokRichText document={article.storyblokBody} />
         </div>
 
         <aside className="mx-auto max-w-[820px] rounded-[22px] bg-[#391B68] px-5 py-7 text-center text-white sm:px-8 sm:py-8">

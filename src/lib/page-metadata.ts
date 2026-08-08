@@ -17,6 +17,7 @@ export function createPageMetadata({
 }: PageMetadataInput): Metadata {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
   const canonical = siteUrl ? `${siteUrl}${path}` : undefined;
+  const imageUrl = image?.startsWith("https://") ? image : siteUrl && image ? `${siteUrl}${image}` : undefined;
 
   return {
     title,
@@ -27,7 +28,7 @@ export function createPageMetadata({
       description,
       type,
       ...(canonical ? { url: canonical } : {}),
-      ...(canonical && image ? { images: [{ url: `${siteUrl}${image}`, alt: title }] } : {}),
+      ...(imageUrl ? { images: [{ url: imageUrl, alt: title }] } : {}),
     },
   };
 }

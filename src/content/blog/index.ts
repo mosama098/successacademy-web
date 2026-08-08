@@ -1,25 +1,10 @@
 import type { Locale } from "@/lib/i18n";
-import { arBlogArticles } from "./ar";
-import { enBlogArticles } from "./en";
-import type { BlogArticle, BlogContentBlock } from "./types";
+import { getStoryblokBlogArticle, getStoryblokBlogArticles } from "@/lib/storyblok";
+import type { BlogArticle } from "./types";
 
-export type { BlogArticle, BlogContentBlock } from "./types";
+export type { BlogArticle } from "./types";
 
 export const BLOG_ARTICLES_PER_PAGE = 9;
-
-const blogArticleRegistry = {
-  ar: arBlogArticles,
-  en: enBlogArticles,
-} satisfies Record<Locale, BlogArticle[]>;
-
-/*
- * Publishing workflow:
- * 1. Add the complete Arabic record in ar.ts and its English counterpart in en.ts using the same slug.
- * 2. Store the local cover in public/images/blog/ and set image plus meaningful imageAlt values.
- * 3. Complete every required metadata, SEO, and content field defined by BlogArticle.
- * 4. Set published to true when ready; future publication dates remain hidden until that date.
- * 5. Set featured to true on the one article that should lead page 1. Otherwise, newest content leads.
- */
 
 function getPublicationTimestamp(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
@@ -30,34 +15,6 @@ function getPublicationTimestamp(value: string) {
   return timestamp;
 }
 
-function isCompleteBlock(block: BlogContentBlock) {
-  if (block.type === "list") return block.items.length > 0 && block.items.every((item) => item.trim().length > 0);
-  return block.text.trim().length > 0;
-}
-
-function isCompleteArticle(article: BlogArticle) {
-  const requiredText = [
-    article.slug,
-    article.title,
-    article.excerpt,
-    article.publishDate,
-    article.readingTime,
-    article.category,
-    article.image,
-    article.imageAlt,
-    article.seoTitle,
-    article.seoDescription,
-  ];
-
-  return (
-    requiredText.every((value) => value.trim().length > 0) &&
-    article.image.startsWith("/images/blog/") &&
-    getPublicationTimestamp(article.publishDate) !== null &&
-    article.content.length > 0 &&
-    article.content.every(isCompleteBlock)
-  );
-}
-
 function compareArticles(left: BlogArticle, right: BlogArticle) {
   const featuredDifference = Number(right.featured) - Number(left.featured);
   if (featuredDifference !== 0) return featuredDifference;
@@ -66,30 +23,28 @@ function compareArticles(left: BlogArticle, right: BlogArticle) {
   return dateDifference || left.slug.localeCompare(right.slug);
 }
 
-export function getPublishedBlogArticles(locale: Locale, now = new Date()) {
-  const pairedLocale: Locale = locale === "ar" ? "en" : "ar";
-  const pairedArticles = new Map(blogArticleRegistry[pairedLocale].map((article) => [article.slug, article]));
+function isCompleteStoryblokArticle(article: BlogArticle) {
+  return (
+    article.storyblokBody.type === "doc" &&
+    article.slug.trim().length > 0 &&
+    article.title.trim().length > 0 &&
+    article.excerpt.trim().length > 0 &&
+    article.category.trim().length > 0 &&
+    article.readingTime.trim().length > 0 &&
+    getPublicationTimestamp(article.publishDate) !== null
+  );
+}
 
-  return blogArticleRegistry[locale]
-    .filter((article) => {
-      const pairedArticle = pairedArticles.get(article.slug);
-      const publishTimestamp = getPublicationTimestamp(article.publishDate);
-      const pairedPublishTimestamp = pairedArticle ? getPublicationTimestamp(pairedArticle.publishDate) : null;
+export async function getPublishedBlogArticles(locale: Locale, now = new Date()) {
+  return (await getStoryblokBlogArticles(locale)).filter((article) => {
+    const publishTimestamp = getPublicationTimestamp(article.publishDate);
 
-      return (
-        article.locale === locale &&
-        article.published &&
-        publishTimestamp !== null &&
-        publishTimestamp <= now.getTime() &&
-        isCompleteArticle(article) &&
-        pairedArticle?.locale === pairedLocale &&
-        pairedArticle.published &&
-        pairedPublishTimestamp !== null &&
-        pairedPublishTimestamp <= now.getTime() &&
-        isCompleteArticle(pairedArticle)
-      );
-    })
-    .toSorted(compareArticles);
+    return (
+      isCompleteStoryblokArticle(article) &&
+      publishTimestamp !== null &&
+      publishTimestamp <= now.getTime()
+    );
+  }).toSorted(compareArticles);
 }
 
 export function paginateBlogArticles(articles: BlogArticle[], requestedPage: number) {
@@ -105,11 +60,20 @@ export function paginateBlogArticles(articles: BlogArticle[], requestedPage: num
   };
 }
 
-export const blogArticles = {
-  ar: getPublishedBlogArticles("ar"),
-  en: getPublishedBlogArticles("en"),
-} satisfies Record<Locale, BlogArticle[]>;
+export async function getBlogArticle(locale: Locale, slug: string, now = new Date()) {
+  const storyblokArticle = await getStoryblokBlogArticle(locale, slug);
+  const storyblokPublishTimestamp = storyblokArticle
+    ? getPublicationTimestamp(storyblokArticle.publishDate)
+    : null;
 
-export function getBlogArticle(locale: Locale, slug: string) {
-  return getPublishedBlogArticles(locale).find((article) => article.slug === slug);
+  if (
+    storyblokArticle &&
+    isCompleteStoryblokArticle(storyblokArticle) &&
+    storyblokPublishTimestamp !== null &&
+    storyblokPublishTimestamp <= now.getTime()
+  ) {
+    return storyblokArticle;
+  }
+
+  return undefined;
 }

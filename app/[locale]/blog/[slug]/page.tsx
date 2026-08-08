@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/blog/blog-article";
 import { SitePageShell } from "@/components/site-page-shell";
-import { blogArticles, getBlogArticle } from "@/content/blog";
+import { getBlogArticle, getPublishedBlogArticles } from "@/content/blog";
 import { locales, type Locale } from "@/lib/i18n";
 import { createPageMetadata } from "@/lib/page-metadata";
 
@@ -9,9 +9,13 @@ type ArticlePageProps = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
-export function generateStaticParams() {
-  return locales.flatMap((locale) =>
-    blogArticles[locale].map((article) => ({ locale, slug: article.slug })),
+export async function generateStaticParams() {
+  const articlesByLocale = await Promise.all(
+    locales.map(async (locale) => ({ locale, articles: await getPublishedBlogArticles(locale) })),
+  );
+
+  return articlesByLocale.flatMap(({ locale, articles }) =>
+    articles.map((article) => ({ locale, slug: article.slug })),
   );
 }
 
@@ -19,7 +23,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const { locale, slug } = await params;
   if (!locales.includes(locale as Locale)) return {};
 
-  const article = getBlogArticle(locale as Locale, slug);
+  const article = await getBlogArticle(locale as Locale, slug);
   if (!article) return {};
 
   return createPageMetadata({
@@ -36,12 +40,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!locales.includes(locale as Locale)) notFound();
 
   const currentLocale = locale as Locale;
-  const article = getBlogArticle(currentLocale, slug);
+  const [article, articles] = await Promise.all([
+    getBlogArticle(currentLocale, slug),
+    getPublishedBlogArticles(currentLocale),
+  ]);
   if (!article) notFound();
+
+  const relatedArticles = articles.filter((candidate) => candidate.slug !== slug).slice(0, 2);
 
   return (
     <SitePageShell locale={currentLocale} page="blog_article" pagePath={`blog/${slug}`}>
-      <BlogArticle locale={currentLocale} article={article} />
+      <BlogArticle locale={currentLocale} article={article} relatedArticles={relatedArticles} />
     </SitePageShell>
   );
 }
