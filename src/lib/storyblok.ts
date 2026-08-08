@@ -37,11 +37,17 @@ type StoryblokRegion = keyof typeof storyblokRegions;
 
 type StoryblokStory = {
   slug?: unknown;
+  first_published_at?: unknown;
+  published_at?: unknown;
   content?: unknown;
 };
 
 type StoryblokResponse = {
   stories?: unknown;
+};
+
+type StoryblokStoryResponse = {
+  story?: unknown;
 };
 
 let warnedAboutMissingToken = false;
@@ -97,17 +103,21 @@ function getAssetAlt(value: unknown, fallback: string) {
   return readText(value.alt) || readText(value.title) || fallback;
 }
 
-function normalizePublishDate(value: unknown) {
-  const text = readText(value);
-  if (!text) return "";
+function normalizePublishDate(...values: unknown[]) {
+  for (const value of values) {
+    const text = readText(value);
+    if (!text) continue;
 
-  const datePart = text.slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return "";
+    const datePart = text.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) continue;
 
-  const timestamp = Date.parse(`${datePart}T00:00:00Z`);
-  if (Number.isNaN(timestamp) || new Date(timestamp).toISOString().slice(0, 10) !== datePart) return "";
+    const timestamp = Date.parse(`${datePart}T00:00:00Z`);
+    if (!Number.isNaN(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === datePart) {
+      return datePart;
+    }
+  }
 
-  return datePart;
+  return "";
 }
 
 function isRichTextNode(value: unknown): value is StoryblokRichTextNode {
@@ -141,10 +151,14 @@ function normalizeStory(story: StoryblokStory, locale: Locale, region: Storyblok
 
   const slug = readText(story.slug);
   const title = readText(story.content.title);
-  const excerpt = readText(story.content.excerpt);
-  const category = readText(story.content.category);
-  const publishDate = normalizePublishDate(story.content.published_at);
   const storyblokBody = normalizeRichText(story.content.body);
+  const excerpt = readText(story.content.excerpt) || readText(story.content.seo_description) || title;
+  const category = readText(story.content.category) || (locale === "ar" ? "مقالات" : "Articles");
+  const publishDate = normalizePublishDate(
+    story.content.published_at,
+    story.first_published_at,
+    story.published_at,
+  );
 
   if (!slug || !title || !excerpt || !category || !publishDate || !storyblokBody) return null;
 
@@ -202,6 +216,37 @@ async function requestStoryblokPage(
   return stories.filter(isRecord) as StoryblokStory[];
 }
 
+async function requestStoryblokStory(
+  token: string,
+  locale: Locale,
+  region: StoryblokRegion,
+  slug: string,
+) {
+  const url = new URL(`${storyblokRegions[region].apiBaseUrl}/stories/${encodeURIComponent(slug)}`);
+  url.searchParams.set("token", token);
+  url.searchParams.set("version", "published");
+  if (locale === "ar") url.searchParams.set("language", "ar");
+
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    next: {
+      revalidate: STORYBLOK_REVALIDATE_SECONDS,
+      tags: ["storyblok-articles", `storyblok-articles-${locale}`, `storyblok-article-${locale}-${slug}`],
+    },
+  });
+
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Storyblok returned HTTP ${response.status}`);
+
+  const data: unknown = await response.json();
+  if (!isRecord(data)) throw new Error("Storyblok returned an invalid response");
+
+  const story = (data as StoryblokStoryResponse).story;
+  if (!isRecord(story)) throw new Error("Storyblok response did not include a story");
+
+  return story as StoryblokStory;
+}
+
 export async function getStoryblokBlogArticles(locale: Locale) {
   const token = process.env.STORYBLOK_ACCESS_TOKEN?.trim();
 
@@ -231,5 +276,20 @@ export async function getStoryblokBlogArticles(locale: Locale) {
   } catch {
     warnInDevelopment("The Content Delivery API request failed; using local blog content only.");
     return [];
+  }
+}
+
+export async function getStoryblokBlogArticle(locale: Locale, slug: string) {
+  const token = process.env.STORYBLOK_ACCESS_TOKEN?.trim();
+  if (!token) return null;
+
+  const region = getStoryblokRegion();
+
+  try {
+    const story = await requestStoryblokStory(token, locale, region, slug);
+    return story ? normalizeStory(story, locale, region) : null;
+  } catch {
+    warnInDevelopment(`The Content Delivery API request for "${slug}" failed; using local blog content only.`);
+    return null;
   }
 }

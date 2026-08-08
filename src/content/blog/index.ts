@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n";
-import { getStoryblokBlogArticles } from "@/lib/storyblok";
+import { getStoryblokBlogArticle, getStoryblokBlogArticles } from "@/lib/storyblok";
 import { arBlogArticles } from "./ar";
 import { enBlogArticles } from "./en";
 import type { BlogArticle, BlogContentBlock } from "./types";
@@ -107,20 +107,11 @@ function isCompleteStoryblokArticle(article: BlogArticle) {
 }
 
 export async function getPublishedBlogArticles(locale: Locale, now = new Date()) {
-  const pairedLocale: Locale = locale === "ar" ? "en" : "ar";
-  const [localizedStoryblokArticles, pairedStoryblokArticles] = await Promise.all([
-    getStoryblokBlogArticles(locale),
-    getStoryblokBlogArticles(pairedLocale),
-  ]);
-  const pairedStoryblokSlugs = new Set(
-    pairedStoryblokArticles.filter(isCompleteStoryblokArticle).map((article) => article.slug),
-  );
-  const storyblokArticles = localizedStoryblokArticles.filter((article) => {
+  const storyblokArticles = (await getStoryblokBlogArticles(locale)).filter((article) => {
     const publishTimestamp = getPublicationTimestamp(article.publishDate);
 
     return (
       isCompleteStoryblokArticle(article) &&
-      pairedStoryblokSlugs.has(article.slug) &&
       publishTimestamp !== null &&
       publishTimestamp <= now.getTime()
     );
@@ -148,6 +139,20 @@ export function paginateBlogArticles(articles: BlogArticle[], requestedPage: num
   };
 }
 
-export async function getBlogArticle(locale: Locale, slug: string) {
-  return (await getPublishedBlogArticles(locale)).find((article) => article.slug === slug);
+export async function getBlogArticle(locale: Locale, slug: string, now = new Date()) {
+  const storyblokArticle = await getStoryblokBlogArticle(locale, slug);
+  const storyblokPublishTimestamp = storyblokArticle
+    ? getPublicationTimestamp(storyblokArticle.publishDate)
+    : null;
+
+  if (
+    storyblokArticle &&
+    isCompleteStoryblokArticle(storyblokArticle) &&
+    storyblokPublishTimestamp !== null &&
+    storyblokPublishTimestamp <= now.getTime()
+  ) {
+    return storyblokArticle;
+  }
+
+  return getLocalPublishedBlogArticles(locale, now).find((article) => article.slug === slug);
 }

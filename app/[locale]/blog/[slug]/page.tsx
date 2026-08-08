@@ -40,8 +40,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!locales.includes(locale as Locale)) notFound();
 
   const currentLocale = locale as Locale;
-  const articles = await getPublishedBlogArticles(currentLocale);
-  const article = articles.find((candidate) => candidate.slug === slug);
+  const [article, articles] = await Promise.all([
+    getBlogArticle(currentLocale, slug),
+    getPublishedBlogArticles(currentLocale),
+  ]);
   if (!article) notFound();
 
   const relatedArticles = articles.filter((candidate) => candidate.slug !== slug).slice(0, 2);
