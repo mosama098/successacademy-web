@@ -276,7 +276,7 @@ const ar: SitePagesContent = {
       errors: {
         companyName: "اسم الشركة مطلوب",
         contactName: "اسم مسؤول التواصل مطلوب",
-        phone: "من فضلك اكتب رقم موبايل مصري صحيح، مثل 01012345678",
+        phone: "من فضلك اكتب رقم موبايل صحيح، مثل 01012345678 أو +966501234567",
         email: "اكتب بريدًا إلكترونيًا صحيحًا",
         employeeCount: "اختار عدد الموظفين",
         preferredTrainingMode: "اختار طريقة التدريب المفضلة",
@@ -466,7 +466,7 @@ const en: SitePagesContent = {
       errors: {
         companyName: "Company name is required",
         contactName: "Contact name is required",
-        phone: "Please enter a valid Egyptian mobile number, such as 01012345678.",
+        phone: "Please enter a valid mobile number, such as 01012345678 or +966501234567.",
         email: "Enter a valid email address",
         employeeCount: "Choose an employee count",
         preferredTrainingMode: "Choose a preferred training mode",

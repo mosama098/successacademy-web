@@ -1,7 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import type {
   StoryblokRichTextDocument,
-  StoryblokRichTextMark,
   StoryblokRichTextNode,
 } from "@/content/blog/types";
 
@@ -9,15 +8,19 @@ function readString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-function getSafeHref(mark: StoryblokRichTextMark) {
-  const href = readString(mark.attrs?.href).trim();
+export function getSafeStoryblokHref(value: unknown) {
+  const href = readString(value).trim();
   if (!href) return null;
-  if (href.startsWith("/") || href.startsWith("#")) return href;
-  if (href.startsWith("mailto:") || href.startsWith("tel:")) return href;
+  if (href.startsWith("#")) return href;
+  if (href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\")) {
+    return href;
+  }
 
   try {
     const url = new URL(href);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+    return url.protocol === "https:" || url.protocol === "mailto:" || url.protocol === "tel:"
+      ? url.toString()
+      : null;
   } catch {
     return null;
   }
@@ -34,7 +37,7 @@ function renderMarkedText(node: StoryblokRichTextNode, key: string) {
     } else if (mark.type === "italic") {
       rendered = <em key={markKey}>{rendered}</em>;
     } else if (mark.type === "link") {
-      const href = getSafeHref(mark);
+      const href = getSafeStoryblokHref(mark.attrs?.href);
       if (!href) continue;
 
       const opensInNewTab = mark.attrs?.target === "_blank";

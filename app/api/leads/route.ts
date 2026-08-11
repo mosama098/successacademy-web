@@ -403,19 +403,19 @@ function buildMetadata(metadata: LeadMetadata | undefined, request: Request) {
 }
 
 function getClientIp(request: Request) {
+  // Nginx Proxy Manager is the trusted public ingress and overwrites X-Real-IP.
+  const realIp = normalizeIpAddress(request.headers.get("x-real-ip"));
+  if (realIp) return realIp;
+
   const forwardedFor = request.headers.get("x-forwarded-for");
 
   if (forwardedFor && forwardedFor.length <= 1_024) {
-    const forwardedAddresses = forwardedFor.split(",").slice(-10);
-
-    // Trusted proxies append or replace the right-most hop; left-most values are easiest to spoof.
-    for (let index = forwardedAddresses.length - 1; index >= 0; index -= 1) {
-      const address = normalizeIpAddress(forwardedAddresses[index]);
-      if (address) return address;
-    }
+    const rightmostAddress = forwardedFor.split(",").at(-1) ?? null;
+    const forwardedIp = normalizeIpAddress(rightmostAddress);
+    if (forwardedIp) return forwardedIp;
   }
 
-  return normalizeIpAddress(request.headers.get("x-real-ip")) ?? "unknown";
+  return "unknown";
 }
 
 function normalizeIpAddress(value: string | null) {

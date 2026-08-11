@@ -127,7 +127,7 @@ export const arContent: LandingContent = {
     ],
     errors: {
       fullName: "الاسم مطلوب",
-      phone: "من فضلك اكتب رقم موبايل مصري صحيح، مثل 01012345678",
+      phone: "من فضلك اكتب رقم موبايل صحيح، مثل 01012345678 أو +966501234567",
       email: "اكتب بريد إلكتروني صحيح",
       learningGoal: "اختار هدفك من الإنجليزي",
       preferredLearningMode: "اختار طريقة التعلم المناسبة",

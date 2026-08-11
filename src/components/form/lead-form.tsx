@@ -288,7 +288,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                   error={errors.phone}
                   required
                   type="tel"
-                  inputMode="numeric"
+                  inputMode="tel"
                   autoComplete="tel"
                   inputClassName={inputClassName}
                   dir="ltr"

@@ -234,7 +234,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
             data-field="phone"
             className={`${inputClass} ${errors.phone ? "!border-[#B42318]" : ""}`}
             type="tel"
-            inputMode="numeric"
+            inputMode="tel"
             autoComplete="tel"
             dir="ltr"
             value={form.phone}
