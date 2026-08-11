@@ -15,11 +15,21 @@ export function normalizeEgyptianMobile(value: string): string | null {
   }
 
   const compact = toAsciiDigits(trimmed).replace(/[\s-]/g, "");
-  const localNumber = compact.startsWith("+20")
-    ? `0${compact.slice(3)}`
-    : compact.startsWith("0020")
-      ? `0${compact.slice(4)}`
-      : compact;
+  const internationalNumber = compact.startsWith("00")
+    ? `+${compact.slice(2)}`
+    : compact;
 
-  return /^01[0125]\d{8}$/.test(localNumber) ? localNumber : null;
+  if (/^01[0125]\d{8}$/.test(internationalNumber)) {
+    return `+20${internationalNumber.slice(1)}`;
+  }
+
+  if (internationalNumber.startsWith("+20")) {
+    return /^\+201[0125]\d{8}$/.test(internationalNumber)
+      ? internationalNumber
+      : null;
+  }
+
+  return /^\+[1-9]\d{7,14}$/.test(internationalNumber)
+    ? internationalNumber
+    : null;
 }
