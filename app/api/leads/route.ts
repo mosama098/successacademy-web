@@ -1,5 +1,9 @@
 import { isIP } from "node:net";
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { readAttemptToken, setAttemptCookie } from "@/features/placement-test/server/cookie";
+import { getExistingAttempt } from "@/features/placement-test/server/attempt-service";
+import { createStoredAttempt } from "@/features/placement-test/server/storage";
 import { normalizeEgyptianMobile } from "@/lib/phone";
 
 type JsonObject = Record<string, unknown>;
@@ -38,6 +42,16 @@ const corporateFields = new Set([
   "preferredTrainingMode",
   "trainingGoal",
   "notes",
+  "consent",
+  "company",
+  "metadata",
+]);
+
+const placementFields = new Set([
+  "source",
+  "fullName",
+  "phone",
+  "email",
   "consent",
   "company",
   "metadata",
@@ -103,16 +117,22 @@ export async function POST(request: Request) {
   const envelopeIssues: string[] = [];
   const source = readOptionalString(body, "source", 32, envelopeIssues);
   const isCorporate = source === "corporate_training";
+  const isPlacement = source === "placement_test";
 
   if (
     Object.hasOwn(body, "source") &&
     source !== "website" &&
-    source !== "corporate_training"
+    source !== "corporate_training" &&
+    source !== "placement_test"
   ) {
     addIssue(envelopeIssues, "source");
   }
 
-  const allowedFields = isCorporate ? corporateFields : individualFields;
+  const allowedFields = isCorporate
+    ? corporateFields
+    : isPlacement
+      ? placementFields
+      : individualFields;
   if (Object.keys(body).some((field) => !allowedFields.has(field))) {
     addIssue(envelopeIssues, "request");
   }
@@ -126,9 +146,19 @@ export async function POST(request: Request) {
 
   const result = isCorporate
     ? prepareCorporateLead(body, request)
-    : prepareIndividualLead(body, request);
+    : isPlacement
+      ? preparePlacementLead(body, request)
+      : prepareIndividualLead(body, request);
 
   if (!result.ok) return validationError(result.missing);
+
+  if (isPlacement) {
+    const existingToken = readAttemptToken(request.headers.get("cookie"));
+    const existingAttempt = existingToken ? await getExistingAttempt(existingToken) : null;
+    if (existingAttempt) {
+      return NextResponse.json({ ok: true, placementAttempt: true, existing: true });
+    }
+  }
 
   const webhookUrl = process.env.LEADS_WEBHOOK_URL;
   const webhookSecret = process.env.LEADS_WEBHOOK_SECRET;
@@ -163,10 +193,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
     }
 
+    if (isPlacement && "leadReference" in result.payload) {
+      try {
+        const { token } = await createStoredAttempt(
+          result.payload.locale === "en" ? "en" : "ar",
+          result.payload.leadReference,
+        );
+        const placementResponse = NextResponse.json({ ok: true, placementAttempt: true });
+        setAttemptCookie(placementResponse, token);
+        return placementResponse;
+      } catch {
+        return NextResponse.json(
+          { ok: false, error: "submission_unavailable" },
+          { status: 500 },
+        );
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
   }
+}
+
+function preparePlacementLead(body: JsonObject, request: Request) {
+  const missing: string[] = [];
+  const fullName = readRequiredString(body, "fullName", 120, missing);
+  const phone = readRequiredString(body, "phone", 32, missing);
+  const email = readOptionalString(body, "email", 254, missing);
+  const metadata = readMetadata(body.metadata, missing);
+  const normalizedPhone = normalizeEgyptianMobile(phone);
+
+  if (!normalizedPhone) addIssue(missing, "phone");
+  if (email && !emailPattern.test(email.trim())) addIssue(missing, "email");
+  if (body.consent !== true) addIssue(missing, "consent");
+
+  if (missing.length > 0 || !normalizedPhone) {
+    return { ok: false as const, missing } satisfies ValidationFailure;
+  }
+
+  return {
+    ok: true as const,
+    payload: {
+      status: "registered_not_started",
+      source: "placement_test",
+      leadReference: randomUUID(),
+      locale: metadata?.locale === "en" ? "en" : "ar",
+      submittedAt: new Date().toISOString(),
+      fullName: fullName.trim(),
+      phone: normalizedPhone,
+      email: email.trim(),
+      metadata: buildMetadata(metadata, request),
+    },
+  };
 }
 
 function prepareIndividualLead(body: JsonObject, request: Request) {

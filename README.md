@@ -2,7 +2,7 @@
 
 Bilingual Arabic/English marketing funnel for Success Academy.
 
-The website is focused on lead capture for a free external English level assessment. It does not include an internal exam, CRM, LMS, TMS, student portal, instructor portal, admin dashboard, or payment flow.
+The website combines the Success Academy marketing funnel with a secure English placement assessment. It does not include a CRM, LMS, TMS, student portal, instructor portal, admin dashboard, or payment flow.
 
 ## Routes
 
@@ -11,7 +11,12 @@ The website is focused on lead capture for a free external English level assessm
 - `/en` English landing page
 - `/ar/thank-you` Arabic confirmation page
 - `/en/thank-you` English confirmation page
+- `/ar/placement-test` Arabic placement registration
+- `/en/placement-test` English placement registration
+- `/ar/placement-test/assessment` Arabic assessment experience
+- `/en/placement-test/assessment` English assessment experience
 - `/api/leads` lead capture API
+- `/api/placement-test/attempt` secure attempt state and answer API
 
 ## Run locally
 
@@ -46,6 +51,7 @@ NEXT_PUBLIC_YOUTUBE_URL=
 NEXT_PUBLIC_LINKEDIN_URL=
 LEADS_WEBHOOK_URL=
 LEADS_WEBHOOK_SECRET=
+PLACEMENT_TEST_DATA_DIR=
 ```
 
 ## Lead webhook
@@ -70,3 +76,17 @@ Tracking IDs are optional and loaded only when environment variables exist.
 GA4 is currently managed through Google Tag Manager. Keep `NEXT_PUBLIC_GA4_ID` empty while the GA4 tag is installed in GTM. If both IDs are configured, the application loads GTM only and suppresses the direct GA4 loader to avoid duplicate page views.
 
 Tracked events include page view, CTA click, form start, assessment time select, successful lead submit, WhatsApp click, request call click, language switch, and FAQ open.
+
+## Placement assessment persistence
+
+Placement attempts are stored server-side as one atomic JSON record per opaque attempt-token hash.
+The records contain an opaque lead reference rather than the student's name, phone number, or email.
+
+- Development defaults to `.data/placement-test`.
+- Production defaults to `/app/data/placement-test`.
+- `PLACEMENT_TEST_DATA_DIR` may override the server-only path when needed.
+- Production mounts `/opt/successacademy-web/.placement-data` at the default container path so
+  autosaved answers and resume state survive container replacement.
+
+Keep this directory private and writable only by the deployment/runtime account. It must never be
+served as a public asset directory.

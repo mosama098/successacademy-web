@@ -69,11 +69,15 @@ jobs:
           fi
 
           echo "=== Starting new version ==="
+          mkdir -p /opt/successacademy-web/.placement-data
+          chmod 700 /opt/successacademy-web/.placement-data
+
           if docker run -d \
             --name successacademy-main-web \
             --restart unless-stopped \
             --env-file /opt/successacademy-web/.env.local \
             --network my-project_default \
+            -v /opt/successacademy-web/.placement-data:/app/data/placement-test \
             -p 127.0.0.1:3002:3000 \
             successacademy-main-web:deploy
           then

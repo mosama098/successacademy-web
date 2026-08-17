@@ -169,3 +169,15 @@ a:focus-visible {
   }
 }
 
+@keyframes placementReveal {
+  from {
+    transform: translateY(8px) scale(0.92);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+

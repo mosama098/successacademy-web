@@ -80,3 +80,21 @@ export function trackFaqOpen(payload: TrackingPayload = {}) {
   metaEvent("FAQOpen", payload);
   tiktokEvent("FAQOpen", payload);
 }
+
+export function trackPlacementTestEvent(
+  name:
+    | "placement_test_registration_complete"
+    | "placement_test_start"
+    | "placement_test_section_start"
+    | "placement_test_progress"
+    | "placement_test_section_complete"
+    | "placement_test_confirmation_start"
+    | "placement_test_complete"
+    | "placement_test_result_view"
+    | "placement_test_sales_cta_click",
+  payload: TrackingPayload = {},
+) {
+  googleEvent(name, payload);
+  metaEvent(name, payload);
+  tiktokEvent(name, payload);
+}

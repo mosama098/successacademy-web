@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:placement": "node scripts/run-placement-tests.cjs"
   },
   "dependencies": {
     "next": "16.3.0",
