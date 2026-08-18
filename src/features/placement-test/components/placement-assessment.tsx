@@ -27,6 +27,7 @@ type PlacementAssessmentProps = {
 type ApiError = Error & { status?: number; code?: string };
 type PlacementCopy = (typeof placementCopy)[PlacementLocale];
 type SelectedOption = AssessmentOption["id"] | null;
+type QuestionTransition = "idle" | "exiting" | "entering";
 
 export function PlacementAssessment({ locale, initialState }: PlacementAssessmentProps) {
   const copy = placementCopy[locale];
@@ -34,9 +35,9 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   const [selected, setSelected] = useState<SelectedOption>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [milestone, setMilestone] = useState<number | null>(null);
   const [timeoutVisible, setTimeoutVisible] = useState(false);
+  const [questionTransition, setQuestionTransition] = useState<QuestionTransition>("idle");
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [questionStartFailed, setQuestionStartFailed] = useState(false);
@@ -45,16 +46,25 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   const expiredDeadline = useRef<string | null>(null);
   const timeoutActive = useRef(false);
   const timeoutTimer = useRef<number | null>(null);
+  const sectionTimer = useRef<number | null>(null);
+  const transitionTimer = useRef<number | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const analysisTimers = useRef<number[]>([]);
 
   async function sendAction(action: PlacementAttemptAction, quiet = false) {
+    const animateQuestionExit = action.action === "answer";
+    const exitStartedAt = animateQuestionExit ? performance.now() : 0;
+    if (animateQuestionExit) setQuestionTransition("exiting");
     if (!quiet) {
       setBusy(true);
       setError(null);
     }
     try {
       const next = await postAction(action);
+      if (animateQuestionExit && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const remainingExit = Math.max(0, 150 - (performance.now() - exitStartedAt));
+        if (remainingExit > 0) await new Promise((resolve) => window.setTimeout(resolve, remainingExit));
+      }
       const previousProgress = state.progressPercent;
       if (state.status !== "completed" && next.status === "completed") {
         startAnalysis(next);
@@ -63,14 +73,15 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
       }
       if (action.action === "answer") {
         setSelected(null);
-        setToast(copy.saved);
-        window.setTimeout(() => setToast(null), 900);
+        setQuestionTransition("entering");
+        if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+        transitionTimer.current = window.setTimeout(() => setQuestionTransition("idle"), 280);
         if (state.section && next.section !== state.section) {
           trackPlacementTestEvent("placement_test_section_complete", {
             section: state.section,
           });
         }
-        const crossed = [25, 50, 75].find(
+        const crossed = [18, 38, 50, 73].find(
           (point) => previousProgress < point && next.progressPercent >= point,
         );
         if (crossed) {
@@ -84,6 +95,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
       }
       return next;
     } catch (caught) {
+      if (animateQuestionExit) setQuestionTransition("idle");
       const apiError = caught as ApiError;
       if (apiError.status === 409 && apiError.code === "question_expired") {
         showTimeoutAndAdvance();
@@ -147,6 +159,8 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   useEffect(() => () => {
     analysisTimers.current.forEach(window.clearTimeout);
     if (timeoutTimer.current !== null) window.clearTimeout(timeoutTimer.current);
+    if (sectionTimer.current !== null) window.clearTimeout(sectionTimer.current);
+    if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
   }, []);
 
   useEffect(() => {
@@ -159,6 +173,23 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     if (oldPhase === "confirmation_intro" && state.phase !== "confirmation_intro") {
       trackPlacementTestEvent("placement_test_confirmation_start");
     }
+  }, [state.phase, state.section]);
+
+  useEffect(() => {
+    if (state.phase !== "section_intro" && state.phase !== "confirmation_intro") return;
+    if (sectionTimer.current !== null) window.clearTimeout(sectionTimer.current);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sectionTimer.current = window.setTimeout(() => {
+      if (state.phase === "section_intro" && state.section) {
+        void sendAction({ action: "section_continue", section: state.section });
+      } else if (state.phase === "confirmation_intro") {
+        void sendAction({ action: "confirmation_continue" });
+      }
+    }, reducedMotion ? 80 : 1_250);
+    return () => {
+      if (sectionTimer.current !== null) window.clearTimeout(sectionTimer.current);
+      sectionTimer.current = null;
+    };
   }, [state.phase, state.section]);
 
   useEffect(() => {
@@ -188,11 +219,11 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
       setRemainingSeconds(remaining);
       if (
         remaining === 0 &&
-        state.questionDeadlineAt &&
         expiredDeadline.current !== activeDeadline
       ) {
         expiredDeadline.current = activeDeadline;
-        showTimeoutAndAdvance();
+        if (state.questionDeadlineAt) showTimeoutAndAdvance();
+        else if (state.readingReadyAt) void refreshState();
       }
     }
 
@@ -263,27 +294,28 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
 
   if (state.phase === "section_intro" && state.section) {
     return (
-      <SectionIntro
+      <SectionMoment
         section={state.section}
         title={copy.sectionIntroTitles[state.section]}
         label={copy.sections[state.section]}
         body={copy.sectionIntros[state.section]}
-        buttonLabel={copy.beginSection}
-        busy={busy}
-        onContinue={() => void sendAction({ action: "section_continue", section: state.section! })}
+        error={error}
+        retryLabel={copy.retry}
+        onRetry={() => void sendAction({ action: "section_continue", section: state.section! })}
       />
     );
   }
 
   if (state.phase === "confirmation_intro") {
     return (
-      <CenteredStage>
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#f1e8fb] text-[#391b68]" aria-hidden="true"><CheckIcon /></div>
-        <Eyebrow>{locale === "ar" ? "خطوة أخيرة" : "Final Check"}</Eyebrow>
-        <h1 className="mt-5 text-balance text-3xl font-black sm:text-5xl">{copy.confirmationTitle}</h1>
-        <p className="mx-auto mt-4 max-w-xl text-[15px] leading-8 text-[#6d5889] sm:text-lg">{copy.confirmationBody}</p>
-        <PrimaryButton disabled={busy} onClick={() => void sendAction({ action: "confirmation_continue" })}>{copy.beginSection}</PrimaryButton>
-      </CenteredStage>
+      <SectionMoment
+        title={copy.confirmationTitle}
+        label={locale === "ar" ? "خطوة أخيرة" : "Final Check"}
+        body={copy.confirmationBody}
+        error={error}
+        retryLabel={copy.retry}
+        onRetry={() => void sendAction({ action: "confirmation_continue" })}
+      />
     );
   }
 
@@ -291,21 +323,42 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     state,
     copy,
     remainingSeconds,
-    toast,
     milestone,
     timeoutVisible,
     locale,
+    questionTransition,
   };
 
-  if (state.phase === "reading_period" && state.question) {
+  if (
+    state.section === "reading" &&
+    state.question &&
+    (state.phase === "reading_period" || state.phase === "question")
+  ) {
     return (
       <AssessmentLayout {...layoutProps}>
-        <ReadingPeriod
+        <ReadingQuestion
           state={state}
           copy={copy}
+          selected={selected}
+          setSelected={(value) => {
+            setSelected(value);
+            if (state.phase === "reading_period" && state.question) {
+              void sendAction({ action: "begin_question", questionId: state.question.id }, true);
+            }
+          }}
           remainingSeconds={remainingSeconds}
           busy={busy}
-          onBegin={() => void sendAction({ action: "begin_reading", questionId: state.question!.id })}
+          error={error}
+          retryQuestionStart={questionStartFailed ? () => {
+            setError(null);
+            setQuestionStartFailed(false);
+          } : undefined}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (selected && state.question && state.phase === "question") {
+              void sendAction({ action: "answer", questionId: state.question.id, optionId: selected });
+            }
+          }}
         />
       </AssessmentLayout>
     );
@@ -381,148 +434,165 @@ function AssessmentLayout({
   state,
   copy,
   remainingSeconds,
-  toast,
   milestone,
   timeoutVisible,
   locale,
+  questionTransition,
   children,
 }: {
   state: PublicAttemptState;
   copy: PlacementCopy;
   remainingSeconds: number | null;
-  toast: string | null;
   milestone: number | null;
   timeoutVisible: boolean;
   locale: PlacementLocale;
+  questionTransition: QuestionTransition;
   children: ReactNode;
 }) {
   return (
-    <div className="relative min-h-[calc(100dvh-4rem)] bg-[#fbf9ff] pb-[calc(7rem+env(safe-area-inset-bottom))]">
-      <div className="sticky top-0 z-30 border-b border-[#e4d9f0] bg-[#fbf9ff]/95 px-4 py-2.5 shadow-[0_8px_24px_rgba(57,27,104,0.04)] backdrop-blur-xl sm:px-6 sm:py-3">
-        <div className="mx-auto max-w-5xl">
+    <div className="relative min-h-[calc(100dvh-4rem)] overflow-x-clip bg-[#f4f1f6] pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(244,239,248,0.8)_45%,rgba(255,247,237,0.7))]" aria-hidden="true" />
+      <header className="sticky top-0 z-30 border-b border-white/80 bg-[#f8f6fa]/90 px-3 py-2.5 shadow-[0_10px_35px_rgba(34,22,46,0.06)] backdrop-blur-xl sm:px-6 sm:py-3">
+        <div className="mx-auto max-w-6xl">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-[#8a74a3]">{copy.assessmentLabel}</p>
-              <p className="mt-0.5 truncate text-sm font-black text-[#391b68]">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#391b68] text-white shadow-[0_7px_18px_rgba(57,27,104,0.18)]" aria-hidden="true"><BoltIcon /></span>
+              <div className="min-w-0">
+                <p className="truncate text-[10px] font-black uppercase tracking-[0.09em] text-[#8a74a3]">{copy.assessmentLabel}</p>
+                <p className="mt-0.5 truncate text-sm font-black text-[#2d2039]">
                 {state.section ? copy.sections[state.section] : copy.assessmentLabel}
-                <span className="mx-1.5 text-[#b5a4c7]">·</span>
-                {copy.questionLabel} {state.sectionQuestion}/{state.sectionTotal}
-              </p>
+                  <span className="mx-1.5 text-[#b5a4c7]">·</span>
+                  {state.sectionQuestion}/{state.sectionTotal}
+                </p>
+              </div>
             </div>
             <TimerBadge state={state} remainingSeconds={remainingSeconds} label={copy.timeRemaining} />
           </div>
-          <ProgressJourney state={state} copy={copy} />
+          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#e4dee9]" role="progressbar" aria-label={copy.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={state.progressPercent}>
+            <div className={`h-full rounded-full bg-gradient-to-r from-[#ec911f] to-[#5a327f] transition-[width] duration-500 motion-reduce:transition-none ${locale === "ar" ? "origin-right" : "origin-left"}`} style={{ width: `${state.progressPercent}%` }} />
+          </div>
+          <ProgressJourney state={state} copy={copy} locale={locale} />
         </div>
-      </div>
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
-        <div key={state.question?.id ?? state.phase} className="motion-safe:animate-[placementQuestionIn_.28s_ease-out]">
+      </header>
+      <main className="relative mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-7 lg:py-8">
+        <div className={`transition duration-150 ease-out ${questionTransition === "exiting" ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"} ${questionTransition === "entering" ? "motion-safe:animate-[placementQuestionIn_.28s_cubic-bezier(.22,.8,.22,1)]" : ""}`}>
           {children}
         </div>
-      </div>
-      {toast ? (
-        <div role="status" className="fixed left-1/2 top-20 z-40 -translate-x-1/2 rounded-full border border-[#d8c8eb] bg-white px-4 py-2 text-xs font-black text-[#391b68] shadow-lg motion-safe:animate-[placementQuestionIn_.22s_ease-out]">{toast}</div>
-      ) : null}
+      </main>
       {milestone ? <Milestone value={milestone} locale={locale} /> : null}
       {timeoutVisible ? <TimeoutOverlay copy={copy} /> : null}
     </div>
   );
 }
 
-function ProgressJourney({ state, copy }: { state: PublicAttemptState; copy: PlacementCopy }) {
+function ProgressJourney({ state, copy, locale }: { state: PublicAttemptState; copy: PlacementCopy; locale: PlacementLocale }) {
   const steps = [
-    { id: "start", label: copy.journey.start },
     { id: "languageUse", label: copy.journey.languageUse },
     { id: "reading", label: copy.journey.reading },
     { id: "listening", label: copy.journey.listening },
     { id: "result", label: copy.journey.result },
   ] as const;
   const activeStep = state.phase === "result"
-    ? 4
+    ? 3
     : state.section === "languageUse"
-      ? 1
+      ? 0
       : state.section === "reading"
-        ? 2
+        ? 1
         : state.section === "listening"
-          ? 3
+          ? 2
           : 0;
 
   return (
-    <div className="relative mt-3" aria-label={copy.progressLabel}>
-      <div className="absolute inset-x-[8%] top-2.5 h-0.5 overflow-hidden rounded-full bg-[#e3d8ef]" aria-hidden="true">
-        <div className="h-full origin-left bg-gradient-to-r from-[#ec911f] to-[#6a4098] transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${state.progressPercent}%` }} />
-      </div>
-      <ol className="relative grid grid-cols-5 gap-1">
+    <nav className="mt-2" aria-label={copy.progressLabel} dir={locale === "ar" ? "rtl" : "ltr"}>
+      <ol className="grid grid-cols-4 gap-1.5">
         {steps.map((step, index) => {
           const reached = index <= activeStep;
           const current = index === activeStep;
           return (
-            <li key={step.id} className="flex min-w-0 flex-col items-center text-center">
-              <span className={`grid h-5 w-5 place-items-center rounded-full border-2 transition-all duration-300 ${current ? "border-[#ec911f] bg-[#ec911f] shadow-[0_0_0_4px_rgba(236,145,31,0.14)]" : reached ? "border-[#391b68] bg-[#391b68]" : "border-[#d8c8e7] bg-[#fbf9ff]"}`} aria-current={current ? "step" : undefined}>
-                {reached ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
-              </span>
-              <span className={`mt-1.5 w-full truncate text-[9px] font-black sm:text-[11px] ${current ? "text-[#391b68]" : "text-[#8b79a0]"}`}>{step.label}</span>
+            <li key={step.id} className={`flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-1.5 py-1 text-center transition-colors ${current ? "bg-white text-[#391b68] shadow-sm" : "text-[#8b7d94]"}`} aria-current={current ? "step" : undefined}>
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${current ? "bg-[#ec911f]" : reached ? "bg-[#6b448e]" : "bg-[#cfc6d6]"}`} aria-hidden="true" />
+              <span className="truncate text-[9px] font-black sm:text-[11px]">{step.label}</span>
             </li>
           );
         })}
       </ol>
-    </div>
+    </nav>
   );
 }
 
 function TimerBadge({ state, remainingSeconds, label }: { state: PublicAttemptState; remainingSeconds: number | null; label: string }) {
-  if (remainingSeconds === null) return <span className="h-10 w-10" aria-hidden="true" />;
-  const total = state.readingReadyAt
-    ? state.question?.readingTimeSeconds ?? remainingSeconds
-    : state.question?.timeLimitSeconds ?? remainingSeconds;
+  if (!state.questionDeadlineAt || remainingSeconds === null || remainingSeconds <= 0) return null;
+  const total = state.question?.timeLimitSeconds ?? remainingSeconds;
   const ratio = Math.max(0, Math.min(1, remainingSeconds / Math.max(1, total)));
   const warning = remainingSeconds <= 10;
   const urgent = remainingSeconds <= 5;
   const stroke = urgent ? "#b42318" : warning ? "#d97706" : "#391b68";
-  const circumference = 2 * Math.PI * 15;
 
   return (
-    <div className={`flex shrink-0 items-center gap-2 rounded-full border bg-white py-1 pe-3 ps-1 shadow-sm transition-colors ${urgent ? "border-red-200 text-red-700" : warning ? "border-orange-200 text-orange-700" : "border-[#ded1ed] text-[#391b68]"}`} aria-label={`${label}: ${remainingSeconds}`}>
-      <span className="relative grid h-8 w-8 place-items-center" aria-hidden="true">
-        <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
-          <circle cx="18" cy="18" r="15" fill="none" stroke="#eee7f5" strokeWidth="3" />
-          <circle cx="18" cy="18" r="15" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - ratio)} className="transition-[stroke-dashoffset] duration-300 motion-reduce:transition-none" />
-        </svg>
-        <ClockIcon />
-      </span>
-      <span className="min-w-7 text-center text-sm font-black tabular-nums">{remainingSeconds}</span>
+    <div className={`relative flex h-9 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl border bg-white px-2.5 shadow-sm transition-colors ${urgent ? "border-red-200 text-red-700" : warning ? "border-orange-200 text-orange-700" : "border-[#ddd4e5] text-[#391b68]"}`} aria-label={`${label}: ${remainingSeconds}`}>
+      <ClockIcon />
+      <span className="min-w-6 text-center text-sm font-black tabular-nums">{remainingSeconds}</span>
+      <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#eee8f2]" aria-hidden="true"><span className="block h-full origin-left transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${ratio * 100}%`, backgroundColor: stroke }} /></span>
     </div>
   );
 }
 
-function ReadingPeriod({ state, copy, remainingSeconds, busy, onBegin }: {
+function ReadingQuestion({ state, copy, selected, setSelected, remainingSeconds, busy, error, retryQuestionStart, onSubmit }: {
   state: PublicAttemptState;
   copy: PlacementCopy;
+  selected: SelectedOption;
+  setSelected: (value: SelectedOption) => void;
   remainingSeconds: number | null;
   busy: boolean;
-  onBegin: () => void;
+  error: string | null;
+  retryQuestionStart?: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const question = state.question!;
+  const dialog = useRef<HTMLDialogElement>(null);
+  const preparing = state.phase === "reading_period";
+  const sharedPassage = question.blockId !== question.slotId;
   return (
-    <section className="mx-auto max-w-3xl overflow-hidden rounded-[26px] border border-[#ded1ed] bg-white shadow-[0_22px_65px_rgba(57,27,104,0.09)]">
-      <div className="border-b border-[#eee6f5] bg-[#f6f1fb] px-5 py-4 sm:px-8">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#391b68] shadow-sm"><BookIcon /></span>
-          <div>
-            <p className="text-sm font-black text-[#391b68]">{copy.readingTime}</p>
-            <p className="mt-0.5 text-xs font-bold text-[#806b99]">{copy.sectionIntros.reading}</p>
+    <form onSubmit={onSubmit} className="grid items-start gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:gap-6">
+      <aside className="hidden max-h-[calc(100dvh-12rem)] overflow-y-auto rounded-[28px] border border-white/90 bg-[#ece8ef] p-7 shadow-[0_22px_55px_rgba(36,25,46,0.08)] lg:sticky lg:top-36 lg:block">
+        <div className="mb-5 flex items-center justify-between gap-3 border-b border-[#d9d0de] pb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#391b68] shadow-sm"><BookIcon /></span>
+            <div>
+              <p className="text-sm font-black text-[#2f223b]">{copy.sections.reading}</p>
+              <p className="mt-0.5 text-xs font-bold text-[#756581]">{copy.questionLabel} {state.sectionQuestion}/{state.sectionTotal}</p>
+            </div>
           </div>
+          {preparing && remainingSeconds !== null ? <span className="rounded-full bg-white px-3 py-1.5 text-xs font-black tabular-nums text-[#704293]">{copy.readingPreparation} · {remainingSeconds}s</span> : null}
         </div>
-      </div>
-      <div className="px-5 py-5 sm:px-8 sm:py-7">
-        <PassageText text={state.question?.passage?.text ?? ""} />
-        {!state.readingReadyAt ? (
-          <PrimaryButton disabled={busy} onClick={onBegin}>{copy.readingTime}</PrimaryButton>
-        ) : (
-          <div className="mt-6 rounded-2xl border border-[#eadff3] bg-[#fcfaff] px-4 py-3 text-center text-sm font-black text-[#6d5889]">
-            {copy.startQuestions} · <span className="tabular-nums text-[#391b68]">{remainingSeconds ?? 0}s</span>
+        <PassageText text={question.passage?.text ?? ""} />
+      </aside>
+      <QuestionSurface>
+        {preparing ? (
+          <div className="mb-5 flex items-start gap-3 rounded-2xl bg-[#ede7f1] px-4 py-3 text-start">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#704293]"><BookIcon size={19} /></span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-black text-[#4c365f]">{copy.readingPreparation}</p>
+                <span className="shrink-0 text-sm font-black tabular-nums text-[#704293]">{remainingSeconds ?? 0}s</span>
+              </div>
+              <p className="mt-1 text-xs font-bold leading-5 text-[#756581]">{copy.readingPreparationHint}</p>
+            </div>
           </div>
-        )}
-      </div>
-    </section>
+        ) : null}
+        {!sharedPassage ? (
+          <div className="mb-5 rounded-2xl bg-[#ece8ef] px-4 py-3 lg:hidden">
+            <div className="mb-2 flex items-center gap-2 text-xs font-black text-[#4c365f]"><BookIcon size={18} />{copy.sections.reading}</div>
+            <PassageText text={question.passage?.text ?? ""} />
+          </div>
+        ) : null}
+        <QuestionHeading state={state} copy={copy} onShowPassage={sharedPassage ? () => dialog.current?.showModal() : undefined} />
+        <AnswerOptions question={question} selected={selected} onSelect={setSelected} legend={copy.selectAnswer} />
+        <InlineError error={error} retryLabel={copy.retry} onRetry={retryQuestionStart} />
+        <StickySubmit disabled={!selected || busy || !state.questionDeadlineAt} busy={busy} copy={copy} />
+      </QuestionSurface>
+      {sharedPassage ? <ReadingDialog dialog={dialog} question={question} closeLabel={copy.closePassage} preparationLabel={preparing && remainingSeconds !== null ? `${copy.readingPreparation} · ${remainingSeconds}s` : undefined} /> : null}
+    </form>
   );
 }
 
@@ -537,24 +607,14 @@ function QuestionCard({ state, copy, selected, setSelected, busy, error, retryQu
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   const question = state.question!;
-  const dialog = useRef<HTMLDialogElement>(null);
-  const hasPassage = Boolean(question.passage);
   return (
-    <form onSubmit={onSubmit} className={`transition duration-200 ${busy ? "translate-y-1 opacity-75" : "translate-y-0 opacity-100"} ${hasPassage ? "grid items-start gap-5 lg:grid-cols-[1.05fr_0.95fr]" : "mx-auto max-w-3xl"}`}>
-      {hasPassage ? (
-        <aside className="hidden rounded-[24px] border border-[#ded1ed] bg-white p-7 shadow-[0_18px_50px_rgba(57,27,104,0.06)] lg:sticky lg:top-40 lg:block">
-          <div className="mb-4 flex items-center gap-2 text-sm font-black text-[#391b68]"><BookIcon />{copy.sections.reading}</div>
-          <PassageText text={question.passage?.text ?? ""} />
-        </aside>
-      ) : null}
+    <form onSubmit={onSubmit} className={`mx-auto max-w-4xl transition duration-150 ${busy ? "opacity-80" : "opacity-100"}`}>
       <QuestionSurface>
-        <QuestionHeading state={state} copy={copy} onShowPassage={hasPassage ? () => dialog.current?.showModal() : undefined} />
+        <QuestionHeading state={state} copy={copy} />
         <AnswerOptions question={question} selected={selected} onSelect={setSelected} legend={copy.selectAnswer} />
         <InlineError error={error} retryLabel={copy.retry} onRetry={retryQuestionStart} />
         <StickySubmit disabled={!selected || busy || !state.questionDeadlineAt} busy={busy} copy={copy} />
-        <p className="mt-3 text-center text-[11px] font-bold leading-5 text-[#8a78a0]">{copy.autoSaveNote}</p>
       </QuestionSurface>
-      {hasPassage ? <ReadingDialog dialog={dialog} question={question} closeLabel={copy.closePassage} /> : null}
     </form>
   );
 }
@@ -768,28 +828,27 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
         <AnswerOptions question={question} selected={selected} onSelect={setSelected} legend={copy.selectAnswer} disabled={!canSelect} />
         <InlineError error={error ?? playbackError} retryLabel={copy.retry} onRetry={retryQuestionStart} />
         <StickySubmit disabled={!canSubmit || busy} busy={busy} copy={copy} />
-        <p className="mt-3 text-center text-[11px] font-bold leading-5 text-[#8a78a0]">{copy.autoSaveNote}</p>
       </QuestionSurface>
     </form>
   );
 }
 
 function QuestionSurface({ children }: { children: ReactNode }) {
-  return <div className="rounded-[26px] border border-[#ded1ed] bg-white p-5 shadow-[0_22px_65px_rgba(57,27,104,0.09)] sm:p-7">{children}</div>;
+  return <div className="relative overflow-hidden rounded-[26px] border border-white/90 bg-[#fffdfb] p-5 shadow-[0_24px_65px_rgba(36,24,45,0.11),0_1px_0_rgba(255,255,255,0.9)_inset] sm:p-7 lg:p-8"><span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#ec911f] via-[#8c5aac] to-[#391b68]" aria-hidden="true" />{children}</div>;
 }
 
 function QuestionHeading({ state, copy, onShowPassage }: { state: PublicAttemptState; copy: PlacementCopy; onShowPassage?: () => void }) {
   const question = state.question!;
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="text-xs font-black uppercase tracking-[0.07em] text-[#8a74a3]">{copy.questionLabel} {state.sectionQuestion}</span>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <span className="rounded-full bg-[#eee9f1] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.07em] text-[#6f5b7a]">{copy.questionLabel} {state.sectionQuestion}</span>
         {onShowPassage ? (
-          <button type="button" onClick={onShowPassage} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#d8c8eb] bg-white px-3 text-xs font-black text-[#391b68] transition hover:bg-[#f7f2fb] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#391b68]/15 lg:hidden"><BookIcon />{copy.showPassage}</button>
+          <button type="button" onClick={onShowPassage} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#391b68] px-3.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(57,27,104,0.17)] transition hover:bg-[#2b154d] active:translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25 lg:hidden"><BookIcon />{copy.showPassage}</button>
         ) : null}
       </div>
       {question.situation && question.section !== "listening" ? <p className="mb-4 rounded-2xl bg-[#f6f1fb] px-4 py-3 text-sm leading-6 text-[#6d5889]">{question.situation}</p> : null}
-      <h1 dir="ltr" className="whitespace-pre-line text-left text-[21px] font-black leading-8 text-[#281343] sm:text-2xl sm:leading-9">{question.prompt}</h1>
+      <h1 dir="ltr" className="whitespace-pre-line text-left text-[23px] font-black leading-[1.38] text-[#24182e] sm:text-[27px] sm:leading-[1.35]">{question.prompt}</h1>
     </div>
   );
 }
@@ -802,14 +861,14 @@ function AnswerOptions({ question, selected, onSelect, legend, disabled = false 
   disabled?: boolean;
 }) {
   return (
-    <fieldset className="mt-6 grid gap-3" dir="ltr" disabled={disabled}>
+    <fieldset className="mt-6 grid gap-2.5 sm:gap-3" dir="ltr" disabled={disabled}>
       <legend className="sr-only">{legend}</legend>
       {question.options.map((option) => {
         const active = selected === option.id;
         return (
-          <label key={option.id} className={`group flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-left text-[15px] font-bold leading-6 transition duration-200 focus-within:ring-4 focus-within:ring-[#391b68]/15 ${disabled ? "cursor-not-allowed border-[#e7dfef] bg-[#faf8fc] text-[#9b8baa] opacity-70" : active ? "cursor-pointer border-[#391b68] bg-[#f1e8fb] text-[#281343] shadow-[inset_0_0_0_1px_#391b68,0_9px_22px_rgba(57,27,104,0.08)]" : "cursor-pointer border-[#ded1ed] bg-white text-[#513477] hover:-translate-y-0.5 hover:border-[#9e82be] active:translate-y-0"}`}>
+          <label key={option.id} className={`group flex min-h-[60px] items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left text-[15px] font-bold leading-6 transition duration-200 focus-within:ring-4 focus-within:ring-[#391b68]/15 sm:px-4 ${disabled ? "cursor-not-allowed border-[#e5e0e8] bg-[#f7f5f8] text-[#9a909f] opacity-75" : active ? "cursor-pointer border-[#5d367e] bg-[#eee7f3] text-[#24182e] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.7),0_10px_24px_rgba(57,27,104,0.09)] motion-safe:animate-[placementOptionSelect_.22s_ease-out]" : "cursor-pointer border-[#ddd6e1] bg-[#f8f6f8] text-[#4d3b57] hover:-translate-y-0.5 hover:border-[#9d88aa] hover:bg-white active:translate-y-0"}`}>
             <input type="radio" name={`answer-${question.id}`} value={option.id} checked={active} disabled={disabled} onChange={() => onSelect(option.id)} className="sr-only" />
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black transition duration-200 ${active ? "bg-[#391b68] text-white" : disabled ? "bg-[#eee8f4] text-[#9b8baa]" : "bg-[#f4eef9] text-[#391b68] group-hover:bg-[#ebe1f4]"}`}>{active ? <CheckIcon size={17} /> : option.id}</span>
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black transition duration-200 ${active ? "bg-[#391b68] text-white shadow-[0_6px_14px_rgba(57,27,104,0.2)]" : disabled ? "bg-[#ebe7ed] text-[#9b8baa]" : "bg-white text-[#5b3a72] shadow-sm group-hover:bg-[#f0e9f4]"}`}>{active ? <CheckIcon size={17} /> : option.id}</span>
             <span className="min-w-0 flex-1">{option.text}</span>
           </label>
         );
@@ -820,8 +879,8 @@ function AnswerOptions({ question, selected, onSelect, legend, disabled = false 
 
 function StickySubmit({ disabled, busy, copy }: { disabled: boolean; busy: boolean; copy: PlacementCopy }) {
   return (
-    <div className="sticky bottom-2 z-20 mt-6 rounded-2xl bg-white/90 p-1.5 shadow-[0_-8px_28px_rgba(251,249,255,0.95)] backdrop-blur sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
-      <button type="submit" disabled={disabled} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#ec911f] px-5 text-base font-black text-white shadow-[0_12px_26px_rgba(236,145,31,0.2)] transition duration-200 hover:bg-[#d97f11] active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
+    <div className="sticky bottom-2 z-20 mt-5 rounded-[20px] bg-[#fffdfb]/90 p-1.5 shadow-[0_-12px_32px_rgba(255,253,251,0.96)] backdrop-blur sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
+      <button type="submit" disabled={disabled} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[16px] bg-[#ec911f] px-5 text-base font-black text-white shadow-[0_12px_26px_rgba(236,145,31,0.22)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#d97f11] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-[#ddd5df] disabled:text-[#8f8395] disabled:shadow-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
         {busy ? copy.saving : copy.saveAnswer}<ArrowIcon />
       </button>
     </div>
@@ -838,11 +897,14 @@ function InlineError({ error, retryLabel, onRetry }: { error: string | null; ret
   );
 }
 
-function ReadingDialog({ dialog, question, closeLabel }: { dialog: React.RefObject<HTMLDialogElement | null>; question: PublicQuestion; closeLabel: string }) {
+function ReadingDialog({ dialog, question, closeLabel, preparationLabel }: { dialog: React.RefObject<HTMLDialogElement | null>; question: PublicQuestion; closeLabel: string; preparationLabel?: string }) {
   return (
-    <dialog ref={dialog} className="m-auto max-h-[88dvh] w-[calc(100%-2rem)] max-w-xl rounded-[26px] border border-[#ded1ed] bg-white p-0 text-[#391b68] shadow-2xl backdrop:bg-[#281343]/55 backdrop:backdrop-blur-sm">
-      <div className="max-h-[88dvh] overflow-y-auto p-5 sm:p-7">
-        <button type="button" onClick={() => dialog.current?.close()} className="sticky top-0 float-end min-h-10 rounded-xl bg-[#391b68] px-4 text-sm font-black text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">{closeLabel}</button>
+    <dialog ref={dialog} className="mb-0 mt-auto max-h-[86dvh] w-full max-w-xl rounded-t-[28px] border border-[#d8cfde] bg-[#f8f6f9] p-0 text-[#391b68] shadow-2xl backdrop:bg-[#201628]/60 backdrop:backdrop-blur-sm sm:m-auto sm:w-[calc(100%-2rem)] sm:rounded-[28px]">
+      <div className="max-h-[86dvh] overflow-y-auto p-5 sm:p-7">
+        <div className="sticky top-0 z-10 -mx-2 mb-4 flex items-center justify-between gap-3 rounded-2xl bg-[#f8f6f9]/95 px-2 py-2 backdrop-blur">
+          {preparationLabel ? <span className="text-xs font-black text-[#704293]">{preparationLabel}</span> : <span />}
+          <button type="button" onClick={() => dialog.current?.close()} className="min-h-10 rounded-xl bg-[#391b68] px-4 text-sm font-black text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">{closeLabel}</button>
+        </div>
         <PassageText text={question.passage?.text ?? ""} />
       </div>
     </dialog>
@@ -957,23 +1019,27 @@ function AudioCheck({ title, body, playLabel, continueLabel, busy, onContinue }:
   );
 }
 
-function SectionIntro({ section, title, label, body, buttonLabel, busy, onContinue }: { section: AssessmentSection; title: string; label: string; body: string; buttonLabel: string; busy: boolean; onContinue: () => void }) {
+function SectionMoment({ section, title, label, body, error, retryLabel, onRetry }: { section?: AssessmentSection; title: string; label: string; body: string; error: string | null; retryLabel: string; onRetry: () => void }) {
   return (
-    <CenteredStage>
-      <SectionIcon section={section} />
-      <Eyebrow>{label}</Eyebrow>
-      <h1 className="mx-auto mt-5 max-w-2xl text-balance text-3xl font-black leading-[1.2] sm:text-5xl">{title}</h1>
-      <p className="mx-auto mt-4 max-w-xl text-[15px] leading-8 text-[#6d5889] sm:text-lg">{body}</p>
-      <PrimaryButton disabled={busy} onClick={onContinue}>{buttonLabel}</PrimaryButton>
-    </CenteredStage>
+    <section className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden bg-[#f4f1f6] px-4 py-8">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.95),rgba(239,232,244,0.85),rgba(255,244,229,0.72))]" aria-hidden="true" />
+      <div className="relative mx-auto w-full max-w-xl rounded-[28px] border border-white/90 bg-white/80 p-7 text-center shadow-[0_28px_80px_rgba(38,25,49,0.12)] backdrop-blur sm:p-9 motion-safe:animate-[placementSectionMoment_1.25s_cubic-bezier(.22,.8,.22,1)]">
+        {section ? <SectionIcon section={section} /> : <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#391b68] text-white"><CheckIcon size={24} /></span>}
+        <p className="mt-4 text-xs font-black uppercase tracking-[0.1em] text-[#8a7497]">{label}</p>
+        <h1 className="mx-auto mt-2 text-balance text-3xl font-black leading-tight text-[#2a1d35] sm:text-4xl">{title}</h1>
+        <p className="mx-auto mt-3 max-w-lg text-sm font-bold leading-7 text-[#70637b] sm:text-base">{body}</p>
+        <div className="mx-auto mt-6 h-1 w-28 overflow-hidden rounded-full bg-[#e3dce8]" aria-hidden="true"><span className="block h-full w-full origin-left bg-gradient-to-r from-[#ec911f] to-[#5e3880] motion-safe:animate-[placementTransitionBar_1.25s_linear_forwards]" /></div>
+        {error ? <div className="mt-5"><InlineError error={error} retryLabel={retryLabel} onRetry={onRetry} /></div> : null}
+      </div>
+    </section>
   );
 }
 
 function CenteredStage({ children }: { children: ReactNode }) {
   return (
-    <section className="flex min-h-[calc(100dvh-4rem)] items-center bg-[#fbf9ff] px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[30px] border border-[#ded1ed] bg-white p-6 text-center shadow-[0_26px_80px_rgba(57,27,104,0.11)] motion-safe:animate-[placementQuestionIn_.32s_ease-out] sm:p-12">
-        <div className="mx-auto mb-6 h-1 w-20 rounded-full bg-gradient-to-r from-[#391b68] to-[#ec911f]" aria-hidden="true" />
+    <section className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden bg-[#f4f1f6] px-4 py-6 sm:px-6 sm:py-9">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.94),rgba(238,231,243,0.82),rgba(255,245,231,0.7))]" aria-hidden="true" />
+      <div className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/90 bg-[#fffdfb]/92 p-6 text-center shadow-[0_28px_80px_rgba(36,24,45,0.12)] backdrop-blur motion-safe:animate-[placementQuestionIn_.32s_ease-out] sm:p-9">
         {children}
       </div>
     </section>
@@ -1024,8 +1090,8 @@ function TimeoutOverlay({ copy }: { copy: PlacementCopy }) {
 
 function Milestone({ value, locale }: { value: number; locale: PlacementLocale }) {
   const messages = locale === "ar"
-    ? value === 25 ? ["بداية ممتازة 👏", "كمل بنفس التركيز."] : value === 50 ? ["عديت النص 🔥", "باقي أقل مما خلصت."] : ["Almost there 🚀", "آخر جزء والنتيجة قربت."]
-    : value === 25 ? ["Great Start 👏", "Keep the same focus."] : value === 50 ? ["Halfway There 🔥", "Less remains than you completed."] : ["Almost There 🚀", "One final part before your result."];
+    ? value === 18 ? ["بداية قوية 👏", "خطوة ممتازة — كمل براحتك."] : value === 38 ? ["ممتاز، كمل بنفس التركيز ✨", "أنت ماشي بثبات."] : value === 50 ? ["عديت النص 🔥", "باقي أقل مما خلصت."] : ["قربت جدًا 🚀", "آخر جزء والنتيجة قربت."]
+    : value === 18 ? ["Strong Start 👏", "Great pace — keep going."] : value === 38 ? ["Excellent Focus ✨", "You are moving steadily."] : value === 50 ? ["Halfway There 🔥", "Less remains than you completed."] : ["Almost There 🚀", "One final part before your result."];
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-[#281343]/50 p-4 backdrop-blur-sm" role="status" aria-live="polite">
       <div className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/50 bg-white p-8 text-center shadow-2xl motion-safe:animate-[placementOverlay_.28s_ease-out]">

@@ -123,16 +123,22 @@ function applyAction(attempt: PlacementAttempt, action: PlacementAttemptAction) 
   const question = requireCurrentQuestion(attempt, action.questionId);
 
   if (action.action === "begin_reading") {
-    if (!question.readingTimeSeconds || attempt.completedReadingBlocks.includes(question.blockId)) {
+    if (!usesReadingPreparation(attempt, question) || attempt.completedReadingBlocks.includes(question.blockId)) {
       throw new PlacementAttemptError("reading_period_not_available", 409);
     }
     if (!attempt.readingReadyAt) {
-      attempt.readingReadyAt = new Date(now.getTime() + question.readingTimeSeconds * 1_000).toISOString();
+      attempt.readingReadyAt = new Date(now.getTime() + (question.readingTimeSeconds ?? 0) * 1_000).toISOString();
     }
     return;
   }
 
   if (action.action === "begin_question") {
+    if (usesReadingPreparation(attempt, question)) {
+      if (!attempt.completedReadingBlocks.includes(question.blockId)) {
+        attempt.completedReadingBlocks.push(question.blockId);
+      }
+      attempt.readingReadyAt = null;
+    }
     if (!questionPrerequisitesComplete(attempt, question, now)) {
       throw new PlacementAttemptError("question_not_ready", 409);
     }
@@ -238,6 +244,19 @@ function reconcileAttempt(attempt: PlacementAttempt, reconcileInterruptedAudio =
 
   if (reconcileInterruptedAudio) reconcileAudioPlayback(attempt, now);
 
+  const preparingQuestion = currentQuestion(attempt);
+  if (
+    preparingQuestion &&
+    attempt.introducedSections.includes("reading") &&
+    usesReadingPreparation(attempt, preparingQuestion) &&
+    !attempt.completedReadingBlocks.includes(preparingQuestion.blockId) &&
+    !attempt.readingReadyAt
+  ) {
+    attempt.readingReadyAt = new Date(
+      now.getTime() + (preparingQuestion.readingTimeSeconds ?? 0) * 1_000,
+    ).toISOString();
+  }
+
   if (attempt.readingReadyAt && now.getTime() >= Date.parse(attempt.readingReadyAt)) {
     const question = currentQuestion(attempt);
     if (question && !attempt.completedReadingBlocks.includes(question.blockId)) {
@@ -332,7 +351,7 @@ function questionPrerequisitesComplete(
   now: Date,
 ) {
   if (
-    question.readingTimeSeconds &&
+    usesReadingPreparation(attempt, question) &&
     !attempt.completedReadingBlocks.includes(question.blockId)
   ) {
     return Boolean(attempt.readingReadyAt && now.getTime() >= Date.parse(attempt.readingReadyAt));
@@ -357,6 +376,14 @@ function activeSequence(attempt: PlacementAttempt) {
   return attempt.confirmationStarted
     ? [...attempt.coreSequence, ...attempt.confirmationSequence]
     : attempt.coreSequence;
+}
+
+function usesReadingPreparation(attempt: PlacementAttempt, question: AssessmentQuestion) {
+  if (!question.readingTimeSeconds || question.section !== "reading") return false;
+  return activeSequence(attempt).some((questionId) => {
+    const candidate = getQuestion(questionId);
+    return candidate?.id !== question.id && candidate?.blockId === question.blockId;
+  });
 }
 
 function getPlayback(attempt: PlacementAttempt, audioId: string) {
@@ -448,7 +475,7 @@ function determinePhase(
   if (!question) return "analysis";
   if (!attempt.introducedSections.includes(question.section)) return "section_intro";
   if (question.section === "listening" && !attempt.audioCheckCompleted) return "audio_check";
-  if (question.readingTimeSeconds && !attempt.completedReadingBlocks.includes(question.blockId)) {
+  if (usesReadingPreparation(attempt, question) && !attempt.completedReadingBlocks.includes(question.blockId)) {
     return "reading_period";
   }
   if (question.audioId && getPlayback(attempt, question.blockId).status !== "completed") {

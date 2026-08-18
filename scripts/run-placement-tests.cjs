@@ -100,6 +100,29 @@ async function createListeningFixture(name, questionIds) {
   return token;
 }
 
+async function createReadingFixture(name, questionIds) {
+  const { token } = await createStoredAttempt("en", `lead-test-${name}`);
+  const fixtureSlots = new Set(
+    questionIds.map((id) => assessmentQuestions.find((question) => question.id === id)?.slotId),
+  );
+  await updateStoredAttempt(token, (attempt) => {
+    attempt.status = "in_progress";
+    attempt.startedAt = new Date().toISOString();
+    attempt.introducedSections = ["languageUse", "reading"];
+    attempt.currentSection = "reading";
+    attempt.coreSequence = [
+      ...questionIds,
+      ...attempt.coreSequence.filter((id) => {
+        const question = assessmentQuestions.find((candidate) => candidate.id === id);
+        return !fixtureSlots.has(question?.slotId);
+      }),
+    ];
+    attempt.currentIndex = 0;
+    attempt.budgetRunningSince = new Date().toISOString();
+  });
+  return token;
+}
+
 test("assessment layout has stable module-level component identity", () => {
   const filename = path.join(
     root,
@@ -187,6 +210,85 @@ test("Listening renders the question and options before playback on one screen",
   assert.ok(listeningMarkup.indexOf("aria-label={copy.playAudio}") < listeningMarkup.indexOf("<AnswerOptions"));
 });
 
+test("Reading renders passage, question, and options in one continuous experience", async () => {
+  const token = await createReadingFixture("reading-short", ["R01-A"]);
+  const state = await getPublicAttemptState(token);
+  assert.equal(state?.phase, "question");
+  assert.equal(state?.question?.id, "R01-A");
+  assert.equal(Boolean(state?.question?.passage?.text), true);
+
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const readingComponent = source.slice(
+    source.indexOf("function ReadingQuestion"),
+    source.indexOf("function QuestionCard"),
+  );
+  assert.match(readingComponent, /<PassageText/);
+  assert.match(readingComponent, /<QuestionHeading/);
+  assert.match(readingComponent, /<AnswerOptions/);
+  assert.doesNotMatch(source, /function ReadingPeriod/);
+});
+
+test("shared Reading preparation is optional and the passage persists between questions", async () => {
+  const token = await createReadingFixture("reading-shared", ["R03-A", "R04-A"]);
+  const preparing = await getPublicAttemptState(token);
+  assert.equal(preparing?.phase, "reading_period");
+  assert.ok(preparing?.readingReadyAt);
+  assert.equal(Boolean(preparing?.question?.passage?.text), true);
+
+  const timed = await applyAttemptAction(token, { action: "begin_question", questionId: "R03-A" });
+  assert.equal(timed.phase, "question");
+  assert.ok(timed.questionDeadlineAt);
+  assert.equal(timed.readingReadyAt, null);
+  const firstPassage = timed.question?.passage?.text;
+
+  await applyAttemptAction(token, { action: "answer", questionId: "R03-A", optionId: "A" });
+  const attachedQuestion = await getPublicAttemptState(token);
+  assert.equal(attachedQuestion?.question?.id, "R04-A");
+  assert.equal(attachedQuestion?.phase, "question");
+  assert.equal(attachedQuestion?.question?.passage?.text, firstPassage);
+});
+
+test("expired Reading preparation reconciles at zero and cannot deadlock", async () => {
+  const token = await createReadingFixture("reading-zero", ["R03-A", "R04-A"]);
+  await getPublicAttemptState(token);
+  await updateStoredAttempt(token, (attempt) => {
+    attempt.readingReadyAt = new Date(Date.now() - 1_000).toISOString();
+  });
+  const ready = await getPublicAttemptState(token);
+  assert.equal(ready?.phase, "question");
+  assert.equal(ready?.readingReadyAt, null);
+  assert.equal(ready?.questionDeadlineAt, null);
+
+  const started = await applyAttemptAction(token, { action: "begin_question", questionId: "R03-A" });
+  assert.ok(started.questionDeadlineAt);
+
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  assert.match(source, /else if \(state\.readingReadyAt\) void refreshState\(\)/);
+  assert.match(source, /remainingSeconds <= 0\) return null/);
+});
+
+test("Reading resume preserves the attached passage and active question", async () => {
+  const token = await createReadingFixture("reading-resume", ["R03-A", "R04-A"]);
+  await updateStoredAttempt(token, (attempt) => {
+    attempt.currentIndex = 1;
+    attempt.completedReadingBlocks = ["R03-04"];
+    attempt.readingReadyAt = null;
+    attempt.questionStartedAt = new Date().toISOString();
+    attempt.questionDeadlineAt = new Date(Date.now() + 45_000).toISOString();
+  });
+  const resumed = await getPublicAttemptState(token);
+  assert.equal(resumed?.question?.id, "R04-A");
+  assert.equal(resumed?.phase, "question");
+  assert.equal(Boolean(resumed?.question?.passage?.text), true);
+  assert.ok(resumed?.questionDeadlineAt);
+});
+
 test("assessment UX includes timeout dialog and level-free progress journey", () => {
   const source = fs.readFileSync(
     path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
@@ -203,7 +305,21 @@ test("assessment UX includes timeout dialog and level-free progress journey", ()
     ["languageUse", "reading", "listening", "result"].map((label) => journey.indexOf(`id: "${label}"`)),
     ["languageUse", "reading", "listening", "result"].map((label) => journey.indexOf(`id: "${label}"`)).sort((a, b) => a - b),
   );
+  assert.doesNotMatch(journey, /id: "start"/);
   assert.doesNotMatch(journey, /\b(?:A1|A2|B1|B2)\b/);
+});
+
+test("question motion and milestones are completion-driven without score feedback", () => {
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const answerFlow = source.slice(source.indexOf("async function sendAction"), source.indexOf("async function refreshState"));
+  assert.match(answerFlow, /setQuestionTransition\("exiting"\)/);
+  assert.match(answerFlow, /setQuestionTransition\("entering"\)/);
+  assert.match(answerFlow, /\[18, 38, 50, 73\]/);
+  assert.match(answerFlow, /previousProgress < point && next\.progressPercent >= point/);
+  assert.doesNotMatch(answerFlow, /correctOption|selectedOption|score/);
 });
 
 test("every question is structurally valid", () => {
