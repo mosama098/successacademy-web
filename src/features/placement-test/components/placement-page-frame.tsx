@@ -18,16 +18,16 @@ export function PlacementPageFrame({ locale, route, children }: PlacementPageFra
   return (
     <main
       dir={copy.direction}
-      className="min-h-screen overflow-x-hidden bg-[#fbf9ff] text-[#391b68]"
+      className="min-h-screen overflow-x-hidden bg-[#f2efeb] text-[#30223a]"
     >
-      <header className="border-b border-[#e8def5] bg-white/95">
+      <header className="relative z-50 border-b border-white/70 bg-[#f8f5f1]/88 shadow-[0_8px_30px_rgba(42,29,51,0.045)] backdrop-blur-xl">
         <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href={`/${locale}`} className="rounded-lg focus-visible:outline-none" aria-label="Success Academy">
+          <Link href={`/${locale}`} className="rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25" aria-label="Success Academy">
             <Image src="/logo.png" width={170} height={64} alt={copy.logoAlt} className="h-10 w-auto object-contain" priority />
           </Link>
           <Link
             href={otherPath}
-            className="rounded-full border border-[#d8c8eb] bg-white px-4 py-2 text-sm font-bold text-[#391b68] transition hover:border-[#391b68] focus-visible:outline-none"
+            className="rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm font-black text-[#3b2946] shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20"
           >
             {locale === "ar" ? "English" : "العربية"}
           </Link>

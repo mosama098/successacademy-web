@@ -316,10 +316,51 @@ test("question motion and milestones are completion-driven without score feedbac
   );
   const answerFlow = source.slice(source.indexOf("async function sendAction"), source.indexOf("async function refreshState"));
   assert.match(answerFlow, /setQuestionTransition\("exiting"\)/);
+  assert.match(answerFlow, /setQuestionTransition\("reward"\)/);
   assert.match(answerFlow, /setQuestionTransition\("entering"\)/);
-  assert.match(answerFlow, /\[18, 38, 50, 73\]/);
+  assert.match(answerFlow, /setReward\(/);
+  assert.match(answerFlow, /completedAnswers % 5 === 0/);
+  assert.match(answerFlow, /\[20, 40, 50, 70, 90\]/);
   assert.match(answerFlow, /previousProgress < point && next\.progressPercent >= point/);
   assert.doesNotMatch(answerFlow, /correctOption|selectedOption|score/);
+});
+
+test("Journey Energy advances from completion only and ignores answer correctness", async () => {
+  async function progressAfterOneAnswer(name, optionId) {
+    const { token } = await createStoredAttempt("en", `lead-energy-${name}`);
+    await applyAttemptAction(token, { action: "start" });
+    let state = await applyAttemptAction(token, { action: "section_continue", section: "languageUse" });
+    state = await applyAttemptAction(token, { action: "begin_question", questionId: state.question.id });
+    const before = state.progressPercent;
+    const next = await applyAttemptAction(token, { action: "answer", questionId: state.question.id, optionId });
+    return { before, after: next.progressPercent };
+  }
+
+  const first = await progressAfterOneAnswer("a", "A");
+  const second = await progressAfterOneAnswer("b", "D");
+  assert.ok(first.after > first.before);
+  assert.equal(first.after, second.after);
+
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  assert.match(source, /<JourneyEnergy value=\{state\.progressPercent\}/);
+});
+
+test("reward, result reveal, and reduced-motion paths are present without correctness feedback", () => {
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const resultComponent = source.slice(source.indexOf("function ResultScreen"), source.indexOf("function AssessmentWelcome"));
+  assert.match(source, /function MotivationBurst/);
+  assert.match(source, /copy\.rewardMessages/);
+  assert.match(source, /copy\.bonusMessages/);
+  assert.match(resultComponent, /setRevealStep\(4\)/);
+  assert.match(resultComponent, /prefers-reduced-motion: reduce/);
+  assert.match(resultComponent, /<CelebrationParticles dense/);
+  assert.doesNotMatch(resultComponent, /correct answers|إجابات صحيحة/);
 });
 
 test("every question is structurally valid", () => {

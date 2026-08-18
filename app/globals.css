@@ -264,3 +264,149 @@ a:focus-visible {
   }
 }
 
+@keyframes placementPageEnter {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes placementRewardBurst {
+  0% {
+    transform: translateY(12px) scale(0.86);
+    opacity: 0;
+  }
+
+  42% {
+    transform: translateY(0) scale(1.04);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-8px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+@keyframes placementRewardRing {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+@keyframes placementParticle {
+  0% {
+    translate: 0 0;
+    scale: 0;
+    opacity: 0;
+  }
+
+  18% {
+    scale: 1;
+    opacity: 1;
+  }
+
+  100% {
+    translate: 0 -110px;
+    rotate: 210deg;
+    opacity: 0;
+  }
+}
+
+@keyframes placementFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes placementEnergyPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(236, 145, 31, 0.34);
+  }
+
+  100% {
+    box-shadow: 0 0 0 12px rgba(236, 145, 31, 0);
+  }
+}
+
+@keyframes placementCheckDraw {
+  from {
+    transform: scale(0.35) rotate(-22deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes placementResultScene {
+  from {
+    filter: blur(8px);
+    transform: scale(1.025);
+    opacity: 0;
+  }
+
+  to {
+    filter: blur(0);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes placementResultBadge {
+  0% {
+    transform: scale(0.65) rotate(-7deg);
+    opacity: 0;
+  }
+
+  68% {
+    transform: scale(1.06) rotate(1deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes placementRevealUp {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes placementStageSweep {
+  from {
+    transform: translateX(-105%);
+  }
+
+  to {
+    transform: translateX(105%);
+  }
+}
+

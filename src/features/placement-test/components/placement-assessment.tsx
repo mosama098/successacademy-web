@@ -10,6 +10,12 @@ import {
 } from "react";
 import { trackPlacementTestEvent } from "@/lib/tracking";
 import { courseLabel, placementCopy } from "../copy";
+import {
+  CelebrationParticles,
+  ChallengeVisual,
+  ExperienceBackdrop,
+  JourneyEnergy,
+} from "./placement-experience";
 import type {
   AssessmentOption,
   AssessmentSection,
@@ -27,7 +33,13 @@ type PlacementAssessmentProps = {
 type ApiError = Error & { status?: number; code?: string };
 type PlacementCopy = (typeof placementCopy)[PlacementLocale];
 type SelectedOption = AssessmentOption["id"] | null;
-type QuestionTransition = "idle" | "exiting" | "entering";
+type QuestionTransition = "idle" | "exiting" | "reward" | "entering";
+type RewardMoment = {
+  id: number;
+  message: string;
+  detail: string | null;
+  bonus: boolean;
+};
 
 export function PlacementAssessment({ locale, initialState }: PlacementAssessmentProps) {
   const copy = placementCopy[locale];
@@ -36,6 +48,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [milestone, setMilestone] = useState<number | null>(null);
+  const [reward, setReward] = useState<RewardMoment | null>(null);
   const [timeoutVisible, setTimeoutVisible] = useState(false);
   const [questionTransition, setQuestionTransition] = useState<QuestionTransition>("idle");
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -48,6 +61,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   const timeoutTimer = useRef<number | null>(null);
   const sectionTimer = useRef<number | null>(null);
   const transitionTimer = useRef<number | null>(null);
+  const milestoneTimer = useRef<number | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const analysisTimers = useRef<number[]>([]);
 
@@ -62,16 +76,29 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     try {
       const next = await postAction(action);
       if (animateQuestionExit && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        const remainingExit = Math.max(0, 150 - (performance.now() - exitStartedAt));
+        const remainingExit = Math.max(0, 180 - (performance.now() - exitStartedAt));
         if (remainingExit > 0) await new Promise((resolve) => window.setTimeout(resolve, remainingExit));
       }
       const previousProgress = state.progressPercent;
-      if (state.status !== "completed" && next.status === "completed") {
-        startAnalysis(next);
-      } else {
-        setState(next);
-      }
       if (action.action === "answer") {
+        const completedAnswers = next.status === "completed"
+          ? next.overallTotal
+          : Math.max(1, next.overallQuestion - 1);
+        const bonus = completedAnswers > 0 && completedAnswers % 5 === 0;
+        setQuestionTransition("reward");
+        setReward({
+          id: completedAnswers,
+          message: copy.rewardMessages[(completedAnswers - 1) % copy.rewardMessages.length],
+          detail: bonus ? copy.bonusMessages[Math.floor(completedAnswers / 5 - 1) % copy.bonusMessages.length] : null,
+          bonus,
+        });
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          await new Promise((resolve) => window.setTimeout(resolve, bonus ? 620 : 480));
+        }
+        setReward(null);
+
+        if (state.status !== "completed" && next.status === "completed") startAnalysis(next);
+        else setState(next);
         setSelected(null);
         setQuestionTransition("entering");
         if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
@@ -81,7 +108,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             section: state.section,
           });
         }
-        const crossed = [18, 38, 50, 73].find(
+        const crossed = [20, 40, 50, 70, 90].find(
           (point) => previousProgress < point && next.progressPercent >= point,
         );
         if (crossed) {
@@ -90,8 +117,12 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             progressPercent: crossed,
             section: next.section,
           });
-          window.setTimeout(() => setMilestone(null), 1_350);
+          if (milestoneTimer.current !== null) window.clearTimeout(milestoneTimer.current);
+          milestoneTimer.current = window.setTimeout(() => setMilestone(null), 1_050);
         }
+      } else {
+        if (state.status !== "completed" && next.status === "completed") startAnalysis(next);
+        else setState(next);
       }
       return next;
     } catch (caught) {
@@ -161,6 +192,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     if (timeoutTimer.current !== null) window.clearTimeout(timeoutTimer.current);
     if (sectionTimer.current !== null) window.clearTimeout(sectionTimer.current);
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+    if (milestoneTimer.current !== null) window.clearTimeout(milestoneTimer.current);
   }, []);
 
   useEffect(() => {
@@ -258,24 +290,10 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
 
   if (state.phase === "welcome") {
     return (
-      <CenteredStage>
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#391b68] to-[#633b92] text-white shadow-[0_16px_34px_rgba(57,27,104,0.2)]">
-          <SparkIcon />
-        </div>
-        <Eyebrow>{copy.assessmentLabel}</Eyebrow>
-        <h1 className="mx-auto mt-5 max-w-2xl text-balance text-3xl font-black leading-[1.2] sm:text-5xl">{copy.welcomeTitle}</h1>
-        <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-[#6d5889] sm:text-lg sm:leading-8">{copy.welcomeBody}</p>
-        <div className="mx-auto mt-7 grid max-w-2xl grid-cols-3 gap-2 text-center text-xs font-black text-[#513477] sm:gap-3 sm:text-sm">
-          <WelcomeFact value="36" label={locale === "ar" ? "سؤال" : "Questions"} />
-          <WelcomeFact value="24–27" label={locale === "ar" ? "دقيقة" : "Minutes"} />
-          <WelcomeFact value="3" label={locale === "ar" ? "مهارات" : "Skills"} />
-        </div>
-        <PrimaryButton disabled={busy} onClick={() => {
+      <AssessmentWelcome locale={locale} copy={copy} busy={busy} onStart={() => {
           trackPlacementTestEvent("placement_test_start", { locale });
           void sendAction({ action: "start" });
-        }}>{copy.startNow}</PrimaryButton>
-        <p className="mx-auto mt-4 max-w-lg text-xs font-bold leading-6 text-[#806b99]">{copy.autoSaveNote}</p>
-      </CenteredStage>
+        }} />
     );
   }
 
@@ -297,7 +315,11 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
       <SectionMoment
         section={state.section}
         title={copy.sectionIntroTitles[state.section]}
-        label={copy.sections[state.section]}
+        label={state.section === "languageUse"
+          ? copy.assessmentLabel
+          : state.section === "reading"
+            ? copy.sectionComplete.languageUse
+            : copy.sectionComplete.reading}
         body={copy.sectionIntros[state.section]}
         error={error}
         retryLabel={copy.retry}
@@ -327,6 +349,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     timeoutVisible,
     locale,
     questionTransition,
+    reward,
   };
 
   if (
@@ -438,6 +461,7 @@ function AssessmentLayout({
   timeoutVisible,
   locale,
   questionTransition,
+  reward,
   children,
 }: {
   state: PublicAttemptState;
@@ -447,41 +471,44 @@ function AssessmentLayout({
   timeoutVisible: boolean;
   locale: PlacementLocale;
   questionTransition: QuestionTransition;
+  reward: RewardMoment | null;
   children: ReactNode;
 }) {
   return (
-    <div className="relative min-h-[calc(100dvh-4rem)] overflow-x-clip bg-[#f4f1f6] pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(244,239,248,0.8)_45%,rgba(255,247,237,0.7))]" aria-hidden="true" />
-      <header className="sticky top-0 z-30 border-b border-white/80 bg-[#f8f6fa]/90 px-3 py-2.5 shadow-[0_10px_35px_rgba(34,22,46,0.06)] backdrop-blur-xl sm:px-6 sm:py-3">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between gap-3">
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)] pb-[calc(6.25rem+env(safe-area-inset-bottom))]">
+      <header className="sticky top-0 z-30 px-3 pt-2.5 sm:px-6 sm:pt-4">
+        <div className="mx-auto max-w-6xl rounded-[22px] border border-white/75 bg-[#faf8f5]/82 px-3 py-2.5 shadow-[0_16px_45px_rgba(39,27,48,0.09)] backdrop-blur-2xl sm:px-4 sm:py-3">
+          <div className="flex items-center justify-between gap-2.5">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#391b68] text-white shadow-[0_7px_18px_rgba(57,27,104,0.18)]" aria-hidden="true"><BoltIcon /></span>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-[#30223a] text-[#f4a445] shadow-[0_8px_20px_rgba(48,34,58,0.22)] motion-safe:animate-[placementEnergyPulse_1.2s_ease-out]" aria-hidden="true"><BoltIcon size={19} /></span>
               <div className="min-w-0">
-                <p className="truncate text-[10px] font-black uppercase tracking-[0.09em] text-[#8a74a3]">{copy.assessmentLabel}</p>
-                <p className="mt-0.5 truncate text-sm font-black text-[#2d2039]">
-                {state.section ? copy.sections[state.section] : copy.assessmentLabel}
-                  <span className="mx-1.5 text-[#b5a4c7]">·</span>
+                <p className="truncate text-[9px] font-black uppercase tracking-[0.12em] text-[#867a89]">{copy.assessmentLabel}</p>
+                <p className="mt-0.5 truncate text-[13px] font-black text-[#2a1e32]">
+                  {state.section ? copy.sections[state.section] : copy.assessmentLabel}
+                  <span className="mx-1.5 text-[#b4aab7]">·</span>
                   {state.sectionQuestion}/{state.sectionTotal}
                 </p>
               </div>
             </div>
             <TimerBadge state={state} remainingSeconds={remainingSeconds} label={copy.timeRemaining} />
           </div>
-          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#e4dee9]" role="progressbar" aria-label={copy.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={state.progressPercent}>
-            <div className={`h-full rounded-full bg-gradient-to-r from-[#ec911f] to-[#5a327f] transition-[width] duration-500 motion-reduce:transition-none ${locale === "ar" ? "origin-right" : "origin-left"}`} style={{ width: `${state.progressPercent}%` }} />
+          <div className="mt-2.5 grid items-center gap-2.5 sm:grid-cols-[minmax(220px,0.8fr)_1.2fr]">
+            <JourneyEnergy value={state.progressPercent} label={copy.energyLabel} compact />
+            <ProgressJourney state={state} copy={copy} locale={locale} />
           </div>
-          <ProgressJourney state={state} copy={copy} locale={locale} />
         </div>
       </header>
-      <main className="relative mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-7 lg:py-8">
-        <div className={`transition duration-150 ease-out ${questionTransition === "exiting" ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"} ${questionTransition === "entering" ? "motion-safe:animate-[placementQuestionIn_.28s_cubic-bezier(.22,.8,.22,1)]" : ""}`}>
+      <main className="relative mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6 lg:py-7">
+        <div
+          className={`will-change-transform transition-[transform,opacity,filter] ease-[cubic-bezier(.22,.8,.22,1)] motion-reduce:transition-none ${questionTransition === "exiting" ? "translate-y-3 scale-[0.985] opacity-0 blur-[2px] duration-180" : questionTransition === "reward" ? "scale-[0.985] opacity-0 duration-150" : "translate-y-0 scale-100 opacity-100 blur-0 duration-280"} ${questionTransition === "entering" ? "motion-safe:animate-[placementQuestionIn_.28s_cubic-bezier(.22,.8,.22,1)]" : ""}`}
+        >
           {children}
         </div>
       </main>
+      {reward ? <MotivationBurst reward={reward} locale={locale} /> : null}
       {milestone ? <Milestone value={milestone} locale={locale} /> : null}
       {timeoutVisible ? <TimeoutOverlay copy={copy} /> : null}
-    </div>
+    </ExperienceBackdrop>
   );
 }
 
@@ -503,15 +530,19 @@ function ProgressJourney({ state, copy, locale }: { state: PublicAttemptState; c
           : 0;
 
   return (
-    <nav className="mt-2" aria-label={copy.progressLabel} dir={locale === "ar" ? "rtl" : "ltr"}>
-      <ol className="grid grid-cols-4 gap-1.5">
+    <nav className="relative" aria-label={copy.progressLabel} dir={locale === "ar" ? "rtl" : "ltr"}>
+      <span className="absolute inset-x-[10%] top-3.5 h-px bg-[#d8d0da]" aria-hidden="true" />
+      <span className="absolute top-3.5 h-px bg-[linear-gradient(90deg,#ec911f,#6e438a)] transition-[width] duration-700 motion-reduce:transition-none" aria-hidden="true" style={{ insetInlineStart: "10%", width: `${Math.min(80, (activeStep / 3) * 80)}%` }} />
+      <ol className="relative grid grid-cols-4 gap-1">
         {steps.map((step, index) => {
           const reached = index <= activeStep;
           const current = index === activeStep;
           return (
-            <li key={step.id} className={`flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-1.5 py-1 text-center transition-colors ${current ? "bg-white text-[#391b68] shadow-sm" : "text-[#8b7d94]"}`} aria-current={current ? "step" : undefined}>
-              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${current ? "bg-[#ec911f]" : reached ? "bg-[#6b448e]" : "bg-[#cfc6d6]"}`} aria-hidden="true" />
-              <span className="truncate text-[9px] font-black sm:text-[11px]">{step.label}</span>
+            <li key={step.id} className="flex min-w-0 flex-col items-center text-center" aria-current={current ? "step" : undefined}>
+              <span className={`relative z-10 grid h-7 w-7 place-items-center rounded-full border transition-all duration-300 ${current ? "border-[#ec911f] bg-[#30223a] shadow-[0_0_0_4px_rgba(236,145,31,0.12)]" : reached ? "border-[#5d3b72] bg-[#5d3b72]" : "border-[#d3cad5] bg-[#f6f3f1]"}`} aria-hidden="true">
+                <span className={`h-1.5 w-1.5 rounded-full ${reached ? "bg-white" : "bg-[#b8adb9]"}`} />
+              </span>
+              <span className={`mt-1 w-full truncate text-[8px] font-black sm:text-[10px] ${current ? "text-[#30223a]" : "text-[#887c8b]"}`}>{step.label}</span>
             </li>
           );
         })}
@@ -527,12 +558,18 @@ function TimerBadge({ state, remainingSeconds, label }: { state: PublicAttemptSt
   const warning = remainingSeconds <= 10;
   const urgent = remainingSeconds <= 5;
   const stroke = urgent ? "#b42318" : warning ? "#d97706" : "#391b68";
+  const circumference = Math.PI * 2 * 15;
 
   return (
-    <div className={`relative flex h-9 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl border bg-white px-2.5 shadow-sm transition-colors ${urgent ? "border-red-200 text-red-700" : warning ? "border-orange-200 text-orange-700" : "border-[#ddd4e5] text-[#391b68]"}`} aria-label={`${label}: ${remainingSeconds}`}>
-      <ClockIcon />
+    <div className={`flex h-10 shrink-0 items-center gap-1.5 rounded-[14px] border bg-white/75 pe-2 ps-1 shadow-sm backdrop-blur transition-colors ${urgent ? "border-red-200 text-red-700" : warning ? "border-orange-200 text-orange-700" : "border-white text-[#372641]"}`} aria-label={`${label}: ${remainingSeconds}`}>
+      <span className="relative grid h-8 w-8 place-items-center" aria-hidden="true">
+        <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
+          <circle cx="18" cy="18" r="15" fill="none" stroke="#e7e1e7" strokeWidth="2.5" />
+          <circle cx="18" cy="18" r="15" fill="none" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - ratio)} className="transition-[stroke-dashoffset] duration-300 motion-reduce:transition-none" />
+        </svg>
+        <ClockIcon size={13} />
+      </span>
       <span className="min-w-6 text-center text-sm font-black tabular-nums">{remainingSeconds}</span>
-      <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#eee8f2]" aria-hidden="true"><span className="block h-full origin-left transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${ratio * 100}%`, backgroundColor: stroke }} /></span>
     </div>
   );
 }
@@ -553,8 +590,8 @@ function ReadingQuestion({ state, copy, selected, setSelected, remainingSeconds,
   const preparing = state.phase === "reading_period";
   const sharedPassage = question.blockId !== question.slotId;
   return (
-    <form onSubmit={onSubmit} className="grid items-start gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:gap-6">
-      <aside className="hidden max-h-[calc(100dvh-12rem)] overflow-y-auto rounded-[28px] border border-white/90 bg-[#ece8ef] p-7 shadow-[0_22px_55px_rgba(36,25,46,0.08)] lg:sticky lg:top-36 lg:block">
+    <form onSubmit={onSubmit} className="grid items-start gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:gap-5">
+      <aside className="hidden max-h-[calc(100dvh-12rem)] overflow-y-auto rounded-[28px] border border-white/70 bg-[#e7e1e7]/90 p-7 shadow-[0_24px_60px_rgba(36,25,46,0.1)] backdrop-blur lg:sticky lg:top-36 lg:block">
         <div className="mb-5 flex items-center justify-between gap-3 border-b border-[#d9d0de] pb-4">
           <div className="flex items-center gap-2.5">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#391b68] shadow-sm"><BookIcon /></span>
@@ -569,8 +606,8 @@ function ReadingQuestion({ state, copy, selected, setSelected, remainingSeconds,
       </aside>
       <QuestionSurface>
         {preparing ? (
-          <div className="mb-5 flex items-start gap-3 rounded-2xl bg-[#ede7f1] px-4 py-3 text-start">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#704293]"><BookIcon size={19} /></span>
+          <div className="mb-5 flex items-start gap-3 rounded-[18px] bg-[#ece6ed] px-4 py-3 text-start shadow-inner">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#30223a] text-[#f2a143]"><BookIcon size={19} /></span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-black text-[#4c365f]">{copy.readingPreparation}</p>
@@ -581,7 +618,7 @@ function ReadingQuestion({ state, copy, selected, setSelected, remainingSeconds,
           </div>
         ) : null}
         {!sharedPassage ? (
-          <div className="mb-5 rounded-2xl bg-[#ece8ef] px-4 py-3 lg:hidden">
+          <div className="mb-5 rounded-[20px] bg-[#e8e2e8] px-4 py-4 shadow-inner lg:hidden">
             <div className="mb-2 flex items-center gap-2 text-xs font-black text-[#4c365f]"><BookIcon size={18} />{copy.sections.reading}</div>
             <PassageText text={question.passage?.text ?? ""} />
           </div>
@@ -744,11 +781,11 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
   const progressRatio = duration > 0 ? Math.min(1, visualProgress / duration) : 0;
 
   return (
-    <form onSubmit={onSubmit} className={`mx-auto max-w-3xl transition duration-200 ${busy ? "translate-y-1 opacity-80" : "translate-y-0 opacity-100"}`}>
+    <form onSubmit={onSubmit} className={`mx-auto max-w-4xl transition duration-200 ${busy ? "opacity-80" : "opacity-100"}`}>
       <QuestionSurface>
-        <div className="mb-5 rounded-2xl border border-[#e7dcf1] bg-[#f8f4fb] p-4">
+        <div className="mb-5 rounded-[20px] bg-[#e8e2e8] p-4 shadow-inner">
           <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#391b68] shadow-sm"><HeadphonesIcon size={23} /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#30223a] text-[#f2a143] shadow-md"><HeadphonesIcon size={23} /></span>
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.06em] text-[#8a74a3]">{isFollowUp ? copy.sharedAudio : copy.listeningPrompt}</p>
               {question.situation ? <p dir="ltr" className="mt-1.5 text-left text-sm font-bold leading-6 text-[#513477]">{question.situation}</p> : null}
@@ -758,7 +795,8 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
 
         <QuestionHeading state={state} copy={copy} />
 
-        <div className={`mt-5 overflow-hidden rounded-2xl border p-4 transition-colors ${audio?.status === "completed" ? "border-[#d7c8e7] bg-[#f6f1fb]" : "border-[#d8c8eb] bg-white"}`}>
+        <div className={`relative mt-5 overflow-hidden rounded-[22px] p-4 transition-colors ${audio?.status === "completed" ? "bg-[#e8e3eb]" : isPlaying ? "bg-[#33243d] text-white shadow-[0_18px_45px_rgba(45,31,55,0.2)]" : "bg-[#ebe6eb]"}`}>
+          {isPlaying ? <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(236,145,31,0.18),transparent_38%)]" aria-hidden="true" /> : null}
           {playable && audio ? (
             <>
               {audio.status !== "completed" ? (
@@ -800,22 +838,22 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
                 {audio.status === "completed" ? (
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#391b68] text-white"><CheckIcon /></span>
                 ) : (
-                  <button type="button" disabled={busy || isPlaying} onClick={() => void startPlayback()} className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#391b68] text-white shadow-[0_10px_24px_rgba(57,27,104,0.22)] transition duration-200 hover:bg-[#281343] active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30" aria-label={copy.playAudio}>
+                  <button type="button" disabled={busy || isPlaying} onClick={() => void startPlayback()} className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#30223a] text-white shadow-[0_10px_24px_rgba(40,28,49,0.25)] transition duration-200 hover:scale-[1.03] hover:bg-[#3d2949] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30" aria-label={copy.playAudio}>
                     {isPlaying ? <PauseIcon /> : <PlayIcon />}
                   </button>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3 text-xs font-black text-[#6d5889]">
+                  <div className={`flex items-center justify-between gap-3 text-xs font-black ${isPlaying ? "text-white/75" : "text-[#6d5889]"}`}>
                     <span>{audio.status === "completed" ? copy.audioComplete : isPlaying ? copy.audioPlaying : copy.playAudio}</span>
                     <span className="shrink-0 tabular-nums" dir="ltr">{formatTime(visualProgress)} / {formatTime(duration)}</span>
                   </div>
-                  <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#e8deef]" dir="ltr" role="progressbar" aria-label={copy.audioPlaying} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(visualProgress)}>
-                    <div className="h-full origin-left rounded-full bg-gradient-to-r from-[#ec911f] to-[#6c4199]" style={{ transform: `scaleX(${progressRatio})` }} />
+                  <div className={`mt-2.5 h-2 overflow-hidden rounded-full ${isPlaying ? "bg-white/12" : "bg-[#d8d0dc]"}`} dir="ltr" role="progressbar" aria-label={copy.audioPlaying} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(visualProgress)}>
+                    <div className="h-full origin-left rounded-full bg-[linear-gradient(90deg,#ec911f,#d8a4eb)] will-change-transform" style={{ transform: `scaleX(${progressRatio})` }} />
                   </div>
                 </div>
                 <AudioWaves playing={isPlaying} />
               </div>
-              <div className="mt-3 flex items-center justify-between gap-3 text-[11px] font-bold text-[#8a78a0]">
+              <div className={`mt-3 flex items-center justify-between gap-3 text-[11px] font-bold ${isPlaying ? "text-white/55" : "text-[#8a78a0]"}`}>
                 <span>{audio.status === "not_started" ? copy.listeningLocked : audio.status === "completed" ? copy.audioComplete : copy.audioPlaying}</span>
                 <span>{copy.audioOnce}</span>
               </div>
@@ -834,7 +872,7 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
 }
 
 function QuestionSurface({ children }: { children: ReactNode }) {
-  return <div className="relative overflow-hidden rounded-[26px] border border-white/90 bg-[#fffdfb] p-5 shadow-[0_24px_65px_rgba(36,24,45,0.11),0_1px_0_rgba(255,255,255,0.9)_inset] sm:p-7 lg:p-8"><span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#ec911f] via-[#8c5aac] to-[#391b68]" aria-hidden="true" />{children}</div>;
+  return <section className="relative overflow-hidden rounded-[28px] border border-white/75 bg-[linear-gradient(145deg,rgba(255,254,251,0.94),rgba(245,241,244,0.92))] p-5 shadow-[0_28px_70px_rgba(39,27,48,0.13),0_1px_0_rgba(255,255,255,0.9)_inset] backdrop-blur-xl sm:p-7 lg:p-8"><span className="absolute -start-16 -top-24 h-52 w-52 rounded-full bg-[#8c5aac]/10 blur-3xl" aria-hidden="true" /><span className="absolute end-0 top-0 h-24 w-1 bg-[linear-gradient(#ec911f,transparent)]" aria-hidden="true" /><div className="relative">{children}</div></section>;
 }
 
 function QuestionHeading({ state, copy, onShowPassage }: { state: PublicAttemptState; copy: PlacementCopy; onShowPassage?: () => void }) {
@@ -842,13 +880,13 @@ function QuestionHeading({ state, copy, onShowPassage }: { state: PublicAttemptS
   return (
     <div>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="rounded-full bg-[#eee9f1] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.07em] text-[#6f5b7a]">{copy.questionLabel} {state.sectionQuestion}</span>
+        <span className="rounded-full bg-[#30223a] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-sm">{copy.questionLabel} {state.sectionQuestion}</span>
         {onShowPassage ? (
-          <button type="button" onClick={onShowPassage} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#391b68] px-3.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(57,27,104,0.17)] transition hover:bg-[#2b154d] active:translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25 lg:hidden"><BookIcon />{copy.showPassage}</button>
+          <button type="button" onClick={onShowPassage} className="inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-[#30223a] px-3.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(45,31,55,0.18)] transition hover:-translate-y-0.5 hover:bg-[#3d2949] active:translate-y-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25 lg:hidden"><BookIcon />{copy.showPassage}</button>
         ) : null}
       </div>
-      {question.situation && question.section !== "listening" ? <p className="mb-4 rounded-2xl bg-[#f6f1fb] px-4 py-3 text-sm leading-6 text-[#6d5889]">{question.situation}</p> : null}
-      <h1 dir="ltr" className="whitespace-pre-line text-left text-[23px] font-black leading-[1.38] text-[#24182e] sm:text-[27px] sm:leading-[1.35]">{question.prompt}</h1>
+      {question.situation && question.section !== "listening" ? <p className="mb-4 rounded-[18px] bg-[#e8e2e8] px-4 py-3 text-sm font-semibold leading-6 text-[#66566c] shadow-inner">{question.situation}</p> : null}
+      <h1 dir="ltr" className="whitespace-pre-line text-left text-[24px] font-black leading-[1.35] tracking-[-0.01em] text-[#241a2b] sm:text-[29px] sm:leading-[1.3]">{question.prompt}</h1>
     </div>
   );
 }
@@ -866,9 +904,10 @@ function AnswerOptions({ question, selected, onSelect, legend, disabled = false 
       {question.options.map((option) => {
         const active = selected === option.id;
         return (
-          <label key={option.id} className={`group flex min-h-[60px] items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left text-[15px] font-bold leading-6 transition duration-200 focus-within:ring-4 focus-within:ring-[#391b68]/15 sm:px-4 ${disabled ? "cursor-not-allowed border-[#e5e0e8] bg-[#f7f5f8] text-[#9a909f] opacity-75" : active ? "cursor-pointer border-[#5d367e] bg-[#eee7f3] text-[#24182e] shadow-[inset_0_0_0_1px_rgba(57,27,104,0.7),0_10px_24px_rgba(57,27,104,0.09)] motion-safe:animate-[placementOptionSelect_.22s_ease-out]" : "cursor-pointer border-[#ddd6e1] bg-[#f8f6f8] text-[#4d3b57] hover:-translate-y-0.5 hover:border-[#9d88aa] hover:bg-white active:translate-y-0"}`}>
+          <label key={option.id} className={`group relative flex min-h-[62px] items-center gap-3 overflow-hidden rounded-[18px] border px-3.5 py-3 text-left text-[15px] font-bold leading-6 transition-[transform,box-shadow,border-color,background-color] duration-200 focus-within:ring-4 focus-within:ring-[#ec911f]/18 sm:px-4 ${disabled ? "cursor-not-allowed border-transparent bg-[#ebe7eb] text-[#948a97] opacity-75" : active ? "cursor-pointer border-[#68427f] bg-[linear-gradient(100deg,#e9e0ed,#f7f3f4)] text-[#24182e] shadow-[0_14px_30px_rgba(52,34,64,0.12)] motion-safe:animate-[placementOptionSelect_.22s_ease-out]" : "cursor-pointer border-white/75 bg-white/68 text-[#4d3b57] shadow-[0_7px_20px_rgba(43,30,52,0.055)] hover:-translate-y-0.5 hover:border-white hover:bg-white hover:shadow-[0_12px_28px_rgba(43,30,52,0.1)] active:translate-y-0 active:scale-[0.99]"}`}>
+            {active ? <span className="absolute inset-y-0 start-0 w-1 bg-[#ec911f]" aria-hidden="true" /> : null}
             <input type="radio" name={`answer-${question.id}`} value={option.id} checked={active} disabled={disabled} onChange={() => onSelect(option.id)} className="sr-only" />
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black transition duration-200 ${active ? "bg-[#391b68] text-white shadow-[0_6px_14px_rgba(57,27,104,0.2)]" : disabled ? "bg-[#ebe7ed] text-[#9b8baa]" : "bg-white text-[#5b3a72] shadow-sm group-hover:bg-[#f0e9f4]"}`}>{active ? <CheckIcon size={17} /> : option.id}</span>
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[13px] text-sm font-black transition duration-200 ${active ? "bg-[#30223a] text-white shadow-[0_7px_16px_rgba(45,31,55,0.22)]" : disabled ? "bg-[#ded8df] text-[#9b8baa]" : "bg-[#f3eff1] text-[#5b3a72] shadow-sm group-hover:bg-[#ece4ef]"}`}>{active ? <span className="motion-safe:animate-[placementCheckDraw_.2s_ease-out]"><CheckIcon size={17} /></span> : option.id}</span>
             <span className="min-w-0 flex-1">{option.text}</span>
           </label>
         );
@@ -879,8 +918,10 @@ function AnswerOptions({ question, selected, onSelect, legend, disabled = false 
 
 function StickySubmit({ disabled, busy, copy }: { disabled: boolean; busy: boolean; copy: PlacementCopy }) {
   return (
-    <div className="sticky bottom-2 z-20 mt-5 rounded-[20px] bg-[#fffdfb]/90 p-1.5 shadow-[0_-12px_32px_rgba(255,253,251,0.96)] backdrop-blur sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
-      <button type="submit" disabled={disabled} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-[16px] bg-[#ec911f] px-5 text-base font-black text-white shadow-[0_12px_26px_rgba(236,145,31,0.22)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#d97f11] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-[#ddd5df] disabled:text-[#8f8395] disabled:shadow-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
+    <div className="sticky bottom-2 z-20 mt-5 rounded-[20px] bg-[#f7f3f4]/88 p-1.5 shadow-[0_-14px_34px_rgba(247,243,244,0.95)] backdrop-blur sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
+      <button type="submit" disabled={disabled} className="group relative inline-flex min-h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-[17px] bg-[#30223a] px-5 text-base font-black text-white shadow-[0_14px_30px_rgba(45,31,55,0.22)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#3b2947] active:translate-y-0 active:scale-[0.995] disabled:cursor-not-allowed disabled:bg-[#d9d2da] disabled:text-[#918693] disabled:shadow-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
+        {!disabled ? <span className="absolute inset-y-0 start-0 w-1 bg-[#ec911f]" aria-hidden="true" /> : null}
+        <span className={`grid h-8 w-8 place-items-center rounded-xl transition ${disabled ? "bg-white/20" : "bg-[#ec911f] text-white group-hover:rotate-6"}`}><BoltIcon size={17} /></span>
         {busy ? copy.saving : copy.saveAnswer}<ArrowIcon />
       </button>
     </div>
@@ -914,6 +955,7 @@ function ReadingDialog({ dialog, question, closeLabel, preparationLabel }: { dia
 function ResultScreen({ locale, state }: { locale: PlacementLocale; state: PublicAttemptState }) {
   const copy = placementCopy[locale];
   const result = state.result!;
+  const [revealStep, setRevealStep] = useState(0);
   const skillNames: Record<AssessmentSection, string> = copy.sections;
   const skillRows = [
     ["listening", result.listening],
@@ -927,61 +969,139 @@ function ResultScreen({ locale, state }: { locale: PlacementLocale; state: Publi
     : result.placement === "B1" && !result.b2Readiness
       ? "You have moved beyond the foundations and have a suitable base for B1. The upper-band items show that some skills still need strengthening before a direct B2 start."
       : `Your performance across all three skills supports ${courseLabel(locale, result.placement)} as the most suitable starting point.`;
+  const salesBridge = locale === "ar"
+    ? `بما إن أنسب بداية ليك هي ${result.placement}، نقدر نساعدك تبدأ بالمستوى المناسب من غير ما تضيع وقت في مستوى أعلى أو أقل من احتياجك.`
+    : `Because ${result.placement} is your best starting point, we can help you begin at the right level without losing time in a course above or below what you need.`;
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setRevealStep(4);
+      return;
+    }
+    const timers = [
+      window.setTimeout(() => setRevealStep(1), 180),
+      window.setTimeout(() => setRevealStep(2), 560),
+      window.setTimeout(() => setRevealStep(3), 900),
+      window.setTimeout(() => setRevealStep(4), 1_180),
+    ];
+    return () => timers.forEach(window.clearTimeout);
+  }, []);
 
   return (
-    <section className="bg-[#fbf9ff] px-4 py-8 sm:px-6 sm:py-14">
-      <div className="mx-auto max-w-5xl">
-        <div className="overflow-hidden rounded-[30px] border border-[#ded1ed] bg-white shadow-[0_28px_80px_rgba(57,27,104,0.11)]">
-          <div className="bg-gradient-to-br from-[#391b68] to-[#5f388c] px-6 py-9 text-center text-white sm:px-10 sm:py-12">
-            <p className="text-sm font-black text-[#f5cc96]">{copy.resultHeading}</p>
-            <div className="mx-auto mt-5 grid h-32 w-32 place-items-center rounded-full border-[7px] border-white/15 bg-white text-5xl font-black text-[#391b68] shadow-[0_18px_45px_rgba(24,9,45,0.25)] motion-safe:animate-[placementReveal_.55s_ease-out]">{result.placement}</div>
-            <h1 className="mt-5 text-balance text-3xl font-black sm:text-4xl">{courseLabel(locale, result.placement)}</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-7 text-white/80 sm:leading-8">{explanation}</p>
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
+      <section className="relative px-4 py-6 sm:px-6 sm:py-10 motion-safe:animate-[placementResultScene_.55s_ease-out_both]">
+        {revealStep >= 1 ? <CelebrationParticles dense /> : null}
+        <div className="mx-auto max-w-5xl">
+          <div className="relative overflow-hidden rounded-[32px] bg-[#2f2138] px-5 py-8 text-center text-white shadow-[0_34px_90px_rgba(39,26,48,0.3)] sm:px-10 sm:py-11">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(160,103,190,0.42),transparent_45%),radial-gradient(circle_at_90%_95%,rgba(236,145,31,0.22),transparent_32%)]" aria-hidden="true" />
+            <div className="relative">
+              <p className={`text-sm font-black text-[#f5b25d] transition duration-300 ${revealStep >= 1 ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>{copy.resultComplete}</p>
+              <p className={`mt-3 text-[13px] font-bold text-white/60 transition duration-300 ${revealStep >= 1 ? "opacity-100" : "opacity-0"}`}>{copy.resultHeading}</p>
+              <div className={`relative mx-auto mt-4 grid h-36 w-36 place-items-center rounded-full border border-white/15 bg-white/8 shadow-[0_0_70px_rgba(236,145,31,0.16)] transition-opacity ${revealStep >= 2 ? "opacity-100 motion-safe:animate-[placementResultBadge_.7s_cubic-bezier(.2,.85,.2,1)_both]" : "opacity-0"}`}>
+                <span className="absolute inset-3 rounded-full border border-[#ec911f]/40" />
+                <span className="text-5xl font-black tracking-[-0.04em] text-white">{result.placement}</span>
+              </div>
+              <h1 className={`mt-5 text-balance text-3xl font-black transition duration-300 sm:text-4xl ${revealStep >= 2 ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>{courseLabel(locale, result.placement)}</h1>
+              <p className={`mx-auto mt-3 max-w-xl text-sm font-semibold leading-7 text-white/65 transition duration-300 sm:text-[15px] ${revealStep >= 2 ? "opacity-100" : "opacity-0"}`}>{copy.resultBasis}</p>
+              <div className={`mx-auto mt-5 max-w-md transition duration-300 ${revealStep >= 2 ? "opacity-100" : "opacity-0"}`}><JourneyEnergy value={100} label={copy.energyLabel} /></div>
+            </div>
           </div>
 
-          <div className="p-5 sm:p-9">
+          <div className={`relative mt-4 rounded-[28px] border border-white/75 bg-white/72 p-5 shadow-[0_24px_65px_rgba(43,29,52,0.11)] backdrop-blur-xl transition duration-500 sm:p-8 ${revealStep >= 3 ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#f1e8fb] text-[#391b68]"><ChartIcon /></span>
-              <h2 className="text-xl font-black text-[#391b68]">{copy.profileTitle}</h2>
+              <span className="grid h-11 w-11 place-items-center rounded-[15px] bg-[#30223a] text-[#f2a143]"><ChartIcon /></span>
+              <h2 className="text-xl font-black text-[#2d2036]">{copy.profileTitle}</h2>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {skillRows.map(([skill, evidence], index) => (
-                <div key={skill} className="rounded-2xl border border-[#e1d6ee] bg-[#fcfaff] p-5 motion-safe:animate-[placementQuestionIn_.3s_ease-out]" style={{ animationDelay: `${index * 80}ms` }}>
+                <div key={skill} className={`rounded-[20px] bg-[#eee9ed] p-4 shadow-inner motion-safe:animate-[placementRevealUp_.38s_ease-out_both]`} style={{ animationDelay: `${index * 100}ms` }}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-black text-[#513477]">{skillNames[skill]}</p>
-                    <span className="rounded-full bg-[#f1e8fb] px-2.5 py-1 text-xs font-black text-[#391b68]">{evidence.estimatedBand}</span>
+                    <p className="text-sm font-black text-[#493553]">{skillNames[skill]}</p>
+                    <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-[#4d335e]">{evidence.estimatedBand}</span>
                   </div>
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#e9e0f3]">
-                    <div className="h-full rounded-full bg-[#ec911f] transition-[width] duration-700 motion-reduce:transition-none" style={{ width: `${evidence.percent}%` }} />
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#d9d1da]">
+                    <div className="h-full rounded-full bg-[linear-gradient(90deg,#ec911f,#76508c)] transition-[width] duration-700 motion-reduce:transition-none" style={{ width: `${evidence.percent}%` }} />
                   </div>
-                  <p className="mt-3 text-xs font-bold text-[#806b99]">{evidence.correct} / {evidence.total} {locale === "ar" ? "إجابات صحيحة" : "correct answers"}</p>
                 </div>
               ))}
             </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <ResultFact icon={<StarIcon />} label={copy.strongest} value={skillNames[result.strongestSkill]} />
               <ResultFact icon={<TargetIcon />} label={copy.improve} value={skillNames[result.weakestSkill]} />
               <ResultFact icon={<ShieldIcon />} label={copy.confidence} value={copy.confidenceLabels[result.confidence]} />
             </div>
-
-            <details className="mt-5 rounded-2xl border border-[#e1d6ee] bg-white p-5 text-start transition open:bg-[#fcfaff]">
-              <summary className="cursor-pointer font-black text-[#391b68] focus-visible:outline-none">{copy.whyResult}</summary>
-              <p className="mt-3 text-sm leading-7 text-[#6d5889]">{copy.whyBody}</p>
+            <details className="mt-4 rounded-[18px] bg-[#eee9ed] p-4 text-start transition open:bg-white/80">
+              <summary className="cursor-pointer font-black text-[#3e2a4a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20">{copy.whyResult}</summary>
+              <p className="mt-3 text-sm leading-7 text-[#6d606f]">{copy.whyBody}</p>
+              <p className="mt-2 text-sm leading-7 text-[#6d606f]">{explanation}</p>
             </details>
           </div>
-        </div>
 
-        <div className="mt-5 overflow-hidden rounded-[26px] border border-[#e3d7ef] bg-white p-6 shadow-[0_18px_50px_rgba(57,27,104,0.07)] sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-8">
-          <div>
-            <p className="text-sm font-black text-[#ec911f]">{copy.courseHeading}</p>
-            <h2 className="mt-2 text-2xl font-black text-[#391b68] sm:text-3xl">{courseLabel(locale, result.placement)}</h2>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-[#6d5889]">{copy.courseBody}</p>
+          <div className={`mt-4 overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#fffaf2,#ede6ef)] p-5 shadow-[0_20px_55px_rgba(43,29,52,0.1)] transition duration-500 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-7 ${revealStep >= 4 ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.1em] text-[#c66e08]">{copy.courseHeading}</p>
+              <h2 className="mt-2 text-2xl font-black text-[#30223a] sm:text-3xl">{courseLabel(locale, result.placement)}</h2>
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-[#6d606f]">{salesBridge}</p>
+            </div>
+            <Link href={`/${locale}#lead-form`} onClick={() => trackPlacementTestEvent("placement_test_sales_cta_click", { placementLevel: result.placement, confidence: result.confidence })} className="group mt-5 inline-flex min-h-14 w-full shrink-0 items-center justify-center gap-3 rounded-[17px] bg-[#30223a] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(45,31,55,0.2)] transition hover:-translate-y-0.5 hover:bg-[#3b2947] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30 sm:mt-0 sm:w-auto"><span className="grid h-8 w-8 place-items-center rounded-xl bg-[#ec911f] transition group-hover:rotate-6"><BoltIcon size={17} /></span>{copy.salesCta}<ArrowIcon /></Link>
           </div>
-          <Link href={`/${locale}#lead-form`} onClick={() => trackPlacementTestEvent("placement_test_sales_cta_click", { placementLevel: result.placement, confidence: result.confidence })} className="mt-6 inline-flex min-h-14 w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#ec911f] px-6 text-base font-black text-white shadow-[0_12px_28px_rgba(236,145,31,0.2)] transition hover:bg-[#d97f11] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30 sm:mt-0 sm:w-auto">{copy.salesCta}<ArrowIcon /></Link>
         </div>
-      </div>
-    </section>
+      </section>
+    </ExperienceBackdrop>
+  );
+}
+
+function AssessmentWelcome({ locale, copy, busy, onStart }: { locale: PlacementLocale; copy: PlacementCopy; busy: boolean; onStart: () => void }) {
+  const facts = locale === "ar"
+    ? [["36", "سؤال"], ["3", "مهارات"], ["24–27", "دقيقة"]]
+    : [["36", "Questions"], ["3", "Skills"], ["24–27", "Minutes"]];
+
+  return (
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
+      <section className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-6xl items-center gap-4 px-4 py-6 sm:px-6 sm:py-9 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
+        <div className="relative z-10 motion-safe:animate-[placementPageEnter_.5s_cubic-bezier(.22,.8,.22,1)_both]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/65 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[#5e486a] shadow-sm backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-[#ec911f] shadow-[0_0_0_4px_rgba(236,145,31,0.12)]" />
+            {copy.assessmentLabel}
+          </div>
+          <h1 className="mt-5 max-w-3xl text-balance text-[clamp(2.25rem,7vw,4.5rem)] font-black leading-[1.05] tracking-[-0.02em] text-[#291e31]">{copy.welcomeTitle}</h1>
+          <p className="mt-4 max-w-xl text-[15px] font-semibold leading-7 text-[#6f6473] sm:text-lg sm:leading-8">{copy.welcomeBody}</p>
+          <div className="mt-6 grid grid-cols-3 gap-2.5 sm:max-w-xl sm:gap-3">
+            {facts.map(([value, label], index) => (
+              <div key={label} className="relative overflow-hidden rounded-[18px] border border-white/80 bg-white/62 px-2 py-3 text-center shadow-[0_12px_30px_rgba(49,34,59,0.07)] backdrop-blur sm:px-4">
+                <span className={`absolute inset-x-0 top-0 h-0.5 ${index === 1 ? "bg-[#ec911f]" : "bg-[#76538b]"}`} />
+                <strong className="block text-lg font-black text-[#2f2237] sm:text-2xl">{value}</strong>
+                <span className="mt-0.5 block text-[10px] font-black text-[#817684] sm:text-xs">{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 max-w-xl rounded-[20px] border border-white/70 bg-[#2e2138] p-3.5 text-white shadow-[0_18px_45px_rgba(43,29,53,0.2)] sm:p-4">
+            <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.08em] text-white/60">
+              <span>{locale === "ar" ? "رحلة التقييم" : "Assessment journey"}</span>
+              <span>0 → 100%</span>
+            </div>
+            <div className="mt-3 flex items-center gap-2" dir={locale === "ar" ? "rtl" : "ltr"}>
+              {[copy.journey.languageUse, copy.journey.reading, copy.journey.listening, copy.journey.result].map((label, index) => (
+                <div key={label} className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[9px] font-black ${index === 0 ? "bg-[#ec911f] text-white" : "bg-white/10 text-white/65"}`}>{index + 1}</span>
+                  <span className="hidden truncate text-[10px] font-black text-white/75 sm:block">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button type="button" disabled={busy} onClick={onStart} className="group mt-5 inline-flex min-h-14 w-full max-w-xl items-center justify-center gap-3 overflow-hidden rounded-[18px] bg-[#ec911f] px-6 text-base font-black text-white shadow-[0_16px_35px_rgba(236,145,31,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#d98213] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 transition group-hover:rotate-6"><BoltIcon size={18} /></span>
+            {copy.startNow}
+            <ArrowIcon />
+          </button>
+          <p className="mt-3 max-w-xl text-center text-[11px] font-bold leading-5 text-[#7e7281]">{copy.autoSaveNote}</p>
+        </div>
+        <div className="order-first mx-auto w-full max-w-[210px] sm:max-w-[240px] lg:order-none lg:max-w-none motion-safe:animate-[placementPageEnter_.55s_.08s_cubic-bezier(.22,.8,.22,1)_both]">
+          <ChallengeVisual label={copy.assessmentLabel} />
+        </div>
+      </section>
+    </ExperienceBackdrop>
   );
 }
 
@@ -1009,49 +1129,58 @@ function AudioCheck({ title, body, playLabel, continueLabel, busy, onContinue }:
     });
   }
   return (
-    <CenteredStage>
-      <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-[#f1e8fb] to-[#fff4e5] text-[#391b68] shadow-[0_14px_34px_rgba(57,27,104,0.12)]"><HeadphonesIcon /></div>
-      <h1 className="mt-5 text-balance text-3xl font-black sm:text-5xl">{title}</h1>
-      <p className="mx-auto mt-4 max-w-xl text-[15px] leading-8 text-[#6d5889] sm:text-lg">{body}</p>
-      <button type="button" onClick={playSample} disabled={playing} className="mx-auto mt-7 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-3 rounded-2xl border border-[#9e82be] bg-white px-5 font-black text-[#391b68] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f7f2fb] disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#391b68]/15"><PlayIcon />{playing ? "…" : playLabel}<AudioWaves playing={playing} /></button>
-      <PrimaryButton disabled={!played || busy} onClick={onContinue}>{continueLabel}</PrimaryButton>
-    </CenteredStage>
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
+      <section className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-4xl items-center px-4 py-7 sm:px-6">
+        <div className="relative w-full overflow-hidden rounded-[30px] border border-white/75 bg-[#30223a] p-6 text-center text-white shadow-[0_30px_85px_rgba(40,27,49,0.25)] sm:p-10 motion-safe:animate-[placementPageEnter_.4s_ease-out]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(154,100,187,0.32),transparent_42%),radial-gradient(circle_at_85%_90%,rgba(236,145,31,0.2),transparent_30%)]" aria-hidden="true" />
+          <div className="relative">
+            <div className="mx-auto flex h-20 w-44 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 text-[#f2a143] shadow-inner">
+              <AudioWaves playing={playing} count={12} />
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#30223a]"><HeadphonesIcon size={26} /></span>
+              <AudioWaves playing={playing} count={12} />
+            </div>
+            <h1 className="mt-6 text-balance text-3xl font-black sm:text-5xl">{title}</h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-7 text-white/68 sm:text-base sm:leading-8">{body}</p>
+            <button type="button" onClick={playSample} disabled={playing} className="mx-auto mt-7 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-3 rounded-[17px] border border-white/15 bg-white/10 px-5 font-black text-white backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-white/15 active:translate-y-0 disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30"><PlayIcon />{playing ? "…" : playLabel}</button>
+            <button type="button" disabled={!played || busy} onClick={onContinue} className="mx-auto mt-3 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-[17px] bg-[#ec911f] px-6 font-black text-white shadow-[0_14px_30px_rgba(236,145,31,0.22)] transition hover:bg-[#d98213] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35 disabled:shadow-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">{continueLabel}<ArrowIcon /></button>
+          </div>
+        </div>
+      </section>
+    </ExperienceBackdrop>
   );
 }
 
 function SectionMoment({ section, title, label, body, error, retryLabel, onRetry }: { section?: AssessmentSection; title: string; label: string; body: string; error: string | null; retryLabel: string; onRetry: () => void }) {
   return (
-    <section className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden bg-[#f4f1f6] px-4 py-8">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.95),rgba(239,232,244,0.85),rgba(255,244,229,0.72))]" aria-hidden="true" />
-      <div className="relative mx-auto w-full max-w-xl rounded-[28px] border border-white/90 bg-white/80 p-7 text-center shadow-[0_28px_80px_rgba(38,25,49,0.12)] backdrop-blur sm:p-9 motion-safe:animate-[placementSectionMoment_1.25s_cubic-bezier(.22,.8,.22,1)]">
-        {section ? <SectionIcon section={section} /> : <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#391b68] text-white"><CheckIcon size={24} /></span>}
-        <p className="mt-4 text-xs font-black uppercase tracking-[0.1em] text-[#8a7497]">{label}</p>
-        <h1 className="mx-auto mt-2 text-balance text-3xl font-black leading-tight text-[#2a1d35] sm:text-4xl">{title}</h1>
-        <p className="mx-auto mt-3 max-w-lg text-sm font-bold leading-7 text-[#70637b] sm:text-base">{body}</p>
-        <div className="mx-auto mt-6 h-1 w-28 overflow-hidden rounded-full bg-[#e3dce8]" aria-hidden="true"><span className="block h-full w-full origin-left bg-gradient-to-r from-[#ec911f] to-[#5e3880] motion-safe:animate-[placementTransitionBar_1.25s_linear_forwards]" /></div>
-        {error ? <div className="mt-5"><InlineError error={error} retryLabel={retryLabel} onRetry={onRetry} /></div> : null}
-      </div>
-    </section>
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
+      <section className="relative flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8 text-center">
+        <div className="relative w-full max-w-lg motion-safe:animate-[placementSectionMoment_1.25s_cubic-bezier(.22,.8,.22,1)]">
+          <div className="absolute inset-x-[20%] top-1/2 h-24 -translate-y-1/2 rounded-full bg-[#6d4388]/20 blur-3xl" aria-hidden="true" />
+          <div className="relative">
+            {section ? <SectionIcon section={section} /> : <span className="mx-auto grid h-16 w-16 place-items-center rounded-[22px] bg-[#30223a] text-[#f3a443] shadow-[0_18px_42px_rgba(45,31,55,0.24)]"><CheckIcon size={26} /></span>}
+            <p className="mt-5 text-[11px] font-black uppercase tracking-[0.14em] text-[#806f86]">{label}</p>
+            <h1 className="mx-auto mt-2 text-balance text-3xl font-black leading-tight text-[#2a1e32] sm:text-5xl">{title}</h1>
+            <p className="mx-auto mt-3 max-w-md text-sm font-semibold leading-7 text-[#716675] sm:text-base">{body}</p>
+            <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-white/80 shadow-inner" aria-hidden="true"><span className="block h-full w-full origin-left bg-[linear-gradient(90deg,#ec911f,#785093)] motion-safe:animate-[placementTransitionBar_1.25s_linear_forwards]" /></div>
+            {error ? <div className="mx-auto mt-5 max-w-sm"><InlineError error={error} retryLabel={retryLabel} onRetry={onRetry} /></div> : null}
+          </div>
+        </div>
+      </section>
+    </ExperienceBackdrop>
   );
 }
 
 function CenteredStage({ children }: { children: ReactNode }) {
   return (
-    <section className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden bg-[#f4f1f6] px-4 py-6 sm:px-6 sm:py-9">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.94),rgba(238,231,243,0.82),rgba(255,245,231,0.7))]" aria-hidden="true" />
-      <div className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/90 bg-[#fffdfb]/92 p-6 text-center shadow-[0_28px_80px_rgba(36,24,45,0.12)] backdrop-blur motion-safe:animate-[placementQuestionIn_.32s_ease-out] sm:p-9">
-        {children}
-      </div>
-    </section>
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
+      <section className="flex min-h-[calc(100dvh-4rem)] items-center px-4 py-7 sm:px-6">
+        <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-[30px] bg-[#30223a] p-7 text-center text-white shadow-[0_30px_85px_rgba(40,27,49,0.28)] motion-safe:animate-[placementQuestionIn_.32s_ease-out] sm:p-10">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(148,94,179,0.32),transparent_46%),radial-gradient(circle_at_90%_90%,rgba(236,145,31,0.18),transparent_32%)]" aria-hidden="true" />
+          <div className="relative">{children}</div>
+        </div>
+      </section>
+    </ExperienceBackdrop>
   );
-}
-
-function PrimaryButton({ children, disabled, onClick }: { children: ReactNode; disabled?: boolean; onClick: () => void }) {
-  return <button type="button" disabled={disabled} onClick={onClick} className="mx-auto mt-7 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-2xl bg-[#ec911f] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(236,145,31,0.22)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#d97f11] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">{children}<ArrowIcon /></button>;
-}
-
-function Eyebrow({ children }: { children: ReactNode }) {
-  return <span className="mt-5 inline-flex rounded-full border border-[#e2d6ee] bg-[#f4eef9] px-4 py-2 text-xs font-black uppercase tracking-[0.06em] text-[#391b68]">{children}</span>;
 }
 
 function PassageText({ text }: { text: string }) {
@@ -1059,11 +1188,7 @@ function PassageText({ text }: { text: string }) {
 }
 
 function ResultFact({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return <div className="flex items-center gap-3 rounded-2xl bg-[#f2eafb] p-4 text-start"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#391b68]">{icon}</span><div><p className="text-xs font-black text-[#806b99]">{label}</p><p className="mt-1 font-black text-[#391b68]">{value}</p></div></div>;
-}
-
-function WelcomeFact({ value, label }: { value: string; label: string }) {
-  return <div className="rounded-2xl border border-[#e3d8f0] bg-[#fcfaff] px-2 py-3"><span className="block text-lg font-black text-[#391b68] sm:text-xl">{value}</span><span className="mt-0.5 block text-[#806b99]">{label}</span></div>;
+  return <div className="flex items-center gap-3 rounded-[18px] bg-[#eee9ed] p-4 text-start shadow-inner"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#30223a] text-[#f2a143]">{icon}</span><div><p className="text-[11px] font-black text-[#837586]">{label}</p><p className="mt-1 font-black text-[#35243f]">{value}</p></div></div>;
 }
 
 function FatalState({ locale, message }: { locale: PlacementLocale; message: string }) {
@@ -1077,12 +1202,31 @@ function TimeoutOverlay({ copy }: { copy: PlacementCopy }) {
     overlay.current?.focus();
   }, []);
   return (
-    <div ref={overlay} role="dialog" aria-modal="true" aria-labelledby="placement-timeout-title" aria-describedby="placement-timeout-body" tabIndex={-1} className="fixed inset-0 z-50 grid place-items-center bg-[#281343]/55 p-4 backdrop-blur-sm focus:outline-none">
-      <div className="w-full max-w-sm rounded-[26px] border border-white/50 bg-white p-7 text-center shadow-2xl motion-safe:animate-[placementOverlay_.24s_ease-out]">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#fff4e5] text-[#d97f11]"><ClockIcon size={26} /></span>
-        <h2 id="placement-timeout-title" className="mt-4 text-2xl font-black text-[#391b68]">{copy.timeoutTitle}</h2>
-        <p id="placement-timeout-body" className="mt-2 text-sm font-bold leading-7 text-[#6d5889]">{copy.timeoutBody}</p>
-        <div className="mx-auto mt-5 h-1 w-24 overflow-hidden rounded-full bg-[#eee7f5]" aria-hidden="true"><div className="h-full w-full origin-left bg-[#ec911f] motion-safe:animate-[placementTimeout_1.15s_linear_forwards]" /></div>
+    <div ref={overlay} role="dialog" aria-modal="true" aria-labelledby="placement-timeout-title" aria-describedby="placement-timeout-body" tabIndex={-1} className="fixed inset-0 z-50 grid place-items-center bg-[#211827]/58 p-4 backdrop-blur-md focus:outline-none">
+      <div className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/15 bg-[#30223a] p-7 text-center text-white shadow-[0_28px_80px_rgba(20,13,25,0.38)] motion-safe:animate-[placementOverlay_.24s_ease-out]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,145,31,0.2),transparent_42%)]" aria-hidden="true" />
+        <div className="relative">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#ec911f] text-white shadow-[0_0_0_8px_rgba(236,145,31,0.1)] motion-safe:animate-[placementEnergyPulse_1s_ease-out]"><ClockIcon size={26} /></span>
+          <h2 id="placement-timeout-title" className="mt-4 text-2xl font-black">{copy.timeoutTitle}</h2>
+          <p id="placement-timeout-body" className="mt-2 text-sm font-bold leading-7 text-white/65">{copy.timeoutBody}</p>
+          <div className="mx-auto mt-5 h-1 w-24 overflow-hidden rounded-full bg-white/12" aria-hidden="true"><div className="h-full w-full origin-left bg-[#ec911f] motion-safe:animate-[placementTimeout_1.15s_linear_forwards]" /></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MotivationBurst({ reward, locale }: { reward: RewardMoment; locale: PlacementLocale }) {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-40 grid place-items-center p-4" role="status" aria-live="polite">
+      <div className={`relative min-w-48 overflow-hidden rounded-[24px] px-7 py-5 text-center text-white shadow-[0_26px_65px_rgba(32,21,39,0.3)] motion-safe:animate-[placementRewardBurst_.62s_cubic-bezier(.2,.85,.2,1)_both] ${reward.bonus ? "bg-[linear-gradient(135deg,#7b4b92,#30223a)]" : "bg-[#30223a]"}`}>
+        {reward.bonus ? <CelebrationParticles /> : null}
+        <span className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ec911f]/60 motion-safe:animate-[placementRewardRing_.55s_ease-out_both]" aria-hidden="true" />
+        <div className="relative">
+          <span className="mx-auto grid h-10 w-10 place-items-center rounded-[14px] bg-[#ec911f] text-white shadow-lg"><BoltIcon size={19} /></span>
+          <p className="mt-2 text-xl font-black">{reward.message}</p>
+          {reward.detail ? <p className="mt-1 text-xs font-black text-[#ffd59f]">{reward.detail}</p> : <p className="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-white/50">{locale === "ar" ? "طاقة التقدم زادت" : "Journey energy gained"}</p>}
+        </div>
       </div>
     </div>
   );
@@ -1090,32 +1234,35 @@ function TimeoutOverlay({ copy }: { copy: PlacementCopy }) {
 
 function Milestone({ value, locale }: { value: number; locale: PlacementLocale }) {
   const messages = locale === "ar"
-    ? value === 18 ? ["بداية قوية 👏", "خطوة ممتازة — كمل براحتك."] : value === 38 ? ["ممتاز، كمل بنفس التركيز ✨", "أنت ماشي بثبات."] : value === 50 ? ["عديت النص 🔥", "باقي أقل مما خلصت."] : ["قربت جدًا 🚀", "آخر جزء والنتيجة قربت."]
-    : value === 18 ? ["Strong Start 👏", "Great pace — keep going."] : value === 38 ? ["Excellent Focus ✨", "You are moving steadily."] : value === 50 ? ["Halfway There 🔥", "Less remains than you completed."] : ["Almost There 🚀", "One final part before your result."];
+    ? value === 20 ? ["بداية قوية 👏", "كمل بنفس الطاقة."] : value === 40 ? ["ممتاز، كمل بنفس التركيز ✨", "أنت ماشي بثبات."] : value === 50 ? ["عديت النص 🔥", "باقي أقل مما خلصت."] : value === 70 ? ["قربت جدًا 🚀", "آخر جزء والنتيجة قربت."] : ["فاضل كام خطوة بس ⚡", "ركز في آخر تحدي."]
+    : value === 20 ? ["Strong Start 👏", "Keep the same energy."] : value === 40 ? ["Excellent Focus ✨", "You are moving steadily."] : value === 50 ? ["Halfway There 🔥", "Less remains than you completed."] : value === 70 ? ["Almost There 🚀", "One final part before your result."] : ["Only a Few Steps Left ⚡", "Stay focused for the final challenge."];
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#281343]/50 p-4 backdrop-blur-sm" role="status" aria-live="polite">
-      <div className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/50 bg-white p-8 text-center shadow-2xl motion-safe:animate-[placementOverlay_.28s_ease-out]">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#391b68] via-[#ec911f] to-[#391b68]" />
-        <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#f1e8fb] text-2xl font-black text-[#391b68]">{value}%</span>
-        <p className="mt-5 text-2xl font-black text-[#391b68]">{messages[0]}</p>
-        <p className="mt-2 font-bold text-[#6d5889]">{messages[1]}</p>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[#211827]/52 p-4 backdrop-blur-sm" role="status" aria-live="polite">
+      <div className="relative w-full max-w-sm overflow-hidden rounded-[30px] border border-white/15 bg-[#30223a] p-8 text-center text-white shadow-[0_30px_85px_rgba(20,13,25,0.4)] motion-safe:animate-[placementOverlay_.3s_ease-out]">
+        <CelebrationParticles />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(148,94,179,0.35),transparent_48%)]" aria-hidden="true" />
+        <div className="relative">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-[#ec911f]/40 bg-white/8 text-2xl font-black text-[#ffc37d] shadow-[0_0_35px_rgba(236,145,31,0.18)]">{value}%</span>
+          <p className="mt-5 text-2xl font-black">{messages[0]}</p>
+          <p className="mt-2 font-bold text-white/62">{messages[1]}</p>
+        </div>
       </div>
     </div>
   );
 }
 
 function SectionIcon({ section }: { section: AssessmentSection }) {
-  return <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#391b68] to-[#674096] text-white shadow-[0_14px_34px_rgba(57,27,104,0.2)]" aria-hidden="true">{section === "listening" ? <HeadphonesIcon /> : section === "reading" ? <BookIcon size={30} /> : <BoltIcon />}</span>;
+  return <span className="mx-auto grid h-16 w-16 place-items-center rounded-[22px] bg-[#30223a] text-[#f3a443] shadow-[0_18px_42px_rgba(45,31,55,0.24)]" aria-hidden="true">{section === "listening" ? <HeadphonesIcon /> : section === "reading" ? <BookIcon size={30} /> : <BoltIcon size={28} />}</span>;
 }
 
 function Spinner() {
   return <span className="mx-auto block h-14 w-14 animate-spin rounded-full border-4 border-[#e2d6ef] border-t-[#ec911f] motion-reduce:animate-none" aria-hidden="true" />;
 }
 
-function AudioWaves({ playing }: { playing: boolean }) {
+function AudioWaves({ playing, count = 4 }: { playing: boolean; count?: number }) {
   return (
     <span className="flex h-6 shrink-0 items-center gap-0.5" aria-hidden="true">
-      {[0, 1, 2, 3].map((bar) => <span key={bar} className={`w-0.5 rounded-full bg-[#ec911f] ${playing ? "motion-safe:animate-[placementWave_.72s_ease-in-out_infinite]" : "h-1.5"}`} style={{ height: playing ? `${9 + (bar % 2) * 7}px` : undefined, animationDelay: `${bar * 90}ms` }} />)}
+      {Array.from({ length: count }, (_, bar) => <span key={bar} className={`w-0.5 rounded-full bg-[#ec911f] ${playing ? "motion-safe:animate-[placementWave_.72s_ease-in-out_infinite]" : "h-1.5"}`} style={{ height: playing ? `${7 + ((bar * 7) % 15)}px` : undefined, animationDelay: `${bar * 65}ms` }} />)}
     </span>
   );
 }
@@ -1153,8 +1300,8 @@ function BookIcon({ size = 22 }: { size?: number }) {
   return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22zM20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22z"/></svg>;
 }
 
-function BoltIcon() {
-  return <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m13 2-8 12h7l-1 8 8-12h-7z"/></svg>;
+function BoltIcon({ size = 30 }: { size?: number }) {
+  return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m13 2-8 12h7l-1 8 8-12h-7z"/></svg>;
 }
 
 function SparkIcon() {

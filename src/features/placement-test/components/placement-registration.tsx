@@ -7,6 +7,7 @@ import { trackFormStart, trackFormSubmit, trackPlacementTestEvent } from "@/lib/
 import { getLeadMetadata } from "@/lib/utm";
 import { placementCopy } from "../copy";
 import type { PlacementLocale } from "../types";
+import { ChallengeVisual, ExperienceBackdrop } from "./placement-experience";
 
 type PlacementRegistrationProps = {
   locale: PlacementLocale;
@@ -88,45 +89,66 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
     });
   }
 
-  return (
-    <section className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:py-14">
-      <div className="max-w-xl">
-        <span className="inline-flex rounded-full bg-[#f1e8fb] px-4 py-2 text-sm font-black text-[#391b68]">English Placement Assessment</span>
-        <h1 className="mt-5 text-balance text-[clamp(2.2rem,5vw,4rem)] font-black leading-[1.12] text-[#391b68]">{copy.title}</h1>
-        <p className="mt-5 max-w-lg text-[15px] leading-8 text-[#6d5889] sm:text-lg">{copy.description}</p>
-        <div className="mt-7 grid gap-3 text-sm font-bold text-[#513477] sm:grid-cols-3">
-          {["36 questions", "24–27 min", "English Use · Reading · Listening"].map((item) => (
-            <div key={item} className="rounded-2xl border border-[#e3d8f0] bg-white/80 px-4 py-3">{item}</div>
-          ))}
-        </div>
-      </div>
+  const facts = locale === "ar"
+    ? [["36", "سؤال"], ["3", "مهارات"], ["24–27", "دقيقة"]]
+    : [["36", "Questions"], ["3", "Skills"], ["24–27", "Minutes"]];
 
-      <form
-        ref={formRef}
-        onSubmit={submit}
-        onFocus={trackStartOnce}
-        noValidate
-        className="rounded-[28px] border border-[#e0d4ef] bg-white p-5 shadow-[0_22px_70px_rgba(57,27,104,0.1)] sm:p-8"
-      >
-        <div className="grid gap-5">
-          <Field label={copy.fullName} name="fullName" error={errors.fullName} required autoComplete="name" />
-          <Field label={copy.phone} name="phone" error={errors.phone} required type="tel" inputMode="tel" autoComplete="tel" />
-          <Field label={copy.email} name="email" error={errors.email} type="email" inputMode="email" autoComplete="email" />
-          <div className="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
-            <label>Company<input name="company" tabIndex={-1} autoComplete="off" /></label>
+  return (
+    <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
+      <section className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-6xl items-center gap-6 px-4 py-6 sm:px-6 sm:py-9 lg:grid-cols-[0.88fr_1.12fr] lg:gap-10">
+        <div className="motion-safe:animate-[placementPageEnter_.45s_ease-out_both]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/75 bg-white/65 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[#5e486a] shadow-sm backdrop-blur"><span className="h-2 w-2 rounded-full bg-[#ec911f]" />{copy.assessmentLabel}</span>
+          <h1 className="mt-5 max-w-xl text-balance text-[clamp(2.25rem,5vw,4rem)] font-black leading-[1.07] tracking-[-0.02em] text-[#291e31]">{copy.title}</h1>
+          <p className="mt-4 max-w-lg text-[15px] font-semibold leading-7 text-[#6f6473] sm:text-lg sm:leading-8">{copy.description}</p>
+          <div className="mt-6 grid grid-cols-3 gap-2.5">
+            {facts.map(([value, label]) => (
+              <div key={label} className="rounded-[18px] border border-white/80 bg-white/62 px-2 py-3 text-center shadow-[0_10px_28px_rgba(46,31,56,0.07)] backdrop-blur">
+                <strong className="block text-lg font-black text-[#30223a]">{value}</strong>
+                <span className="mt-0.5 block text-[10px] font-black text-[#817684] sm:text-xs">{label}</span>
+              </div>
+            ))}
           </div>
-          <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm leading-6 ${errors.consent ? "border-red-400 bg-red-50" : "border-[#e0d4ef] bg-[#fcfaff]"}`}>
-            <input name="consent" type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#391b68]" aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "placement-consent-error" : undefined} />
-            <span>{copy.consent}</span>
-          </label>
-          {errors.consent ? <p id="placement-consent-error" className="-mt-3 text-sm font-bold text-red-700">{errors.consent}</p> : null}
-          {errors.form ? <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{errors.form}</p> : null}
-          <button type="submit" disabled={submitting} className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-[#ec911f] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(236,145,31,0.24)] transition hover:bg-[#d97f11] disabled:cursor-not-allowed disabled:opacity-65">
-            {submitting ? copy.registering : copy.register}
-          </button>
+          <div className="mx-auto mt-2 hidden max-w-[240px] lg:block"><ChallengeVisual label={copy.assessmentLabel} /></div>
         </div>
-      </form>
-    </section>
+
+        <form
+          ref={formRef}
+          onSubmit={submit}
+          onFocus={trackStartOnce}
+          noValidate
+          className="relative overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,254,251,0.94),rgba(244,239,243,0.94))] p-5 shadow-[0_30px_80px_rgba(42,28,51,0.14)] backdrop-blur-xl sm:p-7 motion-safe:animate-[placementPageEnter_.48s_.08s_ease-out_both]"
+        >
+          <span className="absolute -end-20 -top-24 h-52 w-52 rounded-full bg-[#7c5295]/12 blur-3xl" aria-hidden="true" />
+          <div className="relative">
+            <div className="mb-5 flex items-start gap-3 rounded-[18px] bg-[#30223a] p-4 text-white shadow-[0_14px_35px_rgba(45,31,55,0.18)]">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#ec911f] text-white"><ShieldIcon /></span>
+              <div>
+                <p className="font-black">{locale === "ar" ? "محاولة آمنة ومحفوظة" : "Secure, saved attempt"}</p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-white/60">{copy.autoSaveNote}</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={copy.fullName} name="fullName" error={errors.fullName} required autoComplete="name" />
+              <Field label={copy.phone} name="phone" error={errors.phone} required type="tel" inputMode="tel" autoComplete="tel" />
+              <div className="sm:col-span-2"><Field label={copy.email} name="email" error={errors.email} type="email" inputMode="email" autoComplete="email" /></div>
+            </div>
+            <div className="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+              <label>Company<input name="company" tabIndex={-1} autoComplete="off" /></label>
+            </div>
+            <label className={`mt-4 flex cursor-pointer items-start gap-3 rounded-[18px] p-4 text-sm font-semibold leading-6 shadow-inner transition focus-within:ring-4 focus-within:ring-[#ec911f]/18 ${errors.consent ? "bg-red-50 text-red-800" : "bg-[#e9e3e9] text-[#58495e]"}`}>
+              <input name="consent" type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#391b68]" aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "placement-consent-error" : undefined} />
+              <span>{copy.consent}</span>
+            </label>
+            {errors.consent ? <p id="placement-consent-error" className="mt-1.5 text-sm font-bold text-red-700">{errors.consent}</p> : null}
+            {errors.form ? <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{errors.form}</p> : null}
+            <button type="submit" disabled={submitting} className="group mt-4 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-[17px] bg-[#30223a] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(45,31,55,0.22)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#3b2947] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
+              <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#ec911f] transition group-hover:rotate-6"><BoltIcon /></span>
+              {submitting ? copy.registering : copy.register}
+            </button>
+          </div>
+        </form>
+      </section>
+    </ExperienceBackdrop>
   );
 }
 
@@ -144,10 +166,10 @@ function Field({ label, name, error, required, type = "text", inputMode = "text"
   const errorId = `${name}-placement-error`;
   return (
     <div>
-      <label htmlFor={name} className="mb-2 block text-sm font-black text-[#391b68]">
+      <label htmlFor={name} className="mb-1.5 block text-sm font-black text-[#3b2946]">
         {label}{required ? <span className="text-[#ec911f]"> *</span> : null}
       </label>
-      <input id={name} name={name} type={type} inputMode={inputMode} autoComplete={autoComplete} required={required} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className={`h-13 w-full rounded-2xl border bg-white px-4 text-base text-[#281343] outline-none transition placeholder:text-[#9a88ae] focus:border-[#391b68] focus:ring-4 focus:ring-[#391b68]/10 ${error ? "border-red-400" : "border-[#d8c8eb]"}`} />
+      <input id={name} name={name} type={type} inputMode={inputMode} autoComplete={autoComplete} required={required} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className={`h-13 w-full rounded-[16px] border bg-white/76 px-4 text-base text-[#281f2d] outline-none shadow-sm transition duration-200 placeholder:text-[#9a8f9d] focus:-translate-y-0.5 focus:border-[#7a568e] focus:bg-white focus:ring-4 focus:ring-[#7a568e]/10 ${error ? "border-red-400" : "border-white"}`} />
       {error ? <p id={errorId} className="mt-1.5 text-sm font-bold text-red-700">{error}</p> : null}
     </div>
   );
@@ -155,4 +177,12 @@ function Field({ label, name, error, required, type = "text", inputMode = "text"
 
 function isSuccess(value: unknown): value is { ok: true } {
   return typeof value === "object" && value !== null && "ok" in value && value.ok === true;
+}
+
+function ShieldIcon() {
+  return <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.3-8 10-4.6-1.7-8-5-8-10V6z" /><path d="m8.5 12 2.2 2.2 4.8-5" /></svg>;
+}
+
+function BoltIcon() {
+  return <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m13 2-8 12h7l-1 8 8-12h-7z" /></svg>;
 }
