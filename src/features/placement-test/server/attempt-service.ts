@@ -49,12 +49,12 @@ export async function applyAttemptAction(token: string, action: PlacementAttempt
   let actionError: PlacementAttemptError | null = null;
   let deliverResult = false;
   const attempt = await updateStoredAttempt(token, (current) => {
-    reconcileAttempt(current);
+    reconcileAttempt(current, false);
     if (current.status === "completed" || current.status === "expired") return;
 
     try {
       applyAction(current, action);
-      reconcileAttempt(current);
+      reconcileAttempt(current, false);
       deliverResult = claimResultDelivery(current);
     } catch (error) {
       if (error instanceof PlacementAttemptError) {
@@ -176,8 +176,9 @@ function applyAction(attempt: PlacementAttempt, action: PlacementAttemptAction) 
 
   if (action.action === "audio_start") {
     if (playback.status === "completed") return;
+    if (playback.status === "playing") return;
     playback.status = "playing";
-    playback.startedAt ??= now.toISOString();
+    playback.startedAt = now.toISOString();
     pauseBudget(attempt, now);
     return;
   }
@@ -212,6 +213,7 @@ function applyAction(attempt: PlacementAttempt, action: PlacementAttemptAction) 
   }
 
   if (action.action === "audio_failed") {
+    if (playback.status === "not_started") return;
     if (playback.status === "playing" && playback.progressSeconds < 3) {
       playback.status = "not_started";
       playback.startedAt = null;
@@ -223,7 +225,7 @@ function applyAction(attempt: PlacementAttempt, action: PlacementAttemptAction) 
   }
 }
 
-function reconcileAttempt(attempt: PlacementAttempt) {
+function reconcileAttempt(attempt: PlacementAttempt, reconcileInterruptedAudio = true) {
   if (attempt.status !== "in_progress") return;
   const now = new Date();
   chargeBudget(attempt, now);
@@ -233,6 +235,8 @@ function reconcileAttempt(attempt: PlacementAttempt) {
     finalizeAttempt(attempt, now, true);
     return;
   }
+
+  if (reconcileInterruptedAudio) reconcileAudioPlayback(attempt, now);
 
   if (attempt.readingReadyAt && now.getTime() >= Date.parse(attempt.readingReadyAt)) {
     const question = currentQuestion(attempt);
@@ -362,6 +366,26 @@ function getPlayback(attempt: PlacementAttempt, audioId: string) {
     startedAt: null,
     completedAt: null,
   });
+}
+
+function reconcileAudioPlayback(attempt: PlacementAttempt, now: Date) {
+  const question = currentQuestion(attempt);
+  if (!question?.audioId) return;
+  const asset = getAudioAsset(question.audioId);
+  if (!isPlayableAudioAsset(asset)) return;
+  const playback = getPlayback(attempt, question.blockId);
+  if (playback.status !== "playing" || !playback.startedAt) return;
+  const startedAt = Date.parse(playback.startedAt);
+  if (!Number.isFinite(startedAt)) return;
+  const elapsedSeconds = Math.max(0, (now.getTime() - startedAt) / 1_000);
+  playback.progressSeconds = Math.min(
+    asset.expectedDurationSeconds,
+    Math.max(playback.progressSeconds, elapsedSeconds),
+  );
+  if (playback.progressSeconds < asset.expectedDurationSeconds) return;
+  playback.status = "completed";
+  playback.completedAt = now.toISOString();
+  resumeBudget(attempt, now);
 }
 
 function chargeBudget(attempt: PlacementAttempt, now: Date) {

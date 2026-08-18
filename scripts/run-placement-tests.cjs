@@ -76,6 +76,45 @@ function wrongOption(correct) {
   return correct === "A" ? "B" : "A";
 }
 
+async function createListeningFixture(name, questionIds) {
+  const { token } = await createStoredAttempt("en", `lead-test-${name}`);
+  await updateStoredAttempt(token, (attempt) => {
+    attempt.status = "in_progress";
+    attempt.startedAt = new Date().toISOString();
+    attempt.audioCheckCompleted = true;
+    attempt.introducedSections = ["listening"];
+    attempt.currentSection = "listening";
+    attempt.coreSequence = [
+      ...questionIds,
+      ...attempt.coreSequence.filter((id) => !questionIds.includes(id)),
+    ];
+    attempt.currentIndex = 0;
+    attempt.budgetRunningSince = new Date().toISOString();
+  });
+  return token;
+}
+
+test("assessment layout has stable module-level component identity", () => {
+  const filename = path.join(
+    root,
+    "src/features/placement-test/components/placement-assessment.tsx",
+  );
+  const sourceFile = ts.createSourceFile(
+    filename,
+    fs.readFileSync(filename, "utf8"),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const topLevelFunctions = new Set(
+    sourceFile.statements
+      .filter(ts.isFunctionDeclaration)
+      .map((statement) => statement.name?.text)
+      .filter(Boolean),
+  );
+  assert.equal(topLevelFunctions.has("AssessmentLayout"), true);
+});
+
 test("content has 36 core slots with two equivalent forms", () => {
   assert.equal(coreQuestions.length, 36);
   assert.equal(new Set(coreQuestions.map((question) => question.slotId)).size, 36);
@@ -311,6 +350,75 @@ test("audio playback is paced, excluded from the active budget, and precedes the
   await applyAttemptAction(token, { action: "begin_question", questionId });
   const timed = await readStoredAttempt(token);
   assert.ok(timed?.questionDeadlineAt);
+});
+
+test("failed audio startup remains retryable and does not consume playback", async () => {
+  const token = await createListeningFixture("audio-failure", ["L01-A"]);
+
+  await applyAttemptAction(token, { action: "audio_failed", questionId: "L01-A" });
+  await applyAttemptAction(token, { action: "audio_start", questionId: "L01-A" });
+  await applyAttemptAction(token, { action: "audio_failed", questionId: "L01-A" });
+  const failed = await readStoredAttempt(token);
+  assert.ok(failed);
+  assert.equal(failed.audioPlayback.L01.status, "not_started");
+  assert.equal(failed.audioPlayback.L01.progressSeconds, 0);
+  assert.equal(failed.audioPlayback.L01.startedAt, null);
+  assert.notEqual(failed.budgetRunningSince, null);
+
+  await applyAttemptAction(token, { action: "audio_start", questionId: "L01-A" });
+  const retried = await readStoredAttempt(token);
+  assert.equal(retried?.audioPlayback.L01.status, "playing");
+});
+
+test("Form A and Form B audio resume by elapsed progress and cannot replay after completion", async () => {
+  for (const form of ["A", "B"]) {
+    const questionId = `L01-${form}`;
+    const token = await createListeningFixture(`audio-form-${form}`, [questionId]);
+    const before = await getPublicAttemptState(token);
+    assert.equal(before?.audio?.source, `/placement-test/audio/test-${form.toLowerCase()}-q01.mp3`);
+
+    await applyAttemptAction(token, { action: "audio_start", questionId });
+    const expectedDuration = before?.audio?.expectedDurationSeconds;
+    assert.ok(expectedDuration);
+    await updateStoredAttempt(token, (attempt) => {
+      attempt.audioPlayback.L01.startedAt = new Date(
+        Date.now() - (expectedDuration + 1) * 1_000,
+      ).toISOString();
+    });
+
+    const refreshed = await getPublicAttemptState(token);
+    assert.equal(refreshed?.phase, "question");
+    assert.equal(refreshed?.audio?.status, "completed");
+    assert.equal(refreshed?.audio?.progressSeconds, expectedDuration);
+
+    const replay = await applyAttemptAction(token, { action: "audio_start", questionId });
+    assert.equal(replay.phase, "question");
+    assert.equal(replay.audio?.status, "completed");
+  }
+});
+
+test("one completed audio block unlocks every attached listening question", async () => {
+  const token = await createListeningFixture("audio-block", ["L03-A", "L04-A"]);
+  const initial = await getPublicAttemptState(token);
+  const expectedDuration = initial?.audio?.expectedDurationSeconds;
+  assert.ok(expectedDuration);
+
+  await applyAttemptAction(token, { action: "audio_start", questionId: "L03-A" });
+  await updateStoredAttempt(token, (attempt) => {
+    attempt.audioPlayback["L03-04"].startedAt = new Date(
+      Date.now() - (expectedDuration + 1) * 1_000,
+    ).toISOString();
+  });
+  const firstQuestion = await getPublicAttemptState(token);
+  assert.equal(firstQuestion?.phase, "question");
+  await applyAttemptAction(token, { action: "begin_question", questionId: "L03-A" });
+  await applyAttemptAction(token, { action: "answer", questionId: "L03-A", optionId: "B" });
+
+  const secondQuestion = await getPublicAttemptState(token);
+  assert.equal(secondQuestion?.question?.id, "L04-A");
+  assert.equal(secondQuestion?.phase, "question");
+  assert.equal(secondQuestion?.audio?.status, "completed");
+  assert.equal(secondQuestion?.questionDeadlineAt, null);
 });
 
 test("expired answers are recorded as timeouts and refresh cannot reset them", async () => {

@@ -23,6 +23,7 @@ type PlacementAssessmentProps = {
 };
 
 type ApiError = Error & { status?: number; code?: string };
+type PlacementCopy = (typeof placementCopy)[PlacementLocale];
 
 export function PlacementAssessment({ locale, initialState }: PlacementAssessmentProps) {
   const copy = placementCopy[locale];
@@ -242,7 +243,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
 
   if (state.phase === "reading_period" && state.question) {
     return (
-      <AssessmentLayout state={state} copy={copy} remainingSeconds={remainingSeconds}>
+      <AssessmentLayout state={state} copy={copy} remainingSeconds={remainingSeconds} toast={toast} milestone={milestone} locale={locale}>
         <div className="rounded-3xl border border-[#ded1ed] bg-white p-5 shadow-[0_18px_55px_rgba(57,27,104,0.08)] sm:p-8">
           <Eyebrow>{copy.readingTime}</Eyebrow>
           <PassageText text={state.question.passage?.text ?? ""} />
@@ -258,7 +259,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
 
   if (state.phase === "audio" && state.question) {
     return (
-      <AssessmentLayout state={state} copy={copy} remainingSeconds={remainingSeconds}>
+      <AssessmentLayout state={state} copy={copy} remainingSeconds={remainingSeconds} toast={toast} milestone={milestone} locale={locale}>
         <AudioQuestion
           state={state}
           copy={copy}
@@ -272,7 +273,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
 
   if (state.phase === "question" && state.question) {
     return (
-      <AssessmentLayout state={state} copy={copy} remainingSeconds={remainingSeconds}>
+      <AssessmentLayout state={state} copy={copy} remainingSeconds={remainingSeconds} toast={toast} milestone={milestone} locale={locale}>
         <QuestionCard
           state={state}
           selected={selected}
@@ -306,39 +307,45 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   }
 
   return <FatalState locale={locale} message={copy.fatal} />;
+}
 
-  function AssessmentLayout({
-    state: current,
-    copy: currentCopy,
-    remainingSeconds: remaining,
-    children,
-  }: {
-    state: PublicAttemptState;
-    copy: typeof copy;
-    remainingSeconds: number | null;
-    children: ReactNode;
-  }) {
-    const warning = remaining !== null && remaining <= 10;
-    const urgent = remaining !== null && remaining <= 5;
-    return (
-      <div className="pb-[calc(7rem+env(safe-area-inset-bottom))]">
-        <div className="sticky top-0 z-30 border-b border-[#e4d9f0] bg-[#fbf9ff]/95 px-4 py-3 backdrop-blur sm:px-6">
-          <div className="mx-auto max-w-5xl">
-            <div className="flex items-center justify-between gap-4 text-xs font-black text-[#6d5889] sm:text-sm">
-              <span>{current.section ? currentCopy.sections[current.section] : "Assessment"} · {current.sectionQuestion} / {current.sectionTotal}</span>
-              {remaining !== null ? <span className={`rounded-full px-3 py-1 ${urgent ? "bg-red-100 text-red-700" : warning ? "bg-orange-100 text-orange-700" : "bg-[#efe7f8] text-[#391b68]"}`}>{remaining}s</span> : null}
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e9e0f3]" role="progressbar" aria-label="Assessment progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={current.progressPercent}>
-              <div className="h-full rounded-full bg-[#ec911f] transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${current.progressPercent}%` }} />
-            </div>
+function AssessmentLayout({
+  state,
+  copy,
+  remainingSeconds,
+  toast,
+  milestone,
+  locale,
+  children,
+}: {
+  state: PublicAttemptState;
+  copy: PlacementCopy;
+  remainingSeconds: number | null;
+  toast: string | null;
+  milestone: number | null;
+  locale: PlacementLocale;
+  children: ReactNode;
+}) {
+  const warning = remainingSeconds !== null && remainingSeconds <= 10;
+  const urgent = remainingSeconds !== null && remainingSeconds <= 5;
+  return (
+    <div className="pb-[calc(7rem+env(safe-area-inset-bottom))]">
+      <div className="sticky top-0 z-30 border-b border-[#e4d9f0] bg-[#fbf9ff]/95 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex items-center justify-between gap-4 text-xs font-black text-[#6d5889] sm:text-sm">
+            <span>{state.section ? copy.sections[state.section] : "Assessment"} · {state.sectionQuestion} / {state.sectionTotal}</span>
+            {remainingSeconds !== null ? <span className={`rounded-full px-3 py-1 ${urgent ? "bg-red-100 text-red-700" : warning ? "bg-orange-100 text-orange-700" : "bg-[#efe7f8] text-[#391b68]"}`}>{remainingSeconds}s</span> : null}
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e9e0f3]" role="progressbar" aria-label="Assessment progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={state.progressPercent}>
+            <div className="h-full rounded-full bg-[#ec911f] transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${state.progressPercent}%` }} />
           </div>
         </div>
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">{children}</div>
-        {toast ? <div role="status" className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#391b68] px-5 py-3 text-sm font-black text-white shadow-xl">{toast}</div> : null}
-        {milestone ? <Milestone value={milestone} locale={locale} /> : null}
       </div>
-    );
-  }
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">{children}</div>
+      {toast ? <div role="status" className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#391b68] px-5 py-3 text-sm font-black text-white shadow-xl">{toast}</div> : null}
+      {milestone ? <Milestone value={milestone} locale={locale} /> : null}
+    </div>
+  );
 }
 
 function QuestionCard({ state, selected, setSelected, busy, error, saveLabel, savingLabel, showPassageLabel, closePassageLabel, retryLabel, retryQuestionStart, onSubmit }: {
@@ -405,7 +412,7 @@ function QuestionCard({ state, selected, setSelected, busy, error, saveLabel, sa
 
 function AudioQuestion({ state, copy, busy, error, sendAction }: {
   state: PublicAttemptState;
-  copy: (typeof placementCopy)[PlacementLocale];
+  copy: PlacementCopy;
   busy: boolean;
   error: string | null;
   sendAction: (action: PlacementAttemptAction, quiet?: boolean) => Promise<PublicAttemptState | null>;
@@ -415,32 +422,62 @@ function AudioQuestion({ state, copy, busy, error, sendAction }: {
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastSynced = useRef(audio?.progressSeconds ?? 0);
   const completing = useRef(false);
+  const playbackRequest = useRef(false);
+  const serverPlaybackStarted = useRef(audio?.status === "playing");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
   const playable = Boolean(audio && audio.startSeconds !== null && audio.endSeconds !== null && audio.expectedDurationSeconds !== null);
 
+  useEffect(() => {
+    lastSynced.current = audio?.progressSeconds ?? 0;
+    completing.current = false;
+    serverPlaybackStarted.current = audio?.status === "playing";
+    setPlaybackError(null);
+  }, [audio?.id, audio?.status, question.id]);
+
   async function startPlayback() {
-    if (!audio || !playable) return;
-    const next = await sendAction({ action: "audio_start", questionId: question.id });
-    if (!next || !audioRef.current) return;
+    if (!audio || !playable || playbackRequest.current || isPlaying) return;
     const element = audioRef.current;
-    element.currentTime = audio.startSeconds! + audio.progressSeconds;
+    if (!element) return;
+    setPlaybackError(null);
+    playbackRequest.current = true;
+    const currentProgress = Math.max(0, element.currentTime - audio.startSeconds!);
+    element.currentTime = audio.startSeconds! + Math.max(audio.progressSeconds, currentProgress);
     try {
       await element.play();
+      if (audio.status === "not_started") {
+        const next = await sendAction({ action: "audio_start", questionId: question.id });
+        if (!next || next.audio?.status !== "playing" || audioRef.current !== element) {
+          element.pause();
+          await sendAction({ action: "audio_failed", questionId: question.id }, true);
+          return;
+        }
+      }
+      serverPlaybackStarted.current = true;
     } catch {
+      element.pause();
       setIsPlaying(false);
+      setPlaybackError(copy.audioUnavailable);
       await sendAction({ action: "audio_failed", questionId: question.id }, true);
+    } finally {
+      playbackRequest.current = false;
     }
   }
 
   async function syncAndComplete(progress: number) {
-    if (completing.current || !audio) return;
+    if (completing.current || !audio || !serverPlaybackStarted.current) return;
     completing.current = true;
-    await sendAction({ action: "audio_progress", questionId: question.id, progressSeconds: progress }, true);
-    await sendAction({ action: "audio_complete", questionId: question.id });
+    const progressed = await sendAction({ action: "audio_progress", questionId: question.id, progressSeconds: progress }, true);
+    if (!progressed) {
+      completing.current = false;
+      return;
+    }
+    const completed = await sendAction({ action: "audio_complete", questionId: question.id });
+    if (!completed) completing.current = false;
   }
 
   function onTimeUpdate() {
-    if (!audio || !audioRef.current || audio.startSeconds === null || audio.endSeconds === null) return;
+    if (!audio || !audioRef.current || !serverPlaybackStarted.current || audio.startSeconds === null || audio.endSeconds === null) return;
     const element = audioRef.current;
     const progress = Math.max(0, element.currentTime - audio.startSeconds);
     if (progress - lastSynced.current >= 5) {
@@ -473,9 +510,13 @@ function AudioQuestion({ state, copy, busy, error, sendAction }: {
               setIsPlaying(false);
               void syncAndComplete(audio.expectedDurationSeconds ?? 0);
             }}
-            onError={() => void sendAction({ action: "audio_failed", questionId: question.id }, true)}
+            onError={() => {
+              setIsPlaying(false);
+              setPlaybackError(copy.audioUnavailable);
+              void sendAction({ action: "audio_failed", questionId: question.id }, true);
+            }}
           />
-          <button type="button" disabled={busy || audio.status === "completed"} onClick={() => void startPlayback()} className="mt-7 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#391b68] px-5 text-base font-black text-white transition hover:bg-[#281343] disabled:opacity-55">
+          <button type="button" disabled={busy || isPlaying || audio.status === "completed"} onClick={() => void startPlayback()} className="mt-7 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[#391b68] px-5 text-base font-black text-white transition hover:bg-[#281343] disabled:opacity-55">
             <PlayIcon />{busy ? copy.audioLoading : isPlaying ? copy.audioPlaying : copy.playAudio}
           </button>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#e9e0f3]">
@@ -485,7 +526,7 @@ function AudioQuestion({ state, copy, busy, error, sendAction }: {
       ) : (
         <p role="alert" className="mt-6 rounded-2xl bg-orange-50 px-4 py-4 text-sm font-bold leading-6 text-orange-800">{copy.audioUnavailable}</p>
       )}
-      {error ? <p role="alert" className="mt-4 text-sm font-bold text-red-700">{error}</p> : null}
+      {error || playbackError ? <p role="alert" className="mt-4 text-sm font-bold text-red-700">{error ?? playbackError}</p> : null}
     </div>
   );
 }
