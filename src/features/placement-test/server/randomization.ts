@@ -38,7 +38,7 @@ function seededBit(seed: string, blockId: string) {
 }
 
 function slotOrder(slotId: string) {
-  if (slotId.startsWith("L")) return Number(slotId.slice(1));
+  if (slotId.startsWith("LU")) return Number(slotId.slice(2));
   if (slotId.startsWith("R")) return 100 + Number(slotId.slice(1));
-  return 200 + Number(slotId.slice(2));
+  return 200 + Number(slotId.slice(1));
 }

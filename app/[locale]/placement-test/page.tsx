@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PlacementPageFrame } from "@/features/placement-test/components/placement-page-frame";
 import { PlacementRegistration } from "@/features/placement-test/components/placement-registration";
 import { getPublicAttemptState } from "@/features/placement-test/server/attempt-service";
@@ -31,10 +31,11 @@ export default async function PlacementRegistrationPage({ params }: PlacementReg
   const currentLocale = locale as PlacementLocale;
   const token = (await cookies()).get(PLACEMENT_ATTEMPT_COOKIE)?.value;
   const existingState = token ? await getPublicAttemptState(token).catch(() => null) : null;
+  if (existingState) redirect(`/${currentLocale}/placement-test/assessment`);
 
   return (
     <PlacementPageFrame locale={currentLocale} route="registration">
-      <PlacementRegistration locale={currentLocale} existingState={existingState} />
+      <PlacementRegistration locale={currentLocale} />
     </PlacementPageFrame>
   );
 }

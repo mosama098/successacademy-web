@@ -78,7 +78,7 @@ function applyAction(attempt: PlacementAttempt, action: PlacementAttemptAction) 
     if (attempt.status !== "registered_not_started") return;
     attempt.status = "in_progress";
     attempt.startedAt = now.toISOString();
-    attempt.currentSection = "listening";
+    attempt.currentSection = "languageUse";
     attempt.budgetRunningSince = now.toISOString();
     return;
   }
@@ -444,10 +444,10 @@ function determinePhase(
   if (attempt.status === "expired") return "expired";
   if (attempt.status === "completed") return "result";
   if (attempt.status === "registered_not_started") return "welcome";
-  if (!attempt.audioCheckCompleted) return "audio_check";
   if (attempt.confirmationStarted && !attempt.confirmationIntroSeen) return "confirmation_intro";
   if (!question) return "analysis";
   if (!attempt.introducedSections.includes(question.section)) return "section_intro";
+  if (question.section === "listening" && !attempt.audioCheckCompleted) return "audio_check";
   if (question.readingTimeSeconds && !attempt.completedReadingBlocks.includes(question.blockId)) {
     return "reading_period";
   }

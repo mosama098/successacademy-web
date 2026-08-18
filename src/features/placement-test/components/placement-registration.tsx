@@ -1,28 +1,26 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { normalizeEgyptianMobile } from "@/lib/phone";
 import { trackFormStart, trackFormSubmit, trackPlacementTestEvent } from "@/lib/tracking";
 import { getLeadMetadata } from "@/lib/utm";
 import { placementCopy } from "../copy";
-import type { PlacementLocale, PublicAttemptState } from "../types";
+import type { PlacementLocale } from "../types";
 
 type PlacementRegistrationProps = {
   locale: PlacementLocale;
-  existingState: PublicAttemptState | null;
 };
 
 type FormErrors = Partial<Record<"fullName" | "phone" | "email" | "consent" | "form", string>>;
 
-export function PlacementRegistration({ locale, existingState }: PlacementRegistrationProps) {
+export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
   const copy = placementCopy[locale];
-  const [registered, setRegistered] = useState(false);
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const startedTracking = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const hasExistingAttempt = Boolean(existingState);
 
   function trackStartOnce() {
     if (startedTracking.current) return;
@@ -74,7 +72,7 @@ export function PlacementRegistration({ locale, existingState }: PlacementRegist
 
       trackFormSubmit({ form: "placement_test", source: "placement_test", locale });
       trackPlacementTestEvent("placement_test_registration_complete", { locale });
-      setRegistered(true);
+      router.replace(`/${locale}/placement-test/assessment`);
     } catch {
       setErrors({ form: copy.serverError });
     } finally {
@@ -90,36 +88,6 @@ export function PlacementRegistration({ locale, existingState }: PlacementRegist
     });
   }
 
-  if (hasExistingAttempt || registered) {
-    return (
-      <section className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-4 py-10 sm:px-6">
-        <div className="w-full rounded-[28px] border border-[#e0d4ef] bg-white p-6 text-center shadow-[0_22px_70px_rgba(57,27,104,0.1)] sm:p-10">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#f2eafb] text-2xl" aria-hidden="true">✓</span>
-          <h1 className="mt-5 text-3xl font-black text-[#391b68] sm:text-4xl">
-            {hasExistingAttempt ? copy.resumeTitle : copy.welcomeTitle}
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-[15px] leading-7 text-[#6d5889] sm:text-base">
-            {hasExistingAttempt ? copy.resumeDescription : copy.continueLaterNote}
-          </p>
-          <div className="mx-auto mt-7 grid max-w-md gap-3">
-            <Link
-              href={`/${locale}/placement-test/assessment`}
-              className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-[#ec911f] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(236,145,31,0.24)] transition hover:bg-[#d97f11] focus-visible:outline-none"
-            >
-              {hasExistingAttempt ? copy.continueAttempt : copy.startNow}
-            </Link>
-            <Link
-              href={`/${locale}`}
-              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#d8c8eb] bg-white px-6 text-sm font-bold text-[#391b68] transition hover:border-[#391b68] focus-visible:outline-none"
-            >
-              {copy.continueLater}
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:py-14">
       <div className="max-w-xl">
@@ -127,7 +95,7 @@ export function PlacementRegistration({ locale, existingState }: PlacementRegist
         <h1 className="mt-5 text-balance text-[clamp(2.2rem,5vw,4rem)] font-black leading-[1.12] text-[#391b68]">{copy.title}</h1>
         <p className="mt-5 max-w-lg text-[15px] leading-8 text-[#6d5889] sm:text-lg">{copy.description}</p>
         <div className="mt-7 grid gap-3 text-sm font-bold text-[#513477] sm:grid-cols-3">
-          {["36 questions", "24–27 min", "Listening · Reading · English Use"].map((item) => (
+          {["36 questions", "24–27 min", "English Use · Reading · Listening"].map((item) => (
             <div key={item} className="rounded-2xl border border-[#e3d8f0] bg-white/80 px-4 py-3">{item}</div>
           ))}
         </div>

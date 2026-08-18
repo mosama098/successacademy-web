@@ -76,6 +76,12 @@ function wrongOption(correct) {
   return correct === "A" ? "B" : "A";
 }
 
+function firstQuestionIndex(sequence, section) {
+  return sequence.findIndex((id) =>
+    assessmentQuestions.find((question) => question.id === id)?.section === section,
+  );
+}
+
 async function createListeningFixture(name, questionIds) {
   const { token } = await createStoredAttempt("en", `lead-test-${name}`);
   await updateStoredAttempt(token, (attempt) => {
@@ -118,6 +124,86 @@ test("assessment layout has stable module-level component identity", () => {
 test("content has 36 core slots with two equivalent forms", () => {
   assert.equal(coreQuestions.length, 36);
   assert.equal(new Set(coreQuestions.map((question) => question.slotId)).size, 36);
+});
+
+test("core section order is Language Use, Reading, then Listening", () => {
+  assert.deepEqual(
+    [...new Set(coreQuestions.map((question) => question.section))],
+    ["languageUse", "reading", "listening"],
+  );
+  assert.deepEqual(
+    coreQuestions.reduce((counts, question) => {
+      counts[question.section] = (counts[question.section] ?? 0) + 1;
+      return counts;
+    }, {}),
+    { languageUse: 16, reading: 10, listening: 10 },
+  );
+});
+
+test("a started attempt enters Language Use before the Listening audio check", async () => {
+  const { token } = await createStoredAttempt("en", "lead-test-section-order");
+  const started = await applyAttemptAction(token, { action: "start" });
+  assert.equal(started.section, "languageUse");
+  assert.equal(started.phase, "section_intro");
+
+  const languageQuestion = await applyAttemptAction(token, {
+    action: "section_continue",
+    section: "languageUse",
+  });
+  assert.equal(languageQuestion.phase, "question");
+
+  await updateStoredAttempt(token, (attempt) => {
+    attempt.currentIndex = firstQuestionIndex(attempt.coreSequence, "listening");
+    attempt.currentSection = "listening";
+    attempt.introducedSections = ["languageUse", "reading", "listening"];
+    attempt.questionStartedAt = null;
+    attempt.questionDeadlineAt = null;
+  });
+  const listeningStart = await getPublicAttemptState(token);
+  assert.equal(listeningStart?.section, "listening");
+  assert.equal(listeningStart?.phase, "audio_check");
+});
+
+test("Listening renders the question and options before playback on one screen", async () => {
+  const token = await createListeningFixture("question-first", ["L01-A"]);
+  const state = await getPublicAttemptState(token);
+  assert.equal(state?.phase, "audio");
+  assert.equal(Boolean(state?.question?.prompt), true);
+  assert.equal(state?.question?.options.length, 4);
+
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const listeningComponent = source.slice(
+    source.indexOf("function ListeningQuestion"),
+    source.indexOf("function QuestionSurface"),
+  );
+  assert.match(listeningComponent, /<QuestionHeading/);
+  assert.match(listeningComponent, /<AnswerOptions/);
+  assert.match(listeningComponent, /requestAnimationFrame/);
+  const listeningMarkup = listeningComponent.slice(listeningComponent.lastIndexOf("return ("));
+  assert.ok(listeningMarkup.indexOf("<QuestionHeading") < listeningMarkup.indexOf("aria-label={copy.playAudio}"));
+  assert.ok(listeningMarkup.indexOf("aria-label={copy.playAudio}") < listeningMarkup.indexOf("<AnswerOptions"));
+});
+
+test("assessment UX includes timeout dialog and level-free progress journey", () => {
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const journey = source.slice(
+    source.indexOf("function ProgressJourney"),
+    source.indexOf("function TimerBadge"),
+  );
+  assert.match(source, /function TimeoutOverlay/);
+  assert.match(source, /role="dialog"/);
+  assert.match(source, /placementTimeout_1\.15s/);
+  assert.deepEqual(
+    ["languageUse", "reading", "listening", "result"].map((label) => journey.indexOf(`id: "${label}"`)),
+    ["languageUse", "reading", "listening", "result"].map((label) => journey.indexOf(`id: "${label}"`)).sort((a, b) => a - b),
+  );
+  assert.doesNotMatch(journey, /\b(?:A1|A2|B1|B2)\b/);
 });
 
 test("every question is structurally valid", () => {
@@ -251,6 +337,10 @@ test("attempt storage resumes the exact seeded sequence", async () => {
   assert.ok(resumed);
   assert.deepEqual(resumed.coreSequence, attempt.coreSequence);
   assert.deepEqual(resumed.selectedForms, attempt.selectedForms);
+  assert.equal(
+    assessmentQuestions.find((question) => question.id === resumed.coreSequence[0])?.section,
+    "languageUse",
+  );
 });
 
 test("public state never exposes an answer key", async () => {
@@ -260,7 +350,7 @@ test("public state never exposes an answer key", async () => {
     attempt.startedAt = new Date().toISOString();
     attempt.audioCheckCompleted = true;
     attempt.introducedSections = ["listening", "reading", "languageUse"];
-    attempt.currentIndex = 20;
+    attempt.currentIndex = firstQuestionIndex(attempt.coreSequence, "languageUse");
     attempt.currentSection = "languageUse";
     attempt.budgetRunningSince = new Date().toISOString();
   });
@@ -279,10 +369,10 @@ test("an attempt cannot submit another attempt's question", async () => {
     attempt.startedAt = new Date().toISOString();
     attempt.audioCheckCompleted = true;
     attempt.introducedSections = ["listening", "reading", "languageUse"];
-    attempt.currentIndex = 20;
+    attempt.currentIndex = firstQuestionIndex(attempt.coreSequence, "languageUse");
     attempt.currentSection = "languageUse";
     attempt.budgetRunningSince = new Date().toISOString();
-    currentQuestionId = attempt.coreSequence[20];
+    currentQuestionId = attempt.coreSequence[attempt.currentIndex];
   });
   await applyAttemptAction(token, { action: "begin_question", questionId: currentQuestionId });
   await assert.rejects(
@@ -303,7 +393,8 @@ test("audio playback is paced, excluded from the active budget, and precedes the
     attempt.introducedSections = ["listening"];
     attempt.currentSection = "listening";
     attempt.budgetRunningSince = new Date(Date.now() - 5_000).toISOString();
-    questionId = attempt.coreSequence[0];
+    attempt.currentIndex = firstQuestionIndex(attempt.coreSequence, "listening");
+    questionId = attempt.coreSequence[attempt.currentIndex];
     const question = assessmentQuestions.find((item) => item.id === questionId);
     const asset = audioAssets.find((item) => item.id === question?.audioId);
     blockId = question?.blockId;
@@ -429,10 +520,10 @@ test("expired answers are recorded as timeouts and refresh cannot reset them", a
     attempt.startedAt = new Date(Date.now() - 60_000).toISOString();
     attempt.audioCheckCompleted = true;
     attempt.introducedSections = ["listening", "reading", "languageUse"];
-    attempt.currentIndex = 20;
+    attempt.currentIndex = firstQuestionIndex(attempt.coreSequence, "languageUse");
     attempt.currentSection = "languageUse";
     attempt.budgetRunningSince = new Date().toISOString();
-    questionId = attempt.coreSequence[20];
+    questionId = attempt.coreSequence[attempt.currentIndex];
     attempt.questionStartedAt = new Date(Date.now() - 40_000).toISOString();
     attempt.questionDeadlineAt = new Date(Date.now() - 10_000).toISOString();
   });
@@ -442,7 +533,7 @@ test("expired answers are recorded as timeouts and refresh cannot reset them", a
   assert.ok(firstRefresh && secondRefresh && stored);
   assert.equal(stored.answers.filter((answer) => answer.questionId === questionId).length, 1);
   assert.equal(stored.answers.find((answer) => answer.questionId === questionId)?.timedOut, true);
-  assert.equal(stored.currentIndex, 21);
+  assert.equal(stored.currentIndex, firstQuestionIndex(stored.coreSequence, "languageUse") + 1);
 });
 
 test("invalid opaque attempt tokens are rejected", async () => {
