@@ -276,6 +276,45 @@ a:focus-visible {
   }
 }
 
+@keyframes placementCardShuffle {
+  0% {
+    transform: translateX(-4px) rotate(-3deg);
+    opacity: 0;
+  }
+
+  55% {
+    transform: translateX(2px) rotate(1deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes placementSkillPop {
+  from {
+    transform: translateY(4px) scale(0.82);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes placementClockSweep {
+  from {
+    transform: rotate(-70deg);
+  }
+
+  to {
+    transform: rotate(0);
+  }
+}
+
 @keyframes placementRewardBurst {
   0% {
     transform: translateY(12px) scale(0.86);

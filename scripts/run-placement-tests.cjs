@@ -84,6 +84,9 @@ function firstQuestionIndex(sequence, section) {
 
 async function createListeningFixture(name, questionIds) {
   const { token } = await createStoredAttempt("en", `lead-test-${name}`);
+  const fixtureSlots = new Set(
+    questionIds.map((id) => assessmentQuestions.find((question) => question.id === id)?.slotId),
+  );
   await updateStoredAttempt(token, (attempt) => {
     attempt.status = "in_progress";
     attempt.startedAt = new Date().toISOString();
@@ -92,7 +95,10 @@ async function createListeningFixture(name, questionIds) {
     attempt.currentSection = "listening";
     attempt.coreSequence = [
       ...questionIds,
-      ...attempt.coreSequence.filter((id) => !questionIds.includes(id)),
+      ...attempt.coreSequence.filter((id) => {
+        const question = assessmentQuestions.find((candidate) => candidate.id === id);
+        return !fixtureSlots.has(question?.slotId);
+      }),
     ];
     attempt.currentIndex = 0;
     attempt.budgetRunningSince = new Date().toISOString();
@@ -205,9 +211,50 @@ test("Listening renders the question and options before playback on one screen",
   assert.match(listeningComponent, /<QuestionHeading/);
   assert.match(listeningComponent, /<AnswerOptions/);
   assert.match(listeningComponent, /requestAnimationFrame/);
-  const listeningMarkup = listeningComponent.slice(listeningComponent.lastIndexOf("return ("));
-  assert.ok(listeningMarkup.indexOf("<QuestionHeading") < listeningMarkup.indexOf("aria-label={copy.playAudio}"));
-  assert.ok(listeningMarkup.indexOf("aria-label={copy.playAudio}") < listeningMarkup.indexOf("<AnswerOptions"));
+  assert.match(listeningComponent, /const player = \(/);
+  assert.match(listeningComponent, /<QuestionHeading state=\{state\} copy=\{copy\}/);
+  assert.match(listeningComponent, /<div className="mt-5">\{player\}<\/div>/);
+  assert.match(listeningComponent, /disabled=\{!canSelect\}/);
+});
+
+test("shared Listening blocks expose every safe prompt and option before playback", async () => {
+  const token = await createListeningFixture("shared-preview", ["L03-A", "L04-A"]);
+  const state = await getPublicAttemptState(token);
+  assert.equal(state?.phase, "audio");
+  assert.equal(state?.listeningBlockQuestions.length, 2);
+  assert.deepEqual(state?.listeningBlockQuestions.map((question) => question.id), ["L03-A", "L04-A"]);
+  for (const question of state?.listeningBlockQuestions ?? []) {
+    assert.ok(question.prompt);
+    assert.equal(question.options.length, 4);
+    assert.equal("correctOption" in question, false);
+    assert.equal("evidenceBand" in question, false);
+  }
+
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const listeningComponent = source.slice(
+    source.indexOf("function ListeningQuestion"),
+    source.indexOf("function QuestionSurface"),
+  );
+  assert.match(listeningComponent, /data-listening-block-questions/);
+  assert.match(listeningComponent, /blockQuestions\.map/);
+  assert.match(listeningComponent, /copy\.listeningBlockCount\.replace/);
+  assert.match(listeningComponent, /audio\.status !== "not_started" \|\| isPlaying/);
+  assert.match(listeningComponent, /state\.phase === "question"/);
+});
+
+test("shared Listening drafts cannot be finalized before server audio completion", async () => {
+  const token = await createListeningFixture("shared-gate", ["L03-A", "L04-A"]);
+  await applyAttemptAction(token, { action: "audio_start", questionId: "L03-A" });
+  await assert.rejects(
+    () => applyAttemptAction(token, { action: "answer", questionId: "L03-A", optionId: "A" }),
+    (error) => error?.code === "question_not_started",
+  );
+  const state = await getPublicAttemptState(token);
+  assert.equal(state?.phase, "audio");
+  assert.equal(state?.audio?.status, "playing");
 });
 
 test("Reading renders passage, question, and options in one continuous experience", async () => {
@@ -294,9 +341,13 @@ test("assessment UX includes timeout dialog and level-free progress journey", ()
     path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
     "utf8",
   );
-  const journey = source.slice(
-    source.indexOf("function ProgressJourney"),
-    source.indexOf("function TimerBadge"),
+  const experience = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-experience.tsx"),
+    "utf8",
+  );
+  const journey = experience.slice(
+    experience.indexOf("export function AssessmentJourney"),
+    experience.indexOf("export function JourneyEnergy"),
   );
   assert.match(source, /function TimeoutOverlay/);
   assert.match(source, /role="dialog"/);
@@ -361,6 +412,106 @@ test("reward, result reveal, and reduced-motion paths are present without correc
   assert.match(resultComponent, /prefers-reduced-motion: reduce/);
   assert.match(resultComponent, /<CelebrationParticles dense/);
   assert.doesNotMatch(resultComponent, /correct answers|إجابات صحيحة/);
+});
+
+test("welcome and registration share the animated assessment information cards", () => {
+  const experience = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-experience.tsx"),
+    "utf8",
+  );
+  const assessment = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const registration = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-registration.tsx"),
+    "utf8",
+  );
+  assert.match(experience, /export function AssessmentInfoCards/);
+  assert.match(experience, /QuestionCardsIcon/);
+  assert.match(experience, /SkillsIcon/);
+  assert.match(experience, /StopwatchIcon/);
+  assert.match(assessment, /<AssessmentInfoCards locale=\{locale\}/);
+  assert.match(registration, /<AssessmentInfoCards locale=\{locale\}/);
+});
+
+test("assessment journey has four labeled icon stages in the approved sequence", () => {
+  const experience = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-experience.tsx"),
+    "utf8",
+  );
+  const journey = experience.slice(
+    experience.indexOf("export function AssessmentJourney"),
+    experience.indexOf("export function JourneyEnergy"),
+  );
+  const sequence = ["languageUse", "reading", "listening", "result"];
+  const positions = sequence.map((stage) => journey.indexOf(`id: "${stage}"`));
+  assert.ok(positions.every((position) => position >= 0));
+  assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
+  assert.doesNotMatch(journey, /index \+ 1/);
+});
+
+test("reward timing categories are fixed, distinct, and content-selected", () => {
+  const experience = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-experience.tsx"),
+    "utf8",
+  );
+  const assessment = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  assert.match(experience, /short: 720/);
+  assert.match(experience, /normal: 950/);
+  assert.match(experience, /bonus: 1_220/);
+  assert.match(experience, /milestone: 1_450/);
+  assert.match(experience, /section: 1_750/);
+  assert.match(assessment, /rewardMessage\.duration/);
+  assert.match(assessment, /placementMotionDurations\.milestone/);
+  assert.match(assessment, /placementMotionDurations\.section/);
+});
+
+test("result keeps final CEFR, uses qualitative skills, and renders both safe CTAs", () => {
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  const result = source.slice(source.indexOf("function ResultScreen"), source.indexOf("function AssessmentWelcome"));
+  assert.match(result, /\{result\.placement\}/);
+  assert.match(result, /copy\.qualitativeLabels\[evidence\.estimatedBand\]/);
+  assert.doesNotMatch(result, />\{evidence\.estimatedBand\}</);
+  assert.match(result, /href=\{`\/\$\{locale\}`\}/);
+  assert.match(result, /copy\.homepageCta/);
+  assert.match(result, /copy\.whatsappCta/);
+  assert.match(result, /getWhatsAppHref\(locale, whatsAppMessage\)/);
+  assert.match(result, /ctaType/);
+  assert.doesNotMatch(result, /attemptToken|attemptId|fullName|phone|email|correctOption/);
+});
+
+test("WhatsApp helper uses the approved fallback and encodes the dynamic result message", () => {
+  const {
+    getWhatsAppHref,
+    SUCCESS_ACADEMY_WHATSAPP_NUMBER,
+  } = require(path.join(root, "src/lib/utm.ts"));
+  const previousNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const message = "المستوى المناسب: B1\nأقوى مهارة: الاستماع";
+
+  try {
+    delete process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+    assert.equal(SUCCESS_ACADEMY_WHATSAPP_NUMBER, "201204110111");
+    assert.equal(
+      getWhatsAppHref("ar", message),
+      `https://wa.me/201204110111?text=${encodeURIComponent(message)}`,
+    );
+
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER = "+201012345678";
+    assert.equal(
+      getWhatsAppHref("ar", message),
+      `https://wa.me/201012345678?text=${encodeURIComponent(message)}`,
+    );
+  } finally {
+    if (previousNumber === undefined) delete process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+    else process.env.NEXT_PUBLIC_WHATSAPP_NUMBER = previousNumber;
+  }
 });
 
 test("every question is structurally valid", () => {

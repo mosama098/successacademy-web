@@ -7,7 +7,11 @@ import { trackFormStart, trackFormSubmit, trackPlacementTestEvent } from "@/lib/
 import { getLeadMetadata } from "@/lib/utm";
 import { placementCopy } from "../copy";
 import type { PlacementLocale } from "../types";
-import { ChallengeVisual, ExperienceBackdrop } from "./placement-experience";
+import {
+  AssessmentInfoCards,
+  ChallengeVisual,
+  ExperienceBackdrop,
+} from "./placement-experience";
 
 type PlacementRegistrationProps = {
   locale: PlacementLocale;
@@ -89,26 +93,15 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
     });
   }
 
-  const facts = locale === "ar"
-    ? [["36", "سؤال"], ["3", "مهارات"], ["24–27", "دقيقة"]]
-    : [["36", "Questions"], ["3", "Skills"], ["24–27", "Minutes"]];
-
   return (
     <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
-      <section className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-6xl items-center gap-6 px-4 py-6 sm:px-6 sm:py-9 lg:grid-cols-[0.88fr_1.12fr] lg:gap-10">
+      <section className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-6xl items-center gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[0.88fr_1.12fr] lg:gap-10">
         <div className="motion-safe:animate-[placementPageEnter_.45s_ease-out_both]">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/75 bg-white/65 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[#5e486a] shadow-sm backdrop-blur"><span className="h-2 w-2 rounded-full bg-[#ec911f]" />{copy.assessmentLabel}</span>
-          <h1 className="mt-5 max-w-xl text-balance text-[clamp(2.25rem,5vw,4rem)] font-black leading-[1.07] tracking-[-0.02em] text-[#291e31]">{copy.title}</h1>
-          <p className="mt-4 max-w-lg text-[15px] font-semibold leading-7 text-[#6f6473] sm:text-lg sm:leading-8">{copy.description}</p>
-          <div className="mt-6 grid grid-cols-3 gap-2.5">
-            {facts.map(([value, label]) => (
-              <div key={label} className="rounded-[18px] border border-white/80 bg-white/62 px-2 py-3 text-center shadow-[0_10px_28px_rgba(46,31,56,0.07)] backdrop-blur">
-                <strong className="block text-lg font-black text-[#30223a]">{value}</strong>
-                <span className="mt-0.5 block text-[10px] font-black text-[#817684] sm:text-xs">{label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mx-auto mt-2 hidden max-w-[240px] lg:block"><ChallengeVisual label={copy.assessmentLabel} /></div>
+          <h1 className="mt-4 max-w-xl text-balance text-[clamp(2rem,5vw,4rem)] font-black leading-[1.07] tracking-[-0.02em] text-[#291e31] sm:mt-5">{copy.title}</h1>
+          <p className="mt-3 max-w-lg text-[14px] font-semibold leading-6 text-[#6f6473] sm:mt-4 sm:text-lg sm:leading-8">{copy.description}</p>
+          <div className="mt-4 sm:mt-6"><AssessmentInfoCards locale={locale} /></div>
+          <div className="mx-auto mt-1 hidden max-w-[210px] lg:block"><ChallengeVisual label={copy.assessmentLabel} /></div>
         </div>
 
         <form
@@ -116,11 +109,11 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
           onSubmit={submit}
           onFocus={trackStartOnce}
           noValidate
-          className="relative overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,254,251,0.94),rgba(244,239,243,0.94))] p-5 shadow-[0_30px_80px_rgba(42,28,51,0.14)] backdrop-blur-xl sm:p-7 motion-safe:animate-[placementPageEnter_.48s_.08s_ease-out_both]"
+          className="relative overflow-hidden rounded-[26px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,254,251,0.94),rgba(244,239,243,0.94))] p-4 shadow-[0_30px_80px_rgba(42,28,51,0.14)] backdrop-blur-xl sm:rounded-[30px] sm:p-7 motion-safe:animate-[placementPageEnter_.48s_.08s_ease-out_both]"
         >
           <span className="absolute -end-20 -top-24 h-52 w-52 rounded-full bg-[#7c5295]/12 blur-3xl" aria-hidden="true" />
           <div className="relative">
-            <div className="mb-5 flex items-start gap-3 rounded-[18px] bg-[#30223a] p-4 text-white shadow-[0_14px_35px_rgba(45,31,55,0.18)]">
+            <div className="mb-4 flex items-start gap-3 rounded-[18px] bg-[#30223a] p-3.5 text-white shadow-[0_14px_35px_rgba(45,31,55,0.18)] sm:mb-5 sm:p-4">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#ec911f] text-white"><ShieldIcon /></span>
               <div>
                 <p className="font-black">{locale === "ar" ? "محاولة آمنة ومحفوظة" : "Secure, saved attempt"}</p>

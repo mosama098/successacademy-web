@@ -11,15 +11,21 @@ import {
 import { trackPlacementTestEvent } from "@/lib/tracking";
 import { courseLabel, placementCopy } from "../copy";
 import {
+  AssessmentInfoCards,
+  AssessmentJourney,
   CelebrationParticles,
   ChallengeVisual,
   ExperienceBackdrop,
   JourneyEnergy,
+  placementMotionDurations,
+  type PlacementMotionCategory,
 } from "./placement-experience";
+import { getWhatsAppHref } from "@/lib/utm";
 import type {
   AssessmentOption,
   AssessmentSection,
   PlacementAttemptAction,
+  PlacementProfile,
   PlacementLocale,
   PublicAttemptState,
   PublicQuestion,
@@ -39,12 +45,14 @@ type RewardMoment = {
   message: string;
   detail: string | null;
   bonus: boolean;
+  duration: PlacementMotionCategory;
 };
 
 export function PlacementAssessment({ locale, initialState }: PlacementAssessmentProps) {
   const copy = placementCopy[locale];
   const [state, setState] = useState(initialState);
   const [selected, setSelected] = useState<SelectedOption>(null);
+  const [listeningSelections, setListeningSelections] = useState<Record<string, AssessmentOption["id"]>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [milestone, setMilestone] = useState<number | null>(null);
@@ -55,6 +63,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
   const [analysisStep, setAnalysisStep] = useState(0);
   const [questionStartFailed, setQuestionStartFailed] = useState(false);
   const previousPhase = useRef(state.phase);
+  const previousListeningBlock = useRef<string | null>(null);
   const autoStartKey = useRef<string | null>(null);
   const expiredDeadline = useRef<string | null>(null);
   const timeoutActive = useRef(false);
@@ -85,15 +94,17 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
           ? next.overallTotal
           : Math.max(1, next.overallQuestion - 1);
         const bonus = completedAnswers > 0 && completedAnswers % 5 === 0;
+        const rewardMessage = copy.rewardMessages[(completedAnswers - 1) % copy.rewardMessages.length];
         setQuestionTransition("reward");
         setReward({
           id: completedAnswers,
-          message: copy.rewardMessages[(completedAnswers - 1) % copy.rewardMessages.length],
+          message: rewardMessage.text,
           detail: bonus ? copy.bonusMessages[Math.floor(completedAnswers / 5 - 1) % copy.bonusMessages.length] : null,
           bonus,
+          duration: bonus ? "bonus" : rewardMessage.duration,
         });
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          await new Promise((resolve) => window.setTimeout(resolve, bonus ? 620 : 480));
+          await new Promise((resolve) => window.setTimeout(resolve, placementMotionDurations[bonus ? "bonus" : rewardMessage.duration]));
         }
         setReward(null);
 
@@ -118,7 +129,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             section: next.section,
           });
           if (milestoneTimer.current !== null) window.clearTimeout(milestoneTimer.current);
-          milestoneTimer.current = window.setTimeout(() => setMilestone(null), 1_050);
+          milestoneTimer.current = window.setTimeout(() => setMilestone(null), placementMotionDurations.milestone);
         }
       } else {
         if (state.status !== "completed" && next.status === "completed") startAnalysis(next);
@@ -217,12 +228,19 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
       } else if (state.phase === "confirmation_intro") {
         void sendAction({ action: "confirmation_continue" });
       }
-    }, reducedMotion ? 80 : 1_250);
+    }, reducedMotion ? 80 : placementMotionDurations.section);
     return () => {
       if (sectionTimer.current !== null) window.clearTimeout(sectionTimer.current);
       sectionTimer.current = null;
     };
   }, [state.phase, state.section]);
+
+  useEffect(() => {
+    const blockId = state.section === "listening" ? state.question?.blockId ?? null : null;
+    if (!blockId || previousListeningBlock.current === blockId) return;
+    previousListeningBlock.current = blockId;
+    setListeningSelections({});
+  }, [state.question?.blockId, state.section]);
 
   useEffect(() => {
     if (state.phase !== "question" || !state.question || state.questionDeadlineAt) return;
@@ -397,8 +415,10 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
         <ListeningQuestion
           state={state}
           copy={copy}
-          selected={selected}
-          setSelected={setSelected}
+          selections={listeningSelections}
+          setSelection={(questionId, value) => {
+            setListeningSelections((current) => ({ ...current, [questionId]: value }));
+          }}
           busy={busy}
           error={error}
           retryQuestionStart={questionStartFailed ? () => {
@@ -408,8 +428,9 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
           sendAction={sendAction}
           onSubmit={(event) => {
             event.preventDefault();
-            if (selected && state.question && state.phase === "question") {
-              void sendAction({ action: "answer", questionId: state.question.id, optionId: selected });
+            const listeningSelection = state.question ? listeningSelections[state.question.id] : null;
+            if (listeningSelection && state.question && state.phase === "question") {
+              void sendAction({ action: "answer", questionId: state.question.id, optionId: listeningSelection });
             }
           }}
         />
@@ -513,12 +534,6 @@ function AssessmentLayout({
 }
 
 function ProgressJourney({ state, copy, locale }: { state: PublicAttemptState; copy: PlacementCopy; locale: PlacementLocale }) {
-  const steps = [
-    { id: "languageUse", label: copy.journey.languageUse },
-    { id: "reading", label: copy.journey.reading },
-    { id: "listening", label: copy.journey.listening },
-    { id: "result", label: copy.journey.result },
-  ] as const;
   const activeStep = state.phase === "result"
     ? 3
     : state.section === "languageUse"
@@ -529,26 +544,7 @@ function ProgressJourney({ state, copy, locale }: { state: PublicAttemptState; c
           ? 2
           : 0;
 
-  return (
-    <nav className="relative" aria-label={copy.progressLabel} dir={locale === "ar" ? "rtl" : "ltr"}>
-      <span className="absolute inset-x-[10%] top-3.5 h-px bg-[#d8d0da]" aria-hidden="true" />
-      <span className="absolute top-3.5 h-px bg-[linear-gradient(90deg,#ec911f,#6e438a)] transition-[width] duration-700 motion-reduce:transition-none" aria-hidden="true" style={{ insetInlineStart: "10%", width: `${Math.min(80, (activeStep / 3) * 80)}%` }} />
-      <ol className="relative grid grid-cols-4 gap-1">
-        {steps.map((step, index) => {
-          const reached = index <= activeStep;
-          const current = index === activeStep;
-          return (
-            <li key={step.id} className="flex min-w-0 flex-col items-center text-center" aria-current={current ? "step" : undefined}>
-              <span className={`relative z-10 grid h-7 w-7 place-items-center rounded-full border transition-all duration-300 ${current ? "border-[#ec911f] bg-[#30223a] shadow-[0_0_0_4px_rgba(236,145,31,0.12)]" : reached ? "border-[#5d3b72] bg-[#5d3b72]" : "border-[#d3cad5] bg-[#f6f3f1]"}`} aria-hidden="true">
-                <span className={`h-1.5 w-1.5 rounded-full ${reached ? "bg-white" : "bg-[#b8adb9]"}`} />
-              </span>
-              <span className={`mt-1 w-full truncate text-[8px] font-black sm:text-[10px] ${current ? "text-[#30223a]" : "text-[#887c8b]"}`}>{step.label}</span>
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
+  return <AssessmentJourney labels={copy.journey} activeStep={activeStep} locale={locale} label={copy.progressLabel} />;
 }
 
 function TimerBadge({ state, remainingSeconds, label }: { state: PublicAttemptState; remainingSeconds: number | null; label: string }) {
@@ -656,11 +652,11 @@ function QuestionCard({ state, copy, selected, setSelected, busy, error, retryQu
   );
 }
 
-function ListeningQuestion({ state, copy, selected, setSelected, busy, error, retryQuestionStart, sendAction, onSubmit }: {
+function ListeningQuestion({ state, copy, selections, setSelection, busy, error, retryQuestionStart, sendAction, onSubmit }: {
   state: PublicAttemptState;
   copy: PlacementCopy;
-  selected: SelectedOption;
-  setSelected: (value: SelectedOption) => void;
+  selections: Record<string, AssessmentOption["id"]>;
+  setSelection: (questionId: string, value: AssessmentOption["id"]) => void;
   busy: boolean;
   error: string | null;
   retryQuestionStart?: () => void;
@@ -678,11 +674,12 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
   const [isPlaying, setIsPlaying] = useState(false);
   const [visualProgress, setVisualProgress] = useState(audio?.progressSeconds ?? 0);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const blockQuestions = state.listeningBlockQuestions.length > 0 ? state.listeningBlockQuestions : [question];
+  const isSharedBlock = blockQuestions.length > 1;
+  const selected = selections[question.id] ?? null;
   const playable = Boolean(audio && audio.startSeconds !== null && audio.endSeconds !== null && audio.expectedDurationSeconds !== null);
   const canSelect = Boolean(audio && (audio.status !== "not_started" || isPlaying));
   const canSubmit = state.phase === "question" && Boolean(state.questionDeadlineAt) && Boolean(selected);
-  const firstSlot = question.blockId.split("-")[0];
-  const isFollowUp = question.slotId !== firstSlot;
 
   useEffect(() => {
     lastSynced.current = audio?.progressSeconds ?? 0;
@@ -733,7 +730,6 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
         const next = await sendAction({ action: "audio_start", questionId: question.id });
         if (!next || next.audio?.status !== "playing" || audioRef.current !== element) {
           element.pause();
-          setSelected(null);
           await sendAction({ action: "audio_failed", questionId: question.id }, true);
           return;
         }
@@ -742,7 +738,6 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
     } catch {
       element.pause();
       setIsPlaying(false);
-      setSelected(null);
       setPlaybackError(copy.audioUnavailable);
       await sendAction({ action: "audio_failed", questionId: question.id }, true);
     } finally {
@@ -780,90 +775,115 @@ function ListeningQuestion({ state, copy, selected, setSelected, busy, error, re
   const duration = audio?.expectedDurationSeconds ?? 0;
   const progressRatio = duration > 0 ? Math.min(1, visualProgress / duration) : 0;
 
+  const player = (
+    <div className={`relative overflow-hidden rounded-[22px] p-4 transition-colors ${audio?.status === "completed" ? "bg-[#e8e3eb]" : isPlaying ? "bg-[#33243d] text-white shadow-[0_18px_45px_rgba(45,31,55,0.2)]" : "bg-[#ebe6eb]"}`}>
+      {isPlaying ? <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(236,145,31,0.18),transparent_38%)]" aria-hidden="true" /> : null}
+      {playable && audio ? (
+        <>
+          {audio.status !== "completed" ? (
+            <audio
+              ref={audioRef}
+              src={audio.source}
+              preload="metadata"
+              onLoadedMetadata={() => {
+                if (audioRef.current && audio.startSeconds !== null) {
+                  audioRef.current.currentTime = audio.startSeconds + audio.progressSeconds;
+                  setVisualProgress(audio.progressSeconds);
+                }
+              }}
+              onTimeUpdate={onTimeUpdate}
+              onPlay={() => {
+                setIsPlaying(true);
+                animateProgress();
+              }}
+              onPause={() => {
+                setIsPlaying(false);
+                stopProgressAnimation();
+              }}
+              onEnded={() => {
+                setIsPlaying(false);
+                stopProgressAnimation();
+                setVisualProgress(audio.expectedDurationSeconds ?? 0);
+                void syncAndComplete(audio.expectedDurationSeconds ?? 0);
+              }}
+              onError={() => {
+                setIsPlaying(false);
+                stopProgressAnimation();
+                setPlaybackError(copy.audioUnavailable);
+                void sendAction({ action: "audio_failed", questionId: question.id }, true);
+              }}
+            />
+          ) : null}
+
+          <div className="relative flex items-center gap-3">
+            {audio.status === "completed" ? (
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#391b68] text-white"><CheckIcon /></span>
+            ) : (
+              <button type="button" disabled={busy || isPlaying} onClick={() => void startPlayback()} className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#30223a] text-white shadow-[0_10px_24px_rgba(40,28,49,0.25)] transition duration-200 hover:scale-[1.03] hover:bg-[#3d2949] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30" aria-label={copy.playAudio}>
+                {isPlaying ? <PauseIcon /> : <PlayIcon />}
+              </button>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className={`flex items-center justify-between gap-3 text-xs font-black ${isPlaying ? "text-white/75" : "text-[#6d5889]"}`}>
+                <span>{audio.status === "completed" ? copy.audioComplete : isPlaying ? copy.audioPlaying : copy.playAudio}</span>
+                <span className="shrink-0 tabular-nums" dir="ltr">{formatTime(visualProgress)} / {formatTime(duration)}</span>
+              </div>
+              <div className={`mt-2.5 h-2 overflow-hidden rounded-full ${isPlaying ? "bg-white/12" : "bg-[#d8d0dc]"}`} dir="ltr" role="progressbar" aria-label={copy.audioPlaying} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(visualProgress)}>
+                <div className="h-full origin-left rounded-full bg-[linear-gradient(90deg,#ec911f,#d8a4eb)] will-change-transform" style={{ transform: `scaleX(${progressRatio})` }} />
+              </div>
+            </div>
+            <AudioWaves playing={isPlaying} />
+          </div>
+          <div className={`relative mt-3 flex items-center justify-between gap-3 text-[11px] font-bold ${isPlaying ? "text-white/55" : "text-[#8a78a0]"}`}>
+            <span>{audio.status === "not_started" ? copy.listeningLocked : audio.status === "completed" ? copy.listeningBlockReview : copy.audioPlaying}</span>
+            <span>{copy.audioOnce}</span>
+          </div>
+        </>
+      ) : (
+        <p role="alert" className="text-sm font-bold leading-6 text-orange-800">{copy.audioUnavailable}</p>
+      )}
+    </div>
+  );
+
   return (
-    <form onSubmit={onSubmit} className={`mx-auto max-w-4xl transition duration-200 ${busy ? "opacity-80" : "opacity-100"}`}>
+    <form onSubmit={onSubmit} className={`mx-auto max-w-5xl transition duration-200 ${busy ? "opacity-80" : "opacity-100"}`}>
       <QuestionSurface>
-        <div className="mb-5 rounded-[20px] bg-[#e8e2e8] p-4 shadow-inner">
+        <div className="mb-4 rounded-[20px] bg-[#e8e2e8] p-4 shadow-inner">
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#30223a] text-[#f2a143] shadow-md"><HeadphonesIcon size={23} /></span>
             <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.06em] text-[#8a74a3]">{isFollowUp ? copy.sharedAudio : copy.listeningPrompt}</p>
+              <p className="text-sm font-black text-[#513477]">{isSharedBlock ? copy.listeningBlockCount.replace("{count}", String(blockQuestions.length)) : copy.listeningPrompt}</p>
+              {isSharedBlock ? <p className="mt-1 text-xs font-bold leading-5 text-[#756581]">{copy.listeningBlockPreview}</p> : null}
               {question.situation ? <p dir="ltr" className="mt-1.5 text-left text-sm font-bold leading-6 text-[#513477]">{question.situation}</p> : null}
             </div>
           </div>
         </div>
-
-        <QuestionHeading state={state} copy={copy} />
-
-        <div className={`relative mt-5 overflow-hidden rounded-[22px] p-4 transition-colors ${audio?.status === "completed" ? "bg-[#e8e3eb]" : isPlaying ? "bg-[#33243d] text-white shadow-[0_18px_45px_rgba(45,31,55,0.2)]" : "bg-[#ebe6eb]"}`}>
-          {isPlaying ? <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(236,145,31,0.18),transparent_38%)]" aria-hidden="true" /> : null}
-          {playable && audio ? (
-            <>
-              {audio.status !== "completed" ? (
-                <audio
-                  ref={audioRef}
-                  src={audio.source}
-                  preload="metadata"
-                  onLoadedMetadata={() => {
-                    if (audioRef.current && audio.startSeconds !== null) {
-                      audioRef.current.currentTime = audio.startSeconds + audio.progressSeconds;
-                      setVisualProgress(audio.progressSeconds);
-                    }
-                  }}
-                  onTimeUpdate={onTimeUpdate}
-                  onPlay={() => {
-                    setIsPlaying(true);
-                    animateProgress();
-                  }}
-                  onPause={() => {
-                    setIsPlaying(false);
-                    stopProgressAnimation();
-                  }}
-                  onEnded={() => {
-                    setIsPlaying(false);
-                    stopProgressAnimation();
-                    setVisualProgress(audio.expectedDurationSeconds ?? 0);
-                    void syncAndComplete(audio.expectedDurationSeconds ?? 0);
-                  }}
-                  onError={() => {
-                    setIsPlaying(false);
-                    stopProgressAnimation();
-                    setPlaybackError(copy.audioUnavailable);
-                    void sendAction({ action: "audio_failed", questionId: question.id }, true);
-                  }}
-                />
-              ) : null}
-
-              <div className="flex items-center gap-3">
-                {audio.status === "completed" ? (
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#391b68] text-white"><CheckIcon /></span>
-                ) : (
-                  <button type="button" disabled={busy || isPlaying} onClick={() => void startPlayback()} className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#30223a] text-white shadow-[0_10px_24px_rgba(40,28,49,0.25)] transition duration-200 hover:scale-[1.03] hover:bg-[#3d2949] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30" aria-label={copy.playAudio}>
-                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
-                  </button>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className={`flex items-center justify-between gap-3 text-xs font-black ${isPlaying ? "text-white/75" : "text-[#6d5889]"}`}>
-                    <span>{audio.status === "completed" ? copy.audioComplete : isPlaying ? copy.audioPlaying : copy.playAudio}</span>
-                    <span className="shrink-0 tabular-nums" dir="ltr">{formatTime(visualProgress)} / {formatTime(duration)}</span>
-                  </div>
-                  <div className={`mt-2.5 h-2 overflow-hidden rounded-full ${isPlaying ? "bg-white/12" : "bg-[#d8d0dc]"}`} dir="ltr" role="progressbar" aria-label={copy.audioPlaying} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(visualProgress)}>
-                    <div className="h-full origin-left rounded-full bg-[linear-gradient(90deg,#ec911f,#d8a4eb)] will-change-transform" style={{ transform: `scaleX(${progressRatio})` }} />
-                  </div>
-                </div>
-                <AudioWaves playing={isPlaying} />
-              </div>
-              <div className={`mt-3 flex items-center justify-between gap-3 text-[11px] font-bold ${isPlaying ? "text-white/55" : "text-[#8a78a0]"}`}>
-                <span>{audio.status === "not_started" ? copy.listeningLocked : audio.status === "completed" ? copy.audioComplete : copy.audioPlaying}</span>
-                <span>{copy.audioOnce}</span>
-              </div>
-            </>
-          ) : (
-            <p role="alert" className="text-sm font-bold leading-6 text-orange-800">{copy.audioUnavailable}</p>
-          )}
-        </div>
-
-        <AnswerOptions question={question} selected={selected} onSelect={setSelected} legend={copy.selectAnswer} disabled={!canSelect} />
+        {isSharedBlock ? (
+          <>
+            {player}
+            <div className="mt-4 grid gap-3" data-listening-block-questions>
+              {blockQuestions.map((blockQuestion, index) => {
+                const current = blockQuestion.id === question.id;
+                return (
+                  <section key={blockQuestion.id} className={`rounded-[20px] border p-4 transition-colors sm:p-5 ${current ? "border-[#8b65a0] bg-white/85 shadow-[0_12px_32px_rgba(53,35,64,0.09)]" : "border-white/80 bg-white/48"}`} aria-label={`${copy.questionLabel} ${index + 1}`}>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <span className={`rounded-full px-3 py-1 text-[10px] font-black ${current ? "bg-[#30223a] text-white" : "bg-[#e8e2e8] text-[#756581]"}`}>{copy.questionLabel} {index + 1} / {blockQuestions.length}</span>
+                      {current ? <span className="text-[10px] font-black text-[#c66e08]">{copy.sharedAudio}</span> : null}
+                    </div>
+                    <h2 dir="ltr" className="text-left text-xl font-black leading-[1.4] text-[#241a2b] sm:text-2xl">{blockQuestion.prompt}</h2>
+                    <AnswerOptions question={blockQuestion} selected={selections[blockQuestion.id] ?? null} onSelect={(value) => value && setSelection(blockQuestion.id, value)} legend={copy.selectAnswer} disabled={!canSelect} />
+                  </section>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            <QuestionHeading state={state} copy={copy} />
+            <div className="mt-5">{player}</div>
+            <AnswerOptions question={question} selected={selected} onSelect={(value) => value && setSelection(question.id, value)} legend={copy.selectAnswer} disabled={!canSelect} />
+          </>
+        )}
         <InlineError error={error ?? playbackError} retryLabel={copy.retry} onRetry={retryQuestionStart} />
         <StickySubmit disabled={!canSubmit || busy} busy={busy} copy={copy} />
       </QuestionSurface>
@@ -972,6 +992,16 @@ function ResultScreen({ locale, state }: { locale: PlacementLocale; state: Publi
   const salesBridge = locale === "ar"
     ? `بما إن أنسب بداية ليك هي ${result.placement}، نقدر نساعدك تبدأ بالمستوى المناسب من غير ما تضيع وقت في مستوى أعلى أو أقل من احتياجك.`
     : `Because ${result.placement} is your best starting point, we can help you begin at the right level without losing time in a course above or below what you need.`;
+  const whatsAppMessage = buildPlacementWhatsAppMessage(locale, result, skillNames);
+  const whatsAppHref = getWhatsAppHref(locale, whatsAppMessage);
+
+  function trackSalesCta(ctaType: "homepage" | "whatsapp") {
+    trackPlacementTestEvent("placement_test_sales_cta_click", {
+      locale,
+      placementLevel: result.placement,
+      ctaType,
+    });
+  }
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -990,61 +1020,64 @@ function ResultScreen({ locale, state }: { locale: PlacementLocale; state: Publi
 
   return (
     <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
-      <section className="relative px-4 py-6 sm:px-6 sm:py-10 motion-safe:animate-[placementResultScene_.55s_ease-out_both]">
+      <section className="relative px-4 py-4 sm:px-6 sm:py-7 motion-safe:animate-[placementResultScene_.55s_ease-out_both]">
         {revealStep >= 1 ? <CelebrationParticles dense /> : null}
         <div className="mx-auto max-w-5xl">
-          <div className="relative overflow-hidden rounded-[32px] bg-[#2f2138] px-5 py-8 text-center text-white shadow-[0_34px_90px_rgba(39,26,48,0.3)] sm:px-10 sm:py-11">
+          <div className="relative overflow-hidden rounded-[28px] bg-[#2f2138] px-5 py-6 text-center text-white shadow-[0_34px_90px_rgba(39,26,48,0.3)] sm:px-9 sm:py-8">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(160,103,190,0.42),transparent_45%),radial-gradient(circle_at_90%_95%,rgba(236,145,31,0.22),transparent_32%)]" aria-hidden="true" />
             <div className="relative">
               <p className={`text-sm font-black text-[#f5b25d] transition duration-300 ${revealStep >= 1 ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>{copy.resultComplete}</p>
-              <p className={`mt-3 text-[13px] font-bold text-white/60 transition duration-300 ${revealStep >= 1 ? "opacity-100" : "opacity-0"}`}>{copy.resultHeading}</p>
-              <div className={`relative mx-auto mt-4 grid h-36 w-36 place-items-center rounded-full border border-white/15 bg-white/8 shadow-[0_0_70px_rgba(236,145,31,0.16)] transition-opacity ${revealStep >= 2 ? "opacity-100 motion-safe:animate-[placementResultBadge_.7s_cubic-bezier(.2,.85,.2,1)_both]" : "opacity-0"}`}>
+              <p className={`mt-2 text-[13px] font-bold text-white/60 transition duration-300 ${revealStep >= 1 ? "opacity-100" : "opacity-0"}`}>{copy.resultHeading}</p>
+              <div className={`relative mx-auto mt-3 grid h-30 w-30 place-items-center rounded-full border border-white/15 bg-white/8 shadow-[0_0_70px_rgba(236,145,31,0.16)] transition-opacity sm:h-32 sm:w-32 ${revealStep >= 2 ? "opacity-100 motion-safe:animate-[placementResultBadge_.7s_cubic-bezier(.2,.85,.2,1)_both]" : "opacity-0"}`}>
                 <span className="absolute inset-3 rounded-full border border-[#ec911f]/40" />
                 <span className="text-5xl font-black tracking-[-0.04em] text-white">{result.placement}</span>
               </div>
-              <h1 className={`mt-5 text-balance text-3xl font-black transition duration-300 sm:text-4xl ${revealStep >= 2 ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>{courseLabel(locale, result.placement)}</h1>
-              <p className={`mx-auto mt-3 max-w-xl text-sm font-semibold leading-7 text-white/65 transition duration-300 sm:text-[15px] ${revealStep >= 2 ? "opacity-100" : "opacity-0"}`}>{copy.resultBasis}</p>
-              <div className={`mx-auto mt-5 max-w-md transition duration-300 ${revealStep >= 2 ? "opacity-100" : "opacity-0"}`}><JourneyEnergy value={100} label={copy.energyLabel} /></div>
+              <h1 className={`mt-3 text-balance text-3xl font-black transition duration-300 sm:text-4xl ${revealStep >= 2 ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>{courseLabel(locale, result.placement)}</h1>
+              <p className={`mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-white/65 transition duration-300 sm:text-[15px] ${revealStep >= 2 ? "opacity-100" : "opacity-0"}`}>{copy.resultBasis}</p>
+              <div className={`mx-auto mt-3 max-w-md transition duration-300 ${revealStep >= 2 ? "opacity-100" : "opacity-0"}`}><JourneyEnergy value={100} label={copy.energyLabel} /></div>
             </div>
           </div>
 
-          <div className={`relative mt-4 rounded-[28px] border border-white/75 bg-white/72 p-5 shadow-[0_24px_65px_rgba(43,29,52,0.11)] backdrop-blur-xl transition duration-500 sm:p-8 ${revealStep >= 3 ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
+          <div className={`relative mt-3 rounded-[24px] border border-white/75 bg-white/72 p-4 shadow-[0_24px_65px_rgba(43,29,52,0.11)] backdrop-blur-xl transition duration-500 sm:p-6 ${revealStep >= 3 ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-[15px] bg-[#30223a] text-[#f2a143]"><ChartIcon /></span>
               <h2 className="text-xl font-black text-[#2d2036]">{copy.profileTitle}</h2>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
               {skillRows.map(([skill, evidence], index) => (
-                <div key={skill} className={`rounded-[20px] bg-[#eee9ed] p-4 shadow-inner motion-safe:animate-[placementRevealUp_.38s_ease-out_both]`} style={{ animationDelay: `${index * 100}ms` }}>
+                <div key={skill} className="rounded-[18px] bg-[#eee9ed] p-3.5 shadow-inner motion-safe:animate-[placementRevealUp_.38s_ease-out_both]" style={{ animationDelay: `${index * 100}ms` }}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-black text-[#493553]">{skillNames[skill]}</p>
-                    <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-[#4d335e]">{evidence.estimatedBand}</span>
+                    <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-[#4d335e]">{copy.qualitativeLabels[evidence.estimatedBand]}</span>
                   </div>
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#d9d1da]">
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#d9d1da]">
                     <div className="h-full rounded-full bg-[linear-gradient(90deg,#ec911f,#76508c)] transition-[width] duration-700 motion-reduce:transition-none" style={{ width: `${evidence.percent}%` }} />
                   </div>
                 </div>
               ))}
             </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-2.5 grid gap-2.5 sm:grid-cols-3">
               <ResultFact icon={<StarIcon />} label={copy.strongest} value={skillNames[result.strongestSkill]} />
               <ResultFact icon={<TargetIcon />} label={copy.improve} value={skillNames[result.weakestSkill]} />
               <ResultFact icon={<ShieldIcon />} label={copy.confidence} value={copy.confidenceLabels[result.confidence]} />
             </div>
-            <details className="mt-4 rounded-[18px] bg-[#eee9ed] p-4 text-start transition open:bg-white/80">
+            <details className="mt-3 rounded-[18px] bg-[#eee9ed] p-3.5 text-start transition open:bg-white/80">
               <summary className="cursor-pointer font-black text-[#3e2a4a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20">{copy.whyResult}</summary>
               <p className="mt-3 text-sm leading-7 text-[#6d606f]">{copy.whyBody}</p>
               <p className="mt-2 text-sm leading-7 text-[#6d606f]">{explanation}</p>
             </details>
           </div>
 
-          <div className={`mt-4 overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#fffaf2,#ede6ef)] p-5 shadow-[0_20px_55px_rgba(43,29,52,0.1)] transition duration-500 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-7 ${revealStep >= 4 ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
+          <div className={`mt-3 overflow-hidden rounded-[24px] bg-[linear-gradient(135deg,#fffaf2,#ede6ef)] p-4 shadow-[0_20px_55px_rgba(43,29,52,0.1)] transition duration-500 sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-7 sm:p-6 ${revealStep >= 4 ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`}>
             <div>
               <p className="text-xs font-black uppercase tracking-[0.1em] text-[#c66e08]">{copy.courseHeading}</p>
               <h2 className="mt-2 text-2xl font-black text-[#30223a] sm:text-3xl">{courseLabel(locale, result.placement)}</h2>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-[#6d606f]">{salesBridge}</p>
             </div>
-            <Link href={`/${locale}#lead-form`} onClick={() => trackPlacementTestEvent("placement_test_sales_cta_click", { placementLevel: result.placement, confidence: result.confidence })} className="group mt-5 inline-flex min-h-14 w-full shrink-0 items-center justify-center gap-3 rounded-[17px] bg-[#30223a] px-6 text-base font-black text-white shadow-[0_14px_30px_rgba(45,31,55,0.2)] transition hover:-translate-y-0.5 hover:bg-[#3b2947] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30 sm:mt-0 sm:w-auto"><span className="grid h-8 w-8 place-items-center rounded-xl bg-[#ec911f] transition group-hover:rotate-6"><BoltIcon size={17} /></span>{copy.salesCta}<ArrowIcon /></Link>
+            <div className="mt-4 grid min-w-0 gap-2.5 sm:mt-0 sm:w-[250px]">
+              <Link href={`/${locale}`} onClick={() => trackSalesCta("homepage")} className="group inline-flex min-h-13 w-full min-w-0 items-center justify-center gap-2.5 rounded-[16px] bg-[#30223a] px-4 text-sm font-black !text-white shadow-[0_14px_30px_rgba(45,31,55,0.2)] transition hover:-translate-y-0.5 hover:bg-[#3b2947] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#ec911f] transition group-hover:rotate-6"><BoltIcon size={17} /></span><span className="min-w-0">{copy.homepageCta}</span><ArrowIcon /></Link>
+              <a href={whatsAppHref} target="_blank" rel="noopener noreferrer" onClick={() => trackSalesCta("whatsapp")} className="inline-flex min-h-13 w-full min-w-0 items-center justify-center gap-2.5 rounded-[16px] border border-[#6f4b82]/25 bg-white/80 px-4 text-sm font-black text-[#30223a] shadow-sm transition hover:-translate-y-0.5 hover:border-[#6f4b82]/45 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#6f4b82]/18"><WhatsAppIcon /><span className="min-w-0">{copy.whatsappCta}</span></a>
+            </div>
           </div>
         </div>
       </section>
@@ -1053,10 +1086,6 @@ function ResultScreen({ locale, state }: { locale: PlacementLocale; state: Publi
 }
 
 function AssessmentWelcome({ locale, copy, busy, onStart }: { locale: PlacementLocale; copy: PlacementCopy; busy: boolean; onStart: () => void }) {
-  const facts = locale === "ar"
-    ? [["36", "سؤال"], ["3", "مهارات"], ["24–27", "دقيقة"]]
-    : [["36", "Questions"], ["3", "Skills"], ["24–27", "Minutes"]];
-
   return (
     <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
       <section className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-6xl items-center gap-4 px-4 py-6 sm:px-6 sm:py-9 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
@@ -1067,28 +1096,9 @@ function AssessmentWelcome({ locale, copy, busy, onStart }: { locale: PlacementL
           </div>
           <h1 className="mt-5 max-w-3xl text-balance text-[clamp(2.25rem,7vw,4.5rem)] font-black leading-[1.05] tracking-[-0.02em] text-[#291e31]">{copy.welcomeTitle}</h1>
           <p className="mt-4 max-w-xl text-[15px] font-semibold leading-7 text-[#6f6473] sm:text-lg sm:leading-8">{copy.welcomeBody}</p>
-          <div className="mt-6 grid grid-cols-3 gap-2.5 sm:max-w-xl sm:gap-3">
-            {facts.map(([value, label], index) => (
-              <div key={label} className="relative overflow-hidden rounded-[18px] border border-white/80 bg-white/62 px-2 py-3 text-center shadow-[0_12px_30px_rgba(49,34,59,0.07)] backdrop-blur sm:px-4">
-                <span className={`absolute inset-x-0 top-0 h-0.5 ${index === 1 ? "bg-[#ec911f]" : "bg-[#76538b]"}`} />
-                <strong className="block text-lg font-black text-[#2f2237] sm:text-2xl">{value}</strong>
-                <span className="mt-0.5 block text-[10px] font-black text-[#817684] sm:text-xs">{label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 max-w-xl rounded-[20px] border border-white/70 bg-[#2e2138] p-3.5 text-white shadow-[0_18px_45px_rgba(43,29,53,0.2)] sm:p-4">
-            <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.08em] text-white/60">
-              <span>{locale === "ar" ? "رحلة التقييم" : "Assessment journey"}</span>
-              <span>0 → 100%</span>
-            </div>
-            <div className="mt-3 flex items-center gap-2" dir={locale === "ar" ? "rtl" : "ltr"}>
-              {[copy.journey.languageUse, copy.journey.reading, copy.journey.listening, copy.journey.result].map((label, index) => (
-                <div key={label} className="flex min-w-0 flex-1 items-center gap-1.5">
-                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[9px] font-black ${index === 0 ? "bg-[#ec911f] text-white" : "bg-white/10 text-white/65"}`}>{index + 1}</span>
-                  <span className="hidden truncate text-[10px] font-black text-white/75 sm:block">{label}</span>
-                </div>
-              ))}
-            </div>
+          <div className="mt-6 max-w-xl"><AssessmentInfoCards locale={locale} /></div>
+          <div className="mt-3 max-w-xl">
+            <AssessmentJourney labels={copy.journey} activeStep={0} locale={locale} label={copy.progressLabel} />
           </div>
           <button type="button" disabled={busy} onClick={onStart} className="group mt-5 inline-flex min-h-14 w-full max-w-xl items-center justify-center gap-3 overflow-hidden rounded-[18px] bg-[#ec911f] px-6 text-base font-black text-white shadow-[0_16px_35px_rgba(236,145,31,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#d98213] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30">
             <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 transition group-hover:rotate-6"><BoltIcon size={18} /></span>
@@ -1154,14 +1164,14 @@ function SectionMoment({ section, title, label, body, error, retryLabel, onRetry
   return (
     <ExperienceBackdrop className="min-h-[calc(100dvh-4rem)]">
       <section className="relative flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8 text-center">
-        <div className="relative w-full max-w-lg motion-safe:animate-[placementSectionMoment_1.25s_cubic-bezier(.22,.8,.22,1)]">
+        <div className="relative w-full max-w-lg motion-safe:animate-[placementSectionMoment_1.75s_cubic-bezier(.22,.8,.22,1)]">
           <div className="absolute inset-x-[20%] top-1/2 h-24 -translate-y-1/2 rounded-full bg-[#6d4388]/20 blur-3xl" aria-hidden="true" />
           <div className="relative">
             {section ? <SectionIcon section={section} /> : <span className="mx-auto grid h-16 w-16 place-items-center rounded-[22px] bg-[#30223a] text-[#f3a443] shadow-[0_18px_42px_rgba(45,31,55,0.24)]"><CheckIcon size={26} /></span>}
             <p className="mt-5 text-[11px] font-black uppercase tracking-[0.14em] text-[#806f86]">{label}</p>
             <h1 className="mx-auto mt-2 text-balance text-3xl font-black leading-tight text-[#2a1e32] sm:text-5xl">{title}</h1>
             <p className="mx-auto mt-3 max-w-md text-sm font-semibold leading-7 text-[#716675] sm:text-base">{body}</p>
-            <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-white/80 shadow-inner" aria-hidden="true"><span className="block h-full w-full origin-left bg-[linear-gradient(90deg,#ec911f,#785093)] motion-safe:animate-[placementTransitionBar_1.25s_linear_forwards]" /></div>
+            <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-white/80 shadow-inner" aria-hidden="true"><span className="block h-full w-full origin-left bg-[linear-gradient(90deg,#ec911f,#785093)] motion-safe:animate-[placementTransitionBar_1.75s_linear_forwards]" /></div>
             {error ? <div className="mx-auto mt-5 max-w-sm"><InlineError error={error} retryLabel={retryLabel} onRetry={onRetry} /></div> : null}
           </div>
         </div>
@@ -1188,7 +1198,39 @@ function PassageText({ text }: { text: string }) {
 }
 
 function ResultFact({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return <div className="flex items-center gap-3 rounded-[18px] bg-[#eee9ed] p-4 text-start shadow-inner"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#30223a] text-[#f2a143]">{icon}</span><div><p className="text-[11px] font-black text-[#837586]">{label}</p><p className="mt-1 font-black text-[#35243f]">{value}</p></div></div>;
+  return <div className="flex min-h-16 items-center gap-2.5 rounded-[16px] bg-[#eee9ed] p-3 text-start shadow-inner"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-[#30223a] text-[#f2a143]">{icon}</span><div className="min-w-0"><p className="text-[10px] font-black text-[#837586]">{label}</p><p className="mt-0.5 truncate text-sm font-black text-[#35243f]">{value}</p></div></div>;
+}
+
+function buildPlacementWhatsAppMessage(
+  locale: PlacementLocale,
+  result: PlacementProfile,
+  skillNames: Record<AssessmentSection, string>,
+) {
+  if (locale === "ar") {
+    return `أهلاً فريق Success Academy 👋
+
+أنا خلصت English Placement Test على الموقع.
+
+🎯 المستوى المناسب لبدايتي: ${result.placement}
+⭐ أقوى مهارة عندي: ${skillNames[result.strongestSkill]}
+📚 أهم مهارة محتاجة تركيز: ${skillNames[result.weakestSkill]}
+
+حابب أعرف تفاصيل المستوى المناسب ليا، المواعيد المتاحة، وطريقة الحجز.
+
+ممكن تساعدوني أبدأ بالخطوة المناسبة؟ 😊`;
+  }
+
+  return `Hi Success Academy team 👋
+
+I completed the English Placement Test on the website.
+
+🎯 My recommended starting level: ${result.placement}
+⭐ My strongest area: ${skillNames[result.strongestSkill]}
+📚 My main area to improve: ${skillNames[result.weakestSkill]}
+
+I would like to know more about the right level, available schedules, and how to book.
+
+Could you help me take the right next step? 😊`;
 }
 
 function FatalState({ locale, message }: { locale: PlacementLocale; message: string }) {
@@ -1219,7 +1261,7 @@ function TimeoutOverlay({ copy }: { copy: PlacementCopy }) {
 function MotivationBurst({ reward, locale }: { reward: RewardMoment; locale: PlacementLocale }) {
   return (
     <div className="pointer-events-none fixed inset-0 z-40 grid place-items-center p-4" role="status" aria-live="polite">
-      <div className={`relative min-w-48 overflow-hidden rounded-[24px] px-7 py-5 text-center text-white shadow-[0_26px_65px_rgba(32,21,39,0.3)] motion-safe:animate-[placementRewardBurst_.62s_cubic-bezier(.2,.85,.2,1)_both] ${reward.bonus ? "bg-[linear-gradient(135deg,#7b4b92,#30223a)]" : "bg-[#30223a]"}`}>
+      <div className={`relative min-w-48 overflow-hidden rounded-[24px] px-7 py-5 text-center text-white shadow-[0_26px_65px_rgba(32,21,39,0.3)] motion-safe:animate-[placementRewardBurst_.62s_cubic-bezier(.2,.85,.2,1)_both] ${reward.bonus ? "bg-[linear-gradient(135deg,#7b4b92,#30223a)]" : "bg-[#30223a]"}`} style={{ animationDuration: `${placementMotionDurations[reward.duration]}ms` }}>
         {reward.bonus ? <CelebrationParticles /> : null}
         <span className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ec911f]/60 motion-safe:animate-[placementRewardRing_.55s_ease-out_both]" aria-hidden="true" />
         <div className="relative">
@@ -1282,6 +1324,10 @@ function PlayIcon() {
 
 function PauseIcon() {
   return <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M6.5 5.5h4v13h-4zM13.5 5.5h4v13h-4z"/></svg>;
+}
+
+function WhatsAppIcon() {
+  return <svg viewBox="0 0 32 32" width="21" height="21" fill="currentColor" className="shrink-0 text-[#3f7550]" aria-hidden="true"><path d="M16.04 3A12.8 12.8 0 0 0 5.1 22.47L3 29l6.75-2.04A12.84 12.84 0 1 0 16.04 3Zm0 23.37c-2.1 0-4.15-.62-5.9-1.78l-.42-.27-4 1.2 1.24-3.88-.28-.44a10.55 10.55 0 1 1 9.36 5.17Zm5.79-7.9c-.32-.16-1.88-.93-2.17-1.03-.29-.11-.5-.16-.71.16-.21.31-.82 1.03-1 1.24-.19.21-.37.24-.69.08-.32-.16-1.34-.49-2.55-1.58a9.53 9.53 0 0 1-1.77-2.2c-.18-.32-.02-.49.14-.65.14-.14.32-.37.47-.55.16-.19.21-.32.32-.53.1-.21.05-.4-.03-.56-.08-.16-.71-1.72-.98-2.35-.25-.62-.52-.54-.71-.55h-.61c-.21 0-.55.08-.84.4-.29.31-1.11 1.08-1.11 2.64s1.14 3.07 1.29 3.28c.16.21 2.24 3.42 5.42 4.8.76.33 1.35.52 1.81.67.76.24 1.45.21 2 .13.61-.09 1.88-.77 2.14-1.51.26-.74.26-1.38.18-1.51-.08-.14-.29-.22-.61-.38Z"/></svg>;
 }
 
 function CheckIcon({ size = 20 }: { size?: number }) {

@@ -442,6 +442,12 @@ function toPublicState(attempt: PlacementAttempt): PublicAttemptState {
     : 0;
   const audioAsset = question?.audioId ? getAudioAsset(question.audioId) : null;
   const audioPlayback = question?.audioId ? getPlayback(attempt, question.blockId) : null;
+  const listeningBlockQuestions = question?.section === "listening"
+    ? sequence
+        .map((id) => getQuestion(id))
+        .filter((item): item is AssessmentQuestion => Boolean(item && item.blockId === question.blockId))
+        .map(publicQuestion)
+    : [];
 
   return {
     status: attempt.status,
@@ -456,6 +462,7 @@ function toPublicState(attempt: PlacementAttempt): PublicAttemptState {
       ? 0
       : Math.min(100, Math.round((attempt.answers.length / sequence.length) * 100)),
     question: question ? publicQuestion(question) : null,
+    listeningBlockQuestions,
     questionDeadlineAt: attempt.questionDeadlineAt,
     readingReadyAt: attempt.readingReadyAt,
     audio: audioAsset && audioPlayback ? { ...audioAsset, ...audioPlayback } : null,

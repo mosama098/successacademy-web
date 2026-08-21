@@ -24,6 +24,8 @@ const trackedParams = [
   "ttclid",
 ] as const;
 
+export const SUCCESS_ACADEMY_WHATSAPP_NUMBER = "201204110111";
+
 export function getLeadMetadata(locale: string): LeadMetadata {
   if (typeof window === "undefined") {
     return {
@@ -56,16 +58,12 @@ export function getLeadMetadata(locale: string): LeadMetadata {
   };
 }
 
-export function getWhatsAppHref(locale: string) {
-  const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-  const message =
-    locale === "ar"
-      ? "مرحبًا، أنا سجلت للتقييم المجاني في Success Academy وعايز أعرف الخطوة الجاية."
-      : "Hi, I registered for the free level check at Success Academy and I would like to know the next step.";
-
-  if (!number) {
-    return "#lead-form";
-  }
+export function getWhatsAppHref(locale: string, customMessage?: string) {
+  const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
+    || SUCCESS_ACADEMY_WHATSAPP_NUMBER;
+  const message = customMessage ?? (locale === "ar"
+    ? "مرحبًا، أنا سجلت للتقييم المجاني في Success Academy وعايز أعرف الخطوة الجاية."
+    : "Hi, I registered for the free level check at Success Academy and I would like to know the next step.");
 
   return `https://wa.me/${number.replace(/[^\d]/g, "")}?text=${encodeURIComponent(message)}`;
 }

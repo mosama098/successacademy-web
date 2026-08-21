@@ -1,4 +1,92 @@
 import type { CSSProperties, ReactNode } from "react";
+import type { PlacementLocale } from "../types";
+
+export type PlacementMotionCategory = "short" | "normal" | "bonus" | "milestone" | "section";
+
+export const placementMotionDurations: Record<PlacementMotionCategory, number> = {
+  short: 720,
+  normal: 950,
+  bonus: 1_220,
+  milestone: 1_450,
+  section: 1_750,
+};
+
+type JourneyLabels = {
+  languageUse: string;
+  reading: string;
+  listening: string;
+  result: string;
+};
+
+export function AssessmentInfoCards({ locale }: { locale: PlacementLocale }) {
+  const facts = locale === "ar"
+    ? [
+        { value: "36", label: "سؤال", kind: "questions" as const },
+        { value: "3", label: "مهارات", kind: "skills" as const },
+        { value: "24–27", label: "دقيقة", kind: "duration" as const },
+      ]
+    : [
+        { value: "36", label: "Questions", kind: "questions" as const },
+        { value: "3", label: "Skills", kind: "skills" as const },
+        { value: "24–27", label: "Minutes", kind: "duration" as const },
+      ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2.5 sm:gap-3" data-placement-info-cards>
+      {facts.map((fact) => (
+        <div key={fact.kind} className="group relative min-w-0 overflow-hidden rounded-[18px] border border-white/85 bg-white/68 px-2 py-3 text-center shadow-[0_12px_30px_rgba(49,34,59,0.075)] backdrop-blur sm:px-3 sm:py-3.5">
+          <span className="mx-auto mb-1.5 grid h-8 w-10 place-items-center text-[#654479]" aria-hidden="true">
+            {fact.kind === "questions" ? <QuestionCardsIcon /> : fact.kind === "skills" ? <SkillsIcon /> : <StopwatchIcon />}
+          </span>
+          <strong className="block truncate text-lg font-black leading-none text-[#2f2237] sm:text-2xl">{fact.value}</strong>
+          <span className="mt-1 block truncate text-[10px] font-black text-[#817684] sm:text-xs">{fact.label}</span>
+          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[linear-gradient(90deg,transparent,#ec911f,transparent)] opacity-70" aria-hidden="true" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function AssessmentJourney({
+  labels,
+  activeStep,
+  locale,
+  label,
+}: {
+  labels: JourneyLabels;
+  activeStep: number;
+  locale: PlacementLocale;
+  label: string;
+}) {
+  const steps = [
+    { id: "languageUse", label: labels.languageUse, icon: <LanguageIcon /> },
+    { id: "reading", label: labels.reading, icon: <ReadingIcon /> },
+    { id: "listening", label: labels.listening, icon: <ListeningIcon /> },
+    { id: "result", label: labels.result, icon: <TrophyIcon /> },
+  ] as const;
+  const safeStep = Math.max(0, Math.min(3, activeStep));
+
+  return (
+    <nav className="relative rounded-[18px] border border-white/80 bg-white/58 px-2.5 py-2.5 shadow-[0_10px_28px_rgba(48,32,58,0.06)] backdrop-blur" aria-label={label} dir={locale === "ar" ? "rtl" : "ltr"} data-assessment-journey>
+      <span className="absolute inset-x-[10%] top-[22px] h-0.5 rounded-full bg-[#d8d0da]" aria-hidden="true" />
+      <span className="absolute top-[22px] h-0.5 rounded-full bg-[linear-gradient(90deg,#ec911f,#6e438a)] transition-[width] duration-700 motion-reduce:transition-none" aria-hidden="true" style={{ insetInlineStart: "10%", width: `${(safeStep / 3) * 80}%` }} />
+      <ol className="relative grid grid-cols-4 gap-1">
+        {steps.map((step, index) => {
+          const complete = index < safeStep;
+          const current = index === safeStep;
+          return (
+            <li key={step.id} className="flex min-w-0 flex-col items-center text-center" aria-current={current ? "step" : undefined}>
+              <span className={`relative z-10 grid h-7 w-7 place-items-center rounded-[10px] border transition-all duration-300 ${current ? "border-[#ec911f] bg-[#30223a] text-white shadow-[0_0_0_4px_rgba(236,145,31,0.12)]" : complete ? "border-[#69467d] bg-[#69467d] text-white" : "border-[#d3cad5] bg-[#f6f3f1] text-[#a397a6]"}`} aria-hidden="true">
+                {complete ? <JourneyCheckIcon /> : step.icon}
+              </span>
+              <span className={`mt-1.5 w-full truncate text-[8px] font-black leading-tight sm:text-[10px] ${current ? "text-[#30223a]" : complete ? "text-[#66566c]" : "text-[#968b99]"}`}>{step.label}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
 
 type JourneyEnergyProps = {
   value: number;
@@ -101,4 +189,36 @@ function OrbitToken({ children, className, delay }: { children: ReactNode; class
 
 function EnergyIcon() {
   return <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M13.3 2.4 5.5 13h5.6l-.7 8.6L18.5 10h-5.8z" /></svg>;
+}
+
+function QuestionCardsIcon() {
+  return <svg viewBox="0 0 40 32" width="40" height="32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="motion-safe:animate-[placementCardShuffle_1.4s_ease-out_1]" aria-hidden="true"><rect x="6" y="7" width="22" height="18" rx="5" opacity=".42"/><rect x="12" y="4" width="22" height="20" rx="5" fill="#f8f4f2"/><path d="M20.5 11.2a3.4 3.4 0 0 1 6.5 1.4c0 2.6-3.3 2.7-3.3 4.8M23.7 20.2h.01" stroke="#ec911f" strokeWidth="2"/></svg>;
+}
+
+function SkillsIcon() {
+  return <span className="flex items-center justify-center gap-0.5" aria-hidden="true"><span className="grid h-6 w-6 place-items-center rounded-lg bg-[#efe8f1] text-[9px] font-black motion-safe:animate-[placementSkillPop_.55s_ease-out_both]">Aa</span><span className="grid h-6 w-6 place-items-center rounded-lg bg-[#efe8f1] motion-safe:animate-[placementSkillPop_.55s_.12s_ease-out_both]"><ReadingIcon /></span><span className="grid h-6 w-6 place-items-center rounded-lg bg-[#efe8f1] motion-safe:animate-[placementSkillPop_.55s_.24s_ease-out_both]"><ListeningIcon /></span></span>;
+}
+
+function StopwatchIcon() {
+  return <svg viewBox="0 0 32 32" width="31" height="31" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3h8M16 3v4M24.5 8.5l2-2"/><circle cx="16" cy="18" r="10" fill="#f8f4f2"/><path d="M16 18V11" className="origin-[16px_18px] motion-safe:animate-[placementClockSweep_1.25s_ease-out_1]" stroke="#ec911f" strokeWidth="2.2"/><path d="M16 18l4 2"/></svg>;
+}
+
+function LanguageIcon() {
+  return <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m4 19 5-14 5 14M6 14h6M15 10h5M17.5 7.5v5"/></svg>;
+}
+
+function ReadingIcon() {
+  return <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22zM20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22z"/></svg>;
+}
+
+function ListeningIcon() {
+  return <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2M6 13H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2zM18 13h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2z"/></svg>;
+}
+
+function TrophyIcon() {
+  return <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 4h8v4a4 4 0 0 1-8 0zM8 6H5v1a4 4 0 0 0 4 4M16 6h3v1a4 4 0 0 1-4 4M12 12v5M8 21h8M9 17h6"/></svg>;
+}
+
+function JourneyCheckIcon() {
+  return <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>;
 }

@@ -158,6 +158,7 @@ export type PublicAttemptState = {
   overallTotal: number;
   progressPercent: number;
   question: PublicQuestion | null;
+  listeningBlockQuestions: PublicQuestion[];
   questionDeadlineAt: string | null;
   readingReadyAt: string | null;
   audio: (AudioAsset & AudioPlaybackState) | null;
