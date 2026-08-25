@@ -193,10 +193,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
     }
 
-    if (isPlacement && "leadReference" in result.payload) {
+    if (
+      (isPlacement || result.payload.source === "website") &&
+      "leadReference" in result.payload
+    ) {
       try {
         const { token } = await createStoredAttempt(
-          result.payload.locale === "en" ? "en" : "ar",
+          result.payload.metadata.locale === "en" ? "en" : "ar",
           result.payload.leadReference,
         );
         const placementResponse = NextResponse.json({ ok: true, placementAttempt: true });
@@ -277,6 +280,7 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
     payload: {
       status: "new_assessment_lead",
       source: "website",
+      leadReference: randomUUID(),
       submittedAt: new Date().toISOString(),
       fullName: fullName.trim(),
       phone: normalizedPhone,

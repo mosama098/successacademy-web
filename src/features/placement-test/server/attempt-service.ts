@@ -4,6 +4,7 @@ import type {
   AssessmentSection,
   PlacementAttempt,
   PlacementAttemptAction,
+  PlacementProgressWebhookEvent,
   PublicAttemptState,
   PublicQuestion,
   StoredAnswer,
@@ -29,14 +30,22 @@ export class PlacementAttemptError extends Error {
 }
 
 const AUDIO_PROGRESS_TOLERANCE_SECONDS = 2;
+const PROGRESS_WEBHOOK_CLAIM_TTL_MS = 60_000;
+const PROGRESS_WEBHOOK_MAX_EVENTS = 16;
+const PROGRESS_THRESHOLDS = [10, 20, 30, 40, 50, 60, 70, 80, 90] as const;
+const ASSESSMENT_SECTIONS: AssessmentSection[] = ["languageUse", "reading", "listening"];
 
 export async function getPublicAttemptState(token: string) {
   let deliverResult = false;
   const attempt = await updateStoredAttempt(token, (current) => {
     reconcileAttempt(current);
+    enqueueDueProgressWebhookEvents(current);
     deliverResult = claimResultDelivery(current);
   });
-  if (attempt && deliverResult) await deliverResultWebhook(token, attempt);
+  if (attempt && deliverResult) {
+    await deliverPendingProgressWebhooks(token);
+    await deliverResultWebhook(token, attempt);
+  }
   return attempt ? toPublicState(attempt) : null;
 }
 
@@ -50,11 +59,13 @@ export async function applyAttemptAction(token: string, action: PlacementAttempt
   let deliverResult = false;
   const attempt = await updateStoredAttempt(token, (current) => {
     reconcileAttempt(current, false);
+    enqueueDueProgressWebhookEvents(current);
     if (current.status === "completed" || current.status === "expired") return;
 
     try {
       applyAction(current, action);
       reconcileAttempt(current, false);
+      enqueueDueProgressWebhookEvents(current);
       deliverResult = claimResultDelivery(current);
     } catch (error) {
       if (error instanceof PlacementAttemptError) {
@@ -67,8 +78,39 @@ export async function applyAttemptAction(token: string, action: PlacementAttempt
 
   if (!attempt) throw new PlacementAttemptError("invalid_attempt", 401);
   if (actionError) throw actionError;
-  if (deliverResult) await deliverResultWebhook(token, attempt);
+  if (deliverResult) {
+    await deliverPendingProgressWebhooks(token);
+    await deliverResultWebhook(token, attempt);
+  }
   return toPublicState(attempt);
+}
+
+export async function deliverPendingProgressWebhooks(token: string) {
+  for (let index = 0; index < PROGRESS_WEBHOOK_MAX_EVENTS; index += 1) {
+    const claimed = await claimProgressWebhookEvent(token);
+    if (!claimed) return;
+
+    const delivered = await deliverProgressWebhookEvent(claimed);
+    await updateStoredAttempt(token, (attempt) => {
+      ensureProgressWebhookState(attempt);
+      if (attempt.progressWebhookClaimedKey !== claimed.event.key) return;
+      if (delivered) {
+        attempt.progressWebhookQueue = attempt.progressWebhookQueue.filter(
+          (candidate) => candidate.key !== claimed.event.key,
+        );
+        if (!attempt.progressWebhookSentKeys.includes(claimed.event.key)) {
+          attempt.progressWebhookSentKeys.push(claimed.event.key);
+        }
+        attempt.progressWebhookRetryAt = null;
+      } else {
+        attempt.progressWebhookRetryAt = new Date(Date.now() + 60_000).toISOString();
+      }
+      attempt.progressWebhookClaimedKey = null;
+      attempt.progressWebhookClaimedAt = null;
+    });
+
+    if (!delivered) return;
+  }
 }
 
 function applyAction(attempt: PlacementAttempt, action: PlacementAttemptAction) {
@@ -497,6 +539,182 @@ function publicQuestion(question: AssessmentQuestion): PublicQuestion {
   return passage ? { ...safe, passage } : safe;
 }
 
+function enqueueDueProgressWebhookEvents(attempt: PlacementAttempt) {
+  ensureProgressWebhookState(attempt);
+  if (!attempt.startedAt || attempt.status === "registered_not_started" || attempt.status === "expired") {
+    return;
+  }
+  if (attempt.resultWebhookSentAt) {
+    clearProgressWebhookState(attempt);
+    return;
+  }
+
+  const lastActivity = new Date().toISOString();
+  const sequence = activeSequence(attempt);
+  const progress = sequence.length === 0
+    ? 0
+    : Math.min(100, Math.round((attempt.answers.length / sequence.length) * 100));
+  const activeQuestion = currentQuestion(attempt);
+  const latestAnsweredQuestion = getQuestion(attempt.answers.at(-1)?.questionId ?? "");
+  const contextQuestion = activeQuestion ?? latestAnsweredQuestion;
+
+  enqueueProgressWebhookEvent(attempt, {
+    key: "start",
+    assessmentProgress: 0,
+    currentSection: activeQuestion?.section ?? attempt.currentSection,
+    currentQuestion: activeQuestion?.id ?? null,
+    startedAt: attempt.startedAt,
+    lastActivity,
+  });
+
+  for (const threshold of PROGRESS_THRESHOLDS) {
+    if (progress < threshold) break;
+    enqueueProgressWebhookEvent(attempt, {
+      key: `progress:${threshold}`,
+      assessmentProgress: threshold,
+      currentSection: contextQuestion?.section ?? attempt.currentSection,
+      currentQuestion: contextQuestion?.id ?? null,
+      startedAt: attempt.startedAt,
+      lastActivity,
+    });
+  }
+
+  for (const section of ASSESSMENT_SECTIONS) {
+    const sectionQuestionIds = sequence.filter((questionId) => getQuestion(questionId)?.section === section);
+    if (
+      sectionQuestionIds.length === 0 ||
+      !sectionQuestionIds.every((questionId) =>
+        attempt.answers.some((answer) => answer.questionId === questionId),
+      )
+    ) {
+      continue;
+    }
+    enqueueProgressWebhookEvent(attempt, {
+      key: `section:${section}`,
+      assessmentProgress: progress,
+      currentSection: section,
+      currentQuestion: sectionQuestionIds.at(-1) ?? null,
+      startedAt: attempt.startedAt,
+      lastActivity,
+    });
+  }
+}
+
+function enqueueProgressWebhookEvent(
+  attempt: PlacementAttempt,
+  event: PlacementProgressWebhookEvent,
+) {
+  if (
+    attempt.progressWebhookSentKeys.includes(event.key) ||
+    attempt.progressWebhookQueue.some((candidate) => candidate.key === event.key) ||
+    attempt.progressWebhookQueue.length >= PROGRESS_WEBHOOK_MAX_EVENTS
+  ) {
+    return;
+  }
+  attempt.progressWebhookQueue.push(event);
+}
+
+async function claimProgressWebhookEvent(token: string) {
+  const attempt = await updateStoredAttempt(token, (current) => {
+    ensureProgressWebhookState(current);
+    if (current.resultWebhookSentAt) {
+      clearProgressWebhookState(current);
+      return;
+    }
+
+    const retryAt = current.progressWebhookRetryAt
+      ? Date.parse(current.progressWebhookRetryAt)
+      : 0;
+    if (Number.isFinite(retryAt) && retryAt > Date.now()) return;
+
+    const claimedAt = current.progressWebhookClaimedAt
+      ? Date.parse(current.progressWebhookClaimedAt)
+      : 0;
+    if (
+      current.progressWebhookClaimedKey &&
+      Number.isFinite(claimedAt) &&
+      Date.now() - claimedAt < PROGRESS_WEBHOOK_CLAIM_TTL_MS
+    ) {
+      return;
+    }
+
+    current.progressWebhookClaimedKey = null;
+    current.progressWebhookClaimedAt = null;
+    const next = current.progressWebhookQueue[0];
+    if (!next) return;
+    current.progressWebhookClaimedKey = next.key;
+    current.progressWebhookClaimedAt = new Date().toISOString();
+  });
+  if (!attempt?.progressWebhookClaimedKey) return null;
+  const event = attempt.progressWebhookQueue.find(
+    (candidate) => candidate.key === attempt.progressWebhookClaimedKey,
+  );
+  return event
+    ? {
+        event: { ...event },
+        leadReference: attempt.leadReference,
+        attemptReference: attempt.id,
+      }
+    : null;
+}
+
+async function deliverProgressWebhookEvent(claimed: {
+  event: PlacementProgressWebhookEvent;
+  leadReference: string;
+  attemptReference: string;
+}) {
+  const webhookUrl = process.env.LEADS_WEBHOOK_URL;
+  const webhookSecret = process.env.LEADS_WEBHOOK_SECRET;
+  if (!webhookUrl || !webhookSecret) return false;
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: webhookSecret,
+        leadReference: claimed.leadReference,
+        attemptReference: claimed.attemptReference,
+        status: "in_progress",
+        assessmentProgress: claimed.event.assessmentProgress,
+        currentSection: claimed.event.currentSection,
+        currentQuestion: claimed.event.currentQuestion,
+        startedAt: claimed.event.startedAt,
+        lastActivity: claimed.event.lastActivity,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    const body: unknown = response.ok ? await response.json().catch(() => null) : null;
+    return Boolean(
+      body && typeof body === "object" && "success" in body && body.success === true,
+    );
+  } catch {
+    return false;
+  }
+}
+
+function ensureProgressWebhookState(attempt: PlacementAttempt) {
+  if (!Array.isArray(attempt.progressWebhookQueue)) attempt.progressWebhookQueue = [];
+  if (!Array.isArray(attempt.progressWebhookSentKeys)) attempt.progressWebhookSentKeys = [];
+  if (typeof attempt.progressWebhookClaimedKey !== "string") {
+    attempt.progressWebhookClaimedKey = null;
+  }
+  if (typeof attempt.progressWebhookClaimedAt !== "string") {
+    attempt.progressWebhookClaimedAt = null;
+  }
+  if (typeof attempt.progressWebhookRetryAt !== "string") {
+    attempt.progressWebhookRetryAt = null;
+  }
+}
+
+function clearProgressWebhookState(attempt: PlacementAttempt) {
+  attempt.progressWebhookQueue = [];
+  attempt.progressWebhookClaimedKey = null;
+  attempt.progressWebhookClaimedAt = null;
+  attempt.progressWebhookRetryAt = null;
+}
+
 function claimResultDelivery(attempt: PlacementAttempt) {
   if (
     attempt.status !== "completed" ||
@@ -565,7 +783,11 @@ async function deliverResultWebhook(token: string, attempt: PlacementAttempt) {
   }
 
   await updateStoredAttempt(token, (current) => {
-    if (delivered) current.resultWebhookSentAt = new Date().toISOString();
+    if (delivered) {
+      current.resultWebhookSentAt = new Date().toISOString();
+      ensureProgressWebhookState(current);
+      clearProgressWebhookState(current);
+    }
     current.resultWebhookClaimedAt = null;
   });
 }

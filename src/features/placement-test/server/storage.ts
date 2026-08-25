@@ -43,6 +43,11 @@ export async function createStoredAttempt(locale: PlacementLocale, leadReference
     confirmationStarted: false,
     confirmationIntroSeen: false,
     finalProfile: null,
+    progressWebhookQueue: [],
+    progressWebhookSentKeys: [],
+    progressWebhookClaimedKey: null,
+    progressWebhookClaimedAt: null,
+    progressWebhookRetryAt: null,
     resultWebhookClaimedAt: null,
     resultWebhookSentAt: null,
     resultWebhookAttempts: 0,
@@ -59,7 +64,9 @@ export async function readStoredAttempt(token: string) {
 
   try {
     const value: unknown = JSON.parse(await readFile(attemptPath(tokenHash), "utf8"));
-    return isPlacementAttempt(value) && value.tokenHash === tokenHash ? value : null;
+    return isPlacementAttempt(value) && value.tokenHash === tokenHash
+      ? normalizePlacementAttempt(value)
+      : null;
   } catch (error) {
     if (isMissingFile(error)) return null;
     throw error;
@@ -135,6 +142,21 @@ function isPlacementAttempt(value: unknown): value is PlacementAttempt {
     Array.isArray(attempt.coreSequence) &&
     Array.isArray(attempt.answers)
   );
+}
+
+function normalizePlacementAttempt(attempt: PlacementAttempt) {
+  if (!Array.isArray(attempt.progressWebhookQueue)) attempt.progressWebhookQueue = [];
+  if (!Array.isArray(attempt.progressWebhookSentKeys)) attempt.progressWebhookSentKeys = [];
+  if (typeof attempt.progressWebhookClaimedKey !== "string") {
+    attempt.progressWebhookClaimedKey = null;
+  }
+  if (typeof attempt.progressWebhookClaimedAt !== "string") {
+    attempt.progressWebhookClaimedAt = null;
+  }
+  if (typeof attempt.progressWebhookRetryAt !== "string") {
+    attempt.progressWebhookRetryAt = null;
+  }
+  return attempt;
 }
 
 function isMissingFile(error: unknown): error is NodeJS.ErrnoException {

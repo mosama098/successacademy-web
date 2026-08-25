@@ -1,6 +1,11 @@
 import { isIP } from "node:net";
-import { NextResponse } from "next/server";
-import { applyAttemptAction, getPublicAttemptState, PlacementAttemptError } from "@/features/placement-test/server/attempt-service";
+import { after, NextResponse } from "next/server";
+import {
+  applyAttemptAction,
+  deliverPendingProgressWebhooks,
+  getPublicAttemptState,
+  PlacementAttemptError,
+} from "@/features/placement-test/server/attempt-service";
 import { readAttemptToken } from "@/features/placement-test/server/cookie";
 import type { AssessmentSection, PlacementAttemptAction } from "@/features/placement-test/types";
 
@@ -16,6 +21,7 @@ export async function GET(request: Request) {
 
   try {
     const state = await getPublicAttemptState(token);
+    if (state) after(() => deliverPendingProgressWebhooks(token));
     return state ? NextResponse.json({ ok: true, state }) : error("invalid_attempt", 401);
   } catch {
     return error("attempt_unavailable", 500);
@@ -35,6 +41,7 @@ export async function POST(request: Request) {
 
   try {
     const state = await applyAttemptAction(token, action);
+    after(() => deliverPendingProgressWebhooks(token));
     return NextResponse.json({ ok: true, state });
   } catch (caught) {
     if (caught instanceof PlacementAttemptError) return error(caught.code, caught.status);

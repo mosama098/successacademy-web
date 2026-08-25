@@ -1087,6 +1087,19 @@ function SuccessState({
         >
           {copy.success.back}
         </button>
+        <a
+          href={`/${locale}/placement-test/assessment`}
+          style={{ color: "#ffffff" }}
+          className="flex min-h-[54px] items-center justify-center gap-2 rounded-[16px] bg-[#391B68] px-5 text-[15px] font-black text-white shadow-[0_12px_24px_rgba(57,27,104,0.2)] outline-none transition-[background-color,box-shadow,transform] hover:bg-[#4b287d] active:translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[#EC911F]/25 sm:col-span-2"
+        >
+          {isArabic ? "ابدأ تقييمك الآن" : "Start Your Assessment Now"}
+          <span
+            className={isArabic ? "rotate-180" : undefined}
+            aria-hidden="true"
+          >
+            →
+          </span>
+        </a>
       </div>
     </div>
   );

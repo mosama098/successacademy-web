@@ -449,3 +449,53 @@ a:focus-visible {
   }
 }
 
+@keyframes placementJourneyPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(236, 145, 31, 0.12);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px rgba(236, 145, 31, 0.04), 0 0 18px rgba(236, 145, 31, 0.18);
+    transform: scale(1.04);
+  }
+}
+
+@keyframes placementStageComplete {
+  from {
+    transform: scale(0.75);
+    opacity: 0.55;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes placementBookPage {
+  0%,
+  100% {
+    transform: perspective(30px) rotateY(0deg);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: perspective(30px) rotateY(-28deg);
+    opacity: 1;
+  }
+}
+
+@keyframes placementTypingCursor {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0.15;
+  }
+}
+

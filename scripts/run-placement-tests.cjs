@@ -48,7 +48,11 @@ const { createStoredAttempt, readStoredAttempt, updateStoredAttempt } = require(
   root,
   "src/features/placement-test/server/storage.ts",
 ));
-const { applyAttemptAction, getPublicAttemptState } = require(path.join(
+const {
+  applyAttemptAction,
+  deliverPendingProgressWebhooks,
+  getPublicAttemptState,
+} = require(path.join(
   root,
   "src/features/placement-test/server/attempt-service.ts",
 ));
@@ -193,6 +197,151 @@ test("a started attempt enters Language Use before the Listening audio check", a
   assert.equal(listeningStart?.phase, "audio_check");
 });
 
+test("progress webhook sends only deduplicated non-PII progress state", async () => {
+  const previousFetch = global.fetch;
+  const previousUrl = process.env.LEADS_WEBHOOK_URL;
+  const previousSecret = process.env.LEADS_WEBHOOK_SECRET;
+  const payloads = [];
+  process.env.LEADS_WEBHOOK_URL = "https://example.test/placement-progress";
+  process.env.LEADS_WEBHOOK_SECRET = "test-secret";
+  global.fetch = async (_url, init) => {
+    payloads.push(JSON.parse(init.body));
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  try {
+    const { token, attempt: created } = await createStoredAttempt(
+      "en",
+      "lead-test-progress-webhook",
+    );
+    await applyAttemptAction(token, { action: "start" });
+    await deliverPendingProgressWebhooks(token);
+
+    assert.equal(payloads.length, 1);
+    assert.deepEqual(Object.keys(payloads[0]).sort(), [
+      "assessmentProgress",
+      "attemptReference",
+      "currentQuestion",
+      "currentSection",
+      "lastActivity",
+      "leadReference",
+      "secret",
+      "startedAt",
+      "status",
+    ]);
+    assert.equal(payloads[0].leadReference, "lead-test-progress-webhook");
+    assert.equal(payloads[0].attemptReference, created.id);
+    assert.equal(payloads[0].status, "in_progress");
+    assert.equal(payloads[0].assessmentProgress, 0);
+    assert.equal("phone" in payloads[0], false);
+    assert.equal("email" in payloads[0], false);
+    assert.equal("answers" in payloads[0], false);
+    assert.equal("responses" in payloads[0], false);
+
+    await updateStoredAttempt(token, (attempt) => {
+      const completedLanguageUse = getQuestions(attempt.coreSequence)
+        .filter((question) => question.section === "languageUse");
+      attempt.answers = completedLanguageUse.map((question) => ({
+        questionId: question.id,
+        selectedOption: question.correctOption,
+        submittedAt: new Date().toISOString(),
+        responseTimeMs: 1_000,
+        timedOut: false,
+      }));
+      attempt.currentIndex = completedLanguageUse.length;
+      attempt.currentSection = "reading";
+      attempt.budgetRunningSince = null;
+    });
+
+    await getPublicAttemptState(token);
+    await getPublicAttemptState(token);
+    const queued = await readStoredAttempt(token);
+    assert.deepEqual(
+      queued.progressWebhookQueue.map((event) => event.key),
+      ["progress:10", "progress:20", "progress:30", "progress:40", "section:languageUse"],
+    );
+
+    await deliverPendingProgressWebhooks(token);
+    assert.equal(payloads.length, 6);
+    assert.deepEqual(
+      payloads.slice(1, 5).map((payload) => payload.assessmentProgress),
+      [10, 20, 30, 40],
+    );
+    assert.equal(payloads[5].assessmentProgress, 44);
+    assert.equal(payloads[5].currentSection, "languageUse");
+
+    await getPublicAttemptState(token);
+    await deliverPendingProgressWebhooks(token);
+    assert.equal(payloads.length, 6);
+    const delivered = await readStoredAttempt(token);
+    assert.equal(delivered.progressWebhookQueue.length, 0);
+    assert.deepEqual(delivered.progressWebhookSentKeys, [
+      "start",
+      "progress:10",
+      "progress:20",
+      "progress:30",
+      "progress:40",
+      "section:languageUse",
+    ]);
+  } finally {
+    global.fetch = previousFetch;
+    if (previousUrl === undefined) delete process.env.LEADS_WEBHOOK_URL;
+    else process.env.LEADS_WEBHOOK_URL = previousUrl;
+    if (previousSecret === undefined) delete process.env.LEADS_WEBHOOK_SECRET;
+    else process.env.LEADS_WEBHOOK_SECRET = previousSecret;
+  }
+});
+
+test("failed progress webhook delivery remains recoverable", async () => {
+  const previousFetch = global.fetch;
+  const previousUrl = process.env.LEADS_WEBHOOK_URL;
+  const previousSecret = process.env.LEADS_WEBHOOK_SECRET;
+  process.env.LEADS_WEBHOOK_URL = "https://example.test/placement-progress";
+  process.env.LEADS_WEBHOOK_SECRET = "test-secret";
+
+  try {
+    const { token } = await createStoredAttempt("en", "lead-test-progress-retry");
+    await applyAttemptAction(token, { action: "start" });
+    global.fetch = async () => new Response("unavailable", { status: 502 });
+    await deliverPendingProgressWebhooks(token);
+    let stored = await readStoredAttempt(token);
+    assert.deepEqual(stored.progressWebhookQueue.map((event) => event.key), ["start"]);
+    assert.equal(stored.progressWebhookClaimedKey, null);
+    assert.ok(Date.parse(stored.progressWebhookRetryAt) > Date.now());
+
+    global.fetch = async () => new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    await updateStoredAttempt(token, (attempt) => {
+      attempt.progressWebhookRetryAt = new Date(Date.now() - 1_000).toISOString();
+    });
+    await deliverPendingProgressWebhooks(token);
+    stored = await readStoredAttempt(token);
+    assert.equal(stored.progressWebhookQueue.length, 0);
+    assert.deepEqual(stored.progressWebhookSentKeys, ["start"]);
+  } finally {
+    global.fetch = previousFetch;
+    if (previousUrl === undefined) delete process.env.LEADS_WEBHOOK_URL;
+    else process.env.LEADS_WEBHOOK_URL = previousUrl;
+    if (previousSecret === undefined) delete process.env.LEADS_WEBHOOK_SECRET;
+    else process.env.LEADS_WEBHOOK_SECRET = previousSecret;
+  }
+});
+
+test("exit prompt copies the complete current page URL", () => {
+  const source = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+  assert.match(source, /navigator\.clipboard\.writeText\(window\.location\.href\)/);
+  assert.match(source, /addEventListener\("beforeunload"/);
+  assert.match(source, /addEventListener\("popstate"/);
+});
+
 test("Listening renders the question and options before playback on one screen", async () => {
   const token = await createListeningFixture("question-first", ["L01-A"]);
   const state = await getPublicAttemptState(token);
@@ -217,7 +366,7 @@ test("Listening renders the question and options before playback on one screen",
   assert.match(listeningComponent, /disabled=\{!canSelect\}/);
 });
 
-test("shared Listening blocks expose every safe prompt and option before playback", async () => {
+test("shared Listening blocks preview every prompt without choices, then render only the current question", async () => {
   const token = await createListeningFixture("shared-preview", ["L03-A", "L04-A"]);
   const state = await getPublicAttemptState(token);
   assert.equal(state?.phase, "audio");
@@ -238,10 +387,22 @@ test("shared Listening blocks expose every safe prompt and option before playbac
     source.indexOf("function ListeningQuestion"),
     source.indexOf("function QuestionSurface"),
   );
-  assert.match(listeningComponent, /data-listening-block-questions/);
-  assert.match(listeningComponent, /blockQuestions\.map/);
+  const previewComponent = source.slice(
+    source.indexOf("function ListeningBlockPreview"),
+    source.indexOf("function QuestionSurface"),
+  );
+  assert.match(listeningComponent, /previewingSharedBlock = isSharedBlock && audio\?\.status !== "completed"/);
+  assert.match(listeningComponent, /<ListeningBlockPreview questions=\{blockQuestions\}/);
+  assert.match(previewComponent, /questions\.map/);
+  assert.match(previewComponent, /previewQuestion\.prompt/);
+  assert.doesNotMatch(previewComponent, /previewQuestion\.options|AnswerOptions/);
+  assert.match(listeningComponent, /copy\.startListening/);
+  assert.match(listeningComponent, /data-listening-block-current-question/);
   assert.match(listeningComponent, /copy\.listeningBlockCount\.replace/);
-  assert.match(listeningComponent, /audio\.status !== "not_started" \|\| isPlaying/);
+  assert.match(listeningComponent, /copy\.listeningBlockMeta\.replace/);
+  assert.match(listeningComponent, /copy\.listeningQuestionCounter\.replace/);
+  assert.match(listeningComponent, /question=\{question\}/);
+  assert.match(listeningComponent, /isSharedBlock \? audio\.status === "completed"/);
   assert.match(listeningComponent, /state\.phase === "question"/);
 });
 
@@ -428,9 +589,12 @@ test("welcome and registration share the animated assessment information cards",
     "utf8",
   );
   assert.match(experience, /export function AssessmentInfoCards/);
-  assert.match(experience, /QuestionCardsIcon/);
-  assert.match(experience, /SkillsIcon/);
+  assert.match(experience, /AssessmentChecklistIcon/);
+  assert.match(experience, /SkillSpectrumIcon/);
   assert.match(experience, /StopwatchIcon/);
+  assert.match(experience, /<SkillGlyph skill=\{skill\}/);
+  assert.match(experience, /motion-safe:animate-\[placementRevealUp_/);
+  assert.match(experience, /motion-reduce:transition-none/);
   assert.match(assessment, /<AssessmentInfoCards locale=\{locale\}/);
   assert.match(registration, /<AssessmentInfoCards locale=\{locale\}/);
 });
@@ -449,6 +613,10 @@ test("assessment journey has four labeled icon stages in the approved sequence",
   assert.ok(positions.every((position) => position >= 0));
   assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
   assert.doesNotMatch(journey, /index \+ 1/);
+  assert.match(journey, /data-state=/);
+  assert.match(journey, /placementJourneyPulse/);
+  assert.match(journey, /placementStageComplete/);
+  assert.match(journey, /duration-700 ease-out motion-reduce:transition-none/);
 });
 
 test("reward timing categories are fixed, distinct, and content-selected", () => {
@@ -478,35 +646,30 @@ test("result keeps final CEFR, uses qualitative skills, and renders both safe CT
   const result = source.slice(source.indexOf("function ResultScreen"), source.indexOf("function AssessmentWelcome"));
   assert.match(result, /\{result\.placement\}/);
   assert.match(result, /copy\.qualitativeLabels\[evidence\.estimatedBand\]/);
+  assert.match(result, /<AnimatedSkillIcon skill=\{skill\}/);
   assert.doesNotMatch(result, />\{evidence\.estimatedBand\}</);
   assert.match(result, /href=\{`\/\$\{locale\}`\}/);
   assert.match(result, /copy\.homepageCta/);
   assert.match(result, /copy\.whatsappCta/);
-  assert.match(result, /getWhatsAppHref\(locale, whatsAppMessage\)/);
+  assert.match(result, /getPlacementWhatsAppHref\(locale, whatsAppMessage\)/);
   assert.match(result, /ctaType/);
   assert.doesNotMatch(result, /attemptToken|attemptId|fullName|phone|email|correctOption/);
 });
 
-test("WhatsApp helper uses the approved fallback and encodes the dynamic result message", () => {
+test("placement WhatsApp uses the approved number and encodes the dynamic result message", () => {
   const {
-    getWhatsAppHref,
-    SUCCESS_ACADEMY_WHATSAPP_NUMBER,
+    getPlacementWhatsAppHref,
+    PLACEMENT_TEST_WHATSAPP_NUMBER,
   } = require(path.join(root, "src/lib/utm.ts"));
   const previousNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
   const message = "المستوى المناسب: B1\nأقوى مهارة: الاستماع";
 
   try {
-    delete process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-    assert.equal(SUCCESS_ACADEMY_WHATSAPP_NUMBER, "201204110111");
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER = "201204110111";
+    assert.equal(PLACEMENT_TEST_WHATSAPP_NUMBER, "201204006361");
     assert.equal(
-      getWhatsAppHref("ar", message),
-      `https://wa.me/201204110111?text=${encodeURIComponent(message)}`,
-    );
-
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER = "+201012345678";
-    assert.equal(
-      getWhatsAppHref("ar", message),
-      `https://wa.me/201012345678?text=${encodeURIComponent(message)}`,
+      getPlacementWhatsAppHref("ar", message),
+      `https://wa.me/201204006361?text=${encodeURIComponent(message)}`,
     );
   } finally {
     if (previousNumber === undefined) delete process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
@@ -818,6 +981,10 @@ test("one completed audio block unlocks every attached listening question", asyn
   assert.equal(secondQuestion?.phase, "question");
   assert.equal(secondQuestion?.audio?.status, "completed");
   assert.equal(secondQuestion?.questionDeadlineAt, null);
+  await assert.rejects(
+    () => applyAttemptAction(token, { action: "answer", questionId: "L03-A", optionId: "A" }),
+    (error) => error?.code === "invalid_question",
+  );
 });
 
 test("expired answers are recorded as timeouts and refresh cannot reset them", async () => {

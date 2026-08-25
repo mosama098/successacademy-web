@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type FormEvent,
@@ -11,6 +12,7 @@ import {
 import { trackPlacementTestEvent } from "@/lib/tracking";
 import { courseLabel, placementCopy } from "../copy";
 import {
+  AnimatedSkillIcon,
   AssessmentInfoCards,
   AssessmentJourney,
   CelebrationParticles,
@@ -20,7 +22,7 @@ import {
   placementMotionDurations,
   type PlacementMotionCategory,
 } from "./placement-experience";
-import { getWhatsAppHref } from "@/lib/utm";
+import { getPlacementWhatsAppHref } from "@/lib/utm";
 import type {
   AssessmentOption,
   AssessmentSection,
@@ -292,8 +294,18 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     }
   }, [state.phase, state.result]);
 
+  const renderStage = (content: ReactNode) => (
+    <PlacementExitGuard
+      active={state.status === "in_progress"}
+      copy={copy}
+      locale={locale}
+    >
+      {content}
+    </PlacementExitGuard>
+  );
+
   if (showAnalysis) {
-    return (
+    return renderStage(
       <CenteredStage>
         <Spinner />
         <p className="mt-6 text-xl font-black sm:text-2xl">{copy.analysis[analysisStep]}</p>
@@ -302,21 +314,21 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             <span key={index} className={`h-2 rounded-full transition-all duration-300 ${index <= analysisStep ? "w-7 bg-[#ec911f]" : "w-2 bg-[#ddd0ec]"}`} />
           ))}
         </div>
-      </CenteredStage>
+      </CenteredStage>,
     );
   }
 
   if (state.phase === "welcome") {
-    return (
+    return renderStage(
       <AssessmentWelcome locale={locale} copy={copy} busy={busy} onStart={() => {
           trackPlacementTestEvent("placement_test_start", { locale });
           void sendAction({ action: "start" });
-        }} />
+        }} />,
     );
   }
 
   if (state.phase === "audio_check") {
-    return (
+    return renderStage(
       <AudioCheck
         title={copy.audioCheckTitle}
         body={copy.audioCheckBody}
@@ -324,12 +336,12 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
         continueLabel={copy.soundClear}
         busy={busy}
         onContinue={() => void sendAction({ action: "audio_check_complete" })}
-      />
+      />,
     );
   }
 
   if (state.phase === "section_intro" && state.section) {
-    return (
+    return renderStage(
       <SectionMoment
         section={state.section}
         title={copy.sectionIntroTitles[state.section]}
@@ -342,12 +354,12 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
         error={error}
         retryLabel={copy.retry}
         onRetry={() => void sendAction({ action: "section_continue", section: state.section! })}
-      />
+      />,
     );
   }
 
   if (state.phase === "confirmation_intro") {
-    return (
+    return renderStage(
       <SectionMoment
         title={copy.confirmationTitle}
         label={locale === "ar" ? "خطوة أخيرة" : "Final Check"}
@@ -355,7 +367,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
         error={error}
         retryLabel={copy.retry}
         onRetry={() => void sendAction({ action: "confirmation_continue" })}
-      />
+      />,
     );
   }
 
@@ -375,7 +387,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     state.question &&
     (state.phase === "reading_period" || state.phase === "question")
   ) {
-    return (
+    return renderStage(
       <AssessmentLayout {...layoutProps}>
         <ReadingQuestion
           state={state}
@@ -401,7 +413,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             }
           }}
         />
-      </AssessmentLayout>
+      </AssessmentLayout>,
     );
   }
 
@@ -410,7 +422,7 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
     state.question &&
     (state.phase === "audio" || state.phase === "question")
   ) {
-    return (
+    return renderStage(
       <AssessmentLayout {...layoutProps}>
         <ListeningQuestion
           state={state}
@@ -434,12 +446,12 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             }
           }}
         />
-      </AssessmentLayout>
+      </AssessmentLayout>,
     );
   }
 
   if (state.phase === "question" && state.question) {
-    return (
+    return renderStage(
       <AssessmentLayout {...layoutProps}>
         <QuestionCard
           state={state}
@@ -459,19 +471,222 @@ export function PlacementAssessment({ locale, initialState }: PlacementAssessmen
             }
           }}
         />
-      </AssessmentLayout>
+      </AssessmentLayout>,
     );
   }
 
   if (state.phase === "result" && state.result) {
-    return <ResultScreen locale={locale} state={state} />;
+    return renderStage(<ResultScreen locale={locale} state={state} />);
   }
 
   if (state.phase === "expired") {
-    return <FatalState locale={locale} message={copy.expired} />;
+    return renderStage(<FatalState locale={locale} message={copy.expired} />);
   }
 
-  return <FatalState locale={locale} message={copy.fatal} />;
+  return renderStage(<FatalState locale={locale} message={copy.fatal} />);
+}
+
+type ExitDestination =
+  | { kind: "href"; href: string }
+  | { kind: "history" };
+
+function PlacementExitGuard({
+  active,
+  copy,
+  locale,
+  children,
+}: {
+  active: boolean;
+  copy: PlacementCopy;
+  locale: PlacementLocale;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const destination = useRef<ExitDestination | null>(null);
+  const bypass = useRef(false);
+  const stayButton = useRef<HTMLButtonElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const bodyId = useId();
+
+  useEffect(() => {
+    if (!active) return;
+    const sentinelKey = "__placementExitGuard";
+    const currentHistoryState = window.history.state;
+    const historyState = currentHistoryState && typeof currentHistoryState === "object"
+      ? currentHistoryState as Record<string, unknown>
+      : {};
+    if (!historyState[sentinelKey]) {
+      window.history.pushState({ ...historyState, [sentinelKey]: true }, "", window.location.href);
+    }
+
+    function showExitPrompt(nextDestination: ExitDestination) {
+      destination.current = nextDestination;
+      setCopied(false);
+      setOpen(true);
+    }
+
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      if (bypass.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    function handleDocumentClick(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
+        !(event.target instanceof Element)
+      ) {
+        return;
+      }
+      const anchor = event.target.closest("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement) || anchor.download || anchor.target === "_blank") {
+        return;
+      }
+      const targetUrl = new URL(anchor.href, window.location.href);
+      if (!/^https?:$/.test(targetUrl.protocol) || targetUrl.href === window.location.href) return;
+      event.preventDefault();
+      showExitPrompt({ kind: "href", href: targetUrl.href });
+    }
+
+    function handlePopState() {
+      if (bypass.current) {
+        bypass.current = false;
+        return;
+      }
+      showExitPrompt({ kind: "history" });
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("click", handleDocumentClick, true);
+      const latestState = window.history.state;
+      if (
+        !bypass.current &&
+        latestState &&
+        typeof latestState === "object" &&
+        (latestState as Record<string, unknown>)[sentinelKey]
+      ) {
+        bypass.current = true;
+        window.history.back();
+      }
+    };
+  }, [active]);
+
+  useEffect(() => {
+    if (!open) return;
+    previousFocus.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    stayButton.current?.focus();
+    return () => previousFocus.current?.focus();
+  }, [open]);
+
+  function stay() {
+    if (destination.current?.kind === "history") {
+      const currentHistoryState = window.history.state;
+      const historyState = currentHistoryState && typeof currentHistoryState === "object"
+        ? currentHistoryState as Record<string, unknown>
+        : {};
+      window.history.pushState(
+        { ...historyState, __placementExitGuard: true },
+        "",
+        window.location.href,
+      );
+    }
+    destination.current = null;
+    setOpen(false);
+  }
+
+  function leave() {
+    const nextDestination = destination.current;
+    if (!nextDestination) return;
+    bypass.current = true;
+    setOpen(false);
+    if (nextDestination.kind === "history") window.history.back();
+    else window.location.assign(nextDestination.href);
+  }
+
+  async function copyCurrentUrl() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <>
+      {children}
+      {active && open ? (
+        <div
+          className="fixed inset-0 z-[80] grid place-items-center bg-[#21152b]/48 px-4 backdrop-blur-[6px]"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) stay();
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={bodyId}
+            dir={copy.direction}
+            className="w-full max-w-md rounded-[26px] border border-white/80 bg-[#fbf9f6] p-5 text-[#30223a] shadow-[0_30px_90px_rgba(35,20,47,0.3)] motion-safe:animate-[placementOverlay_.24s_cubic-bezier(.22,.8,.22,1)] sm:p-6"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") stay();
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#f4eaf7] text-[#391b68]" aria-hidden="true">
+                <ExitIcon />
+              </span>
+              <div>
+                <h2 id={titleId} className="text-xl font-black sm:text-2xl">{copy.exitTitle}</h2>
+                <p id={bodyId} className="mt-2 text-sm font-semibold leading-6 text-[#746779]">{copy.exitBody}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void copyCurrentUrl()}
+              className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[15px] border border-[#d9c9df] bg-white px-4 text-sm font-black text-[#391b68] transition hover:border-[#bda6c8] hover:bg-[#f8f2fa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ec911f] focus-visible:ring-offset-2"
+            >
+              <CopyIcon />
+              {copied ? copy.exitCopied : copy.exitCopyUrl}
+            </button>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <button
+                ref={stayButton}
+                type="button"
+                onClick={stay}
+                className="min-h-12 rounded-[15px] bg-[#391b68] px-4 text-sm font-black text-white shadow-[0_10px_24px_rgba(57,27,104,0.2)] transition hover:bg-[#2f1658] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ec911f] focus-visible:ring-offset-2"
+              >
+                {copy.exitStay}
+              </button>
+              <button
+                type="button"
+                onClick={leave}
+                className="min-h-12 rounded-[15px] px-4 text-sm font-black text-[#756979] transition hover:bg-[#eee7f0] hover:text-[#391b68] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ec911f] focus-visible:ring-offset-2"
+              >
+                {copy.exitLeave}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
+  );
 }
 
 function AssessmentLayout({
@@ -511,7 +726,16 @@ function AssessmentLayout({
                 </p>
               </div>
             </div>
-            <TimerBadge state={state} remainingSeconds={remainingSeconds} label={copy.timeRemaining} />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <TimerBadge state={state} remainingSeconds={remainingSeconds} label={copy.timeRemaining} />
+              <Link
+                href={`/${locale}`}
+                aria-label={copy.exitAction}
+                className="grid h-9 w-9 place-items-center rounded-xl border border-[#e4dbe6] bg-white/80 text-[#695b70] transition hover:border-[#cdbbd5] hover:bg-white hover:text-[#391b68] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ec911f] focus-visible:ring-offset-2"
+              >
+                <ExitIcon />
+              </Link>
+            </div>
           </div>
           <div className="mt-2.5 grid items-center gap-2.5 sm:grid-cols-[minmax(220px,0.8fr)_1.2fr]">
             <JourneyEnergy value={state.progressPercent} label={copy.energyLabel} compact />
@@ -676,9 +900,11 @@ function ListeningQuestion({ state, copy, selections, setSelection, busy, error,
   const [playbackError, setPlaybackError] = useState<string | null>(null);
   const blockQuestions = state.listeningBlockQuestions.length > 0 ? state.listeningBlockQuestions : [question];
   const isSharedBlock = blockQuestions.length > 1;
+  const blockQuestionIndex = Math.max(0, blockQuestions.findIndex((blockQuestion) => blockQuestion.id === question.id));
+  const previewingSharedBlock = isSharedBlock && audio?.status !== "completed";
   const selected = selections[question.id] ?? null;
   const playable = Boolean(audio && audio.startSeconds !== null && audio.endSeconds !== null && audio.expectedDurationSeconds !== null);
-  const canSelect = Boolean(audio && (audio.status !== "not_started" || isPlaying));
+  const canSelect = Boolean(audio && (isSharedBlock ? audio.status === "completed" : audio.status !== "not_started" || isPlaying));
   const canSubmit = state.phase === "question" && Boolean(state.questionDeadlineAt) && Boolean(selected);
 
   useEffect(() => {
@@ -819,13 +1045,14 @@ function ListeningQuestion({ state, copy, selections, setSelection, busy, error,
             {audio.status === "completed" ? (
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#391b68] text-white"><CheckIcon /></span>
             ) : (
-              <button type="button" disabled={busy || isPlaying} onClick={() => void startPlayback()} className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#30223a] text-white shadow-[0_10px_24px_rgba(40,28,49,0.25)] transition duration-200 hover:scale-[1.03] hover:bg-[#3d2949] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30" aria-label={copy.playAudio}>
+              <button type="button" disabled={busy || isPlaying} onClick={() => void startPlayback()} className={`relative flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-[#30223a] text-white shadow-[0_10px_24px_rgba(40,28,49,0.25)] transition duration-200 hover:scale-[1.02] hover:bg-[#3d2949] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30 ${audio.status === "not_started" ? "min-w-[148px] px-5" : "w-14"}`} aria-label={audio.status === "not_started" ? copy.startListening : copy.playAudio}>
                 {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                {audio.status === "not_started" ? <span className="text-sm font-black">{copy.startListening}</span> : null}
               </button>
             )}
             <div className="min-w-0 flex-1">
               <div className={`flex items-center justify-between gap-3 text-xs font-black ${isPlaying ? "text-white/75" : "text-[#6d5889]"}`}>
-                <span>{audio.status === "completed" ? copy.audioComplete : isPlaying ? copy.audioPlaying : copy.playAudio}</span>
+                <span>{audio.status === "completed" ? copy.audioComplete : isPlaying ? copy.audioPlaying : copy.listenCarefully}</span>
                 <span className="shrink-0 tabular-nums" dir="ltr">{formatTime(visualProgress)} / {formatTime(duration)}</span>
               </div>
               <div className={`mt-2.5 h-2 overflow-hidden rounded-full ${isPlaying ? "bg-white/12" : "bg-[#d8d0dc]"}`} dir="ltr" role="progressbar" aria-label={copy.audioPlaying} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(visualProgress)}>
@@ -835,7 +1062,7 @@ function ListeningQuestion({ state, copy, selections, setSelection, busy, error,
             <AudioWaves playing={isPlaying} />
           </div>
           <div className={`relative mt-3 flex items-center justify-between gap-3 text-[11px] font-bold ${isPlaying ? "text-white/55" : "text-[#8a78a0]"}`}>
-            <span>{audio.status === "not_started" ? copy.listeningLocked : audio.status === "completed" ? copy.listeningBlockReview : copy.audioPlaying}</span>
+            <span>{audio.status === "not_started" ? isSharedBlock ? copy.listeningPreviewReady : copy.listeningLocked : audio.status === "completed" ? copy.listeningBlockReview : copy.audioPlaying}</span>
             <span>{copy.audioOnce}</span>
           </div>
         </>
@@ -852,31 +1079,32 @@ function ListeningQuestion({ state, copy, selections, setSelection, busy, error,
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#30223a] text-[#f2a143] shadow-md"><HeadphonesIcon size={23} /></span>
             <div className="min-w-0">
-              <p className="text-sm font-black text-[#513477]">{isSharedBlock ? copy.listeningBlockCount.replace("{count}", String(blockQuestions.length)) : copy.listeningPrompt}</p>
+              {isSharedBlock ? <span className="inline-flex rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.06em] text-[#513477] shadow-sm">{copy.listeningBlockMeta.replace("{count}", String(blockQuestions.length))}</span> : null}
+              <p className={`${isSharedBlock ? "mt-2" : ""} text-sm font-black text-[#513477]`}>{isSharedBlock ? copy.listeningBlockCount.replace("{count}", String(blockQuestions.length)) : copy.listeningPrompt}</p>
               {isSharedBlock ? <p className="mt-1 text-xs font-bold leading-5 text-[#756581]">{copy.listeningBlockPreview}</p> : null}
               {question.situation ? <p dir="ltr" className="mt-1.5 text-left text-sm font-bold leading-6 text-[#513477]">{question.situation}</p> : null}
             </div>
           </div>
         </div>
         {isSharedBlock ? (
-          <>
-            {player}
-            <div className="mt-4 grid gap-3" data-listening-block-questions>
-              {blockQuestions.map((blockQuestion, index) => {
-                const current = blockQuestion.id === question.id;
-                return (
-                  <section key={blockQuestion.id} className={`rounded-[20px] border p-4 transition-colors sm:p-5 ${current ? "border-[#8b65a0] bg-white/85 shadow-[0_12px_32px_rgba(53,35,64,0.09)]" : "border-white/80 bg-white/48"}`} aria-label={`${copy.questionLabel} ${index + 1}`}>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className={`rounded-full px-3 py-1 text-[10px] font-black ${current ? "bg-[#30223a] text-white" : "bg-[#e8e2e8] text-[#756581]"}`}>{copy.questionLabel} {index + 1} / {blockQuestions.length}</span>
-                      {current ? <span className="text-[10px] font-black text-[#c66e08]">{copy.sharedAudio}</span> : null}
-                    </div>
-                    <h2 dir="ltr" className="text-left text-xl font-black leading-[1.4] text-[#241a2b] sm:text-2xl">{blockQuestion.prompt}</h2>
-                    <AnswerOptions question={blockQuestion} selected={selections[blockQuestion.id] ?? null} onSelect={(value) => value && setSelection(blockQuestion.id, value)} legend={copy.selectAnswer} disabled={!canSelect} />
-                  </section>
-                );
-              })}
-            </div>
-          </>
+          previewingSharedBlock ? (
+            <>
+              <ListeningBlockPreview questions={blockQuestions} copy={copy} />
+              <div className="mt-4">{player}</div>
+            </>
+          ) : (
+            <>
+              {player}
+              <section key={question.id} className="mt-4 rounded-[20px] border border-[#8b65a0] bg-white/85 p-4 shadow-[0_12px_32px_rgba(53,35,64,0.09)] motion-safe:animate-[placementQuestionIn_.28s_cubic-bezier(.22,.8,.22,1)] sm:p-5" aria-label={`${copy.questionLabel} ${blockQuestionIndex + 1}`} data-listening-block-current-question>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-[#30223a] px-3 py-1 text-[10px] font-black text-white">{copy.listeningQuestionCounter.replace("{current}", String(blockQuestionIndex + 1)).replace("{count}", String(blockQuestions.length))}</span>
+                  <span className="text-[10px] font-black text-[#c66e08]">{copy.sharedAudio}</span>
+                </div>
+                <h2 dir="ltr" className="text-left text-[21px] font-black leading-[1.42] text-[#241a2b] sm:text-[25px]">{question.prompt}</h2>
+                <AnswerOptions question={question} selected={selected} onSelect={(value) => value && setSelection(question.id, value)} legend={copy.selectAnswer} disabled={!canSelect} />
+              </section>
+            </>
+          )
         ) : (
           <>
             <QuestionHeading state={state} copy={copy} />
@@ -888,6 +1116,21 @@ function ListeningQuestion({ state, copy, selections, setSelection, busy, error,
         <StickySubmit disabled={!canSubmit || busy} busy={busy} copy={copy} />
       </QuestionSurface>
     </form>
+  );
+}
+
+function ListeningBlockPreview({ questions, copy }: { questions: PublicQuestion[]; copy: PlacementCopy }) {
+  return (
+    <section className="rounded-[22px] border border-white/80 bg-white/72 p-3.5 shadow-[0_16px_38px_rgba(48,32,58,0.08)] backdrop-blur sm:p-4" data-listening-block-preview>
+      <ol className="space-y-2.5">
+        {questions.map((previewQuestion, index) => (
+          <li key={previewQuestion.id} className="rounded-[16px] border border-[#ded4e2] bg-[#f5f1f5] px-3.5 py-3 motion-safe:animate-[placementRevealUp_.32s_ease-out_both]" style={{ animationDelay: `${index * 70}ms` }}>
+            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#8a6b98]">{copy.questionLabel} {index + 1}</span>
+            <p dir="ltr" className="mt-1.5 text-left text-[15px] font-black leading-6 text-[#2d2036] sm:text-base">{previewQuestion.prompt}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -906,7 +1149,7 @@ function QuestionHeading({ state, copy, onShowPassage }: { state: PublicAttemptS
         ) : null}
       </div>
       {question.situation && question.section !== "listening" ? <p className="mb-4 rounded-[18px] bg-[#e8e2e8] px-4 py-3 text-sm font-semibold leading-6 text-[#66566c] shadow-inner">{question.situation}</p> : null}
-      <h1 dir="ltr" className="whitespace-pre-line text-left text-[24px] font-black leading-[1.35] tracking-[-0.01em] text-[#241a2b] sm:text-[29px] sm:leading-[1.3]">{question.prompt}</h1>
+      <h1 dir="ltr" className="whitespace-pre-line text-left text-[22px] font-black leading-[1.42] tracking-[-0.005em] text-[#241a2b] sm:text-[26px] sm:leading-[1.36]">{question.prompt}</h1>
     </div>
   );
 }
@@ -924,10 +1167,10 @@ function AnswerOptions({ question, selected, onSelect, legend, disabled = false 
       {question.options.map((option) => {
         const active = selected === option.id;
         return (
-          <label key={option.id} className={`group relative flex min-h-[62px] items-center gap-3 overflow-hidden rounded-[18px] border px-3.5 py-3 text-left text-[15px] font-bold leading-6 transition-[transform,box-shadow,border-color,background-color] duration-200 focus-within:ring-4 focus-within:ring-[#ec911f]/18 sm:px-4 ${disabled ? "cursor-not-allowed border-transparent bg-[#ebe7eb] text-[#948a97] opacity-75" : active ? "cursor-pointer border-[#68427f] bg-[linear-gradient(100deg,#e9e0ed,#f7f3f4)] text-[#24182e] shadow-[0_14px_30px_rgba(52,34,64,0.12)] motion-safe:animate-[placementOptionSelect_.22s_ease-out]" : "cursor-pointer border-white/75 bg-white/68 text-[#4d3b57] shadow-[0_7px_20px_rgba(43,30,52,0.055)] hover:-translate-y-0.5 hover:border-white hover:bg-white hover:shadow-[0_12px_28px_rgba(43,30,52,0.1)] active:translate-y-0 active:scale-[0.99]"}`}>
+          <label key={option.id} className={`group relative flex min-h-[62px] items-center gap-3 overflow-hidden rounded-[18px] border px-3.5 py-3 text-left text-[15px] font-bold leading-6 transition-[transform,box-shadow,border-color,background-color] duration-200 focus-within:ring-4 focus-within:ring-[#ec911f]/18 sm:px-4 ${disabled ? "cursor-not-allowed border-transparent bg-[#ebe7eb] text-[#948a97] opacity-75" : active ? "cursor-pointer border-[#68427f] bg-[linear-gradient(100deg,#e9e0ed,#fffaf4)] text-[#24182e] shadow-[0_14px_30px_rgba(52,34,64,0.13),0_0_0_1px_rgba(236,145,31,0.1)_inset] motion-safe:animate-[placementOptionSelect_.22s_ease-out]" : "cursor-pointer border-white/75 bg-white/68 text-[#4d3b57] shadow-[0_7px_20px_rgba(43,30,52,0.055)] hover:-translate-y-0.5 hover:border-white hover:bg-white hover:shadow-[0_12px_28px_rgba(43,30,52,0.1)] active:translate-y-0 active:scale-[0.99]"}`}>
             {active ? <span className="absolute inset-y-0 start-0 w-1 bg-[#ec911f]" aria-hidden="true" /> : null}
             <input type="radio" name={`answer-${question.id}`} value={option.id} checked={active} disabled={disabled} onChange={() => onSelect(option.id)} className="sr-only" />
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[13px] text-sm font-black transition duration-200 ${active ? "bg-[#30223a] text-white shadow-[0_7px_16px_rgba(45,31,55,0.22)]" : disabled ? "bg-[#ded8df] text-[#9b8baa]" : "bg-[#f3eff1] text-[#5b3a72] shadow-sm group-hover:bg-[#ece4ef]"}`}>{active ? <span className="motion-safe:animate-[placementCheckDraw_.2s_ease-out]"><CheckIcon size={17} /></span> : option.id}</span>
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[13px] text-sm font-black transition duration-200 ${active ? "bg-[#30223a] text-white shadow-[0_7px_16px_rgba(45,31,55,0.22)]" : disabled ? "bg-[#ded8df] text-[#9b8baa]" : "bg-[#f3eff1] text-[#5b3a72] shadow-sm group-hover:bg-[#ece4ef]"}`}>{active ? <span className="motion-safe:animate-[placementCheckDraw_.24s_cubic-bezier(.2,.9,.2,1)]"><CheckIcon size={17} /></span> : option.id}</span>
             <span className="min-w-0 flex-1">{option.text}</span>
           </label>
         );
@@ -993,7 +1236,7 @@ function ResultScreen({ locale, state }: { locale: PlacementLocale; state: Publi
     ? `بما إن أنسب بداية ليك هي ${result.placement}، نقدر نساعدك تبدأ بالمستوى المناسب من غير ما تضيع وقت في مستوى أعلى أو أقل من احتياجك.`
     : `Because ${result.placement} is your best starting point, we can help you begin at the right level without losing time in a course above or below what you need.`;
   const whatsAppMessage = buildPlacementWhatsAppMessage(locale, result, skillNames);
-  const whatsAppHref = getWhatsAppHref(locale, whatsAppMessage);
+  const whatsAppHref = getPlacementWhatsAppHref(locale, whatsAppMessage);
 
   function trackSalesCta(ctaType: "homepage" | "whatsapp") {
     trackPlacementTestEvent("placement_test_sales_cta_click", {
@@ -1045,10 +1288,13 @@ function ResultScreen({ locale, state }: { locale: PlacementLocale; state: Publi
             </div>
             <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
               {skillRows.map(([skill, evidence], index) => (
-                <div key={skill} className="rounded-[18px] bg-[#eee9ed] p-3.5 shadow-inner motion-safe:animate-[placementRevealUp_.38s_ease-out_both]" style={{ animationDelay: `${index * 100}ms` }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-black text-[#493553]">{skillNames[skill]}</p>
-                    <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-[#4d335e]">{copy.qualitativeLabels[evidence.estimatedBand]}</span>
+                <div key={skill} className="rounded-[18px] border border-white/80 bg-[#f3eff2] p-3.5 shadow-[0_10px_28px_rgba(44,29,53,0.065)] motion-safe:animate-[placementRevealUp_.38s_ease-out_both]" style={{ animationDelay: `${index * 100}ms` }}>
+                  <div className="flex items-center gap-3">
+                    <AnimatedSkillIcon skill={skill} />
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black text-[#766979]">{skillNames[skill]}</p>
+                      <p className="mt-0.5 truncate text-base font-black text-[#35243f]">{copy.qualitativeLabels[evidence.estimatedBand]}</p>
+                    </div>
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#d9d1da]">
                     <div className="h-full rounded-full bg-[linear-gradient(90deg,#ec911f,#76508c)] transition-[width] duration-700 motion-reduce:transition-none" style={{ width: `${evidence.percent}%` }} />
@@ -1368,6 +1614,14 @@ function TargetIcon() {
 
 function ShieldIcon() {
   return <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.3-8 10-4.6-1.7-8-5-8-10V6z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg>;
+}
+
+function ExitIcon() {
+  return <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10"/><path d="M14.5 8.5 18 12l-3.5 3.5M18 12H9"/></svg>;
+}
+
+function CopyIcon() {
+  return <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>;
 }
 
 async function postAction(action: PlacementAttemptAction) {

@@ -98,6 +98,15 @@ export type AudioPlaybackState = {
   completedAt: string | null;
 };
 
+export type PlacementProgressWebhookEvent = {
+  key: string;
+  assessmentProgress: number;
+  currentSection: AssessmentSection | null;
+  currentQuestion: string | null;
+  startedAt: string;
+  lastActivity: string;
+};
+
 export type PlacementAttempt = {
   schemaVersion: 1;
   id: string;
@@ -127,6 +136,11 @@ export type PlacementAttempt = {
   confirmationStarted: boolean;
   confirmationIntroSeen: boolean;
   finalProfile: PlacementProfile | null;
+  progressWebhookQueue: PlacementProgressWebhookEvent[];
+  progressWebhookSentKeys: string[];
+  progressWebhookClaimedKey: string | null;
+  progressWebhookClaimedAt: string | null;
+  progressWebhookRetryAt: string | null;
   resultWebhookClaimedAt: string | null;
   resultWebhookSentAt: string | null;
   resultWebhookAttempts: number;
