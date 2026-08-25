@@ -713,7 +713,7 @@ test("result keeps final CEFR, uses qualitative skills, and renders both safe CT
   assert.match(result, /copy\.qualitativeLabels\[evidence\.estimatedBand\]/);
   assert.match(result, /<AnimatedSkillIcon skill=\{skill\}/);
   assert.doesNotMatch(result, />\{evidence\.estimatedBand\}</);
-  assert.match(result, /href=\{`\/\$\{locale\}`\}/);
+  assert.match(result, /href=\{`\/\$\{locale\}\/plans\?level=\$\{result\.placement\}&source=placement`\}/);
   assert.match(result, /copy\.homepageCta/);
   assert.match(result, /copy\.whatsappCta/);
   assert.match(result, /getPlacementWhatsAppHref\(locale, whatsAppMessage\)/);
