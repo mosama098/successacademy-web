@@ -36,7 +36,7 @@ const { selectForms, buildCoreSequence } = require(path.join(
   root,
   "src/features/placement-test/server/randomization.ts",
 ));
-const { scorePlacement } = require(path.join(
+const { PLACEMENT_COUNT_GATES, scorePlacement } = require(path.join(
   root,
   "src/features/placement-test/server/scoring.ts",
 ));
@@ -75,6 +75,71 @@ function answersWhere(isCorrect) {
     timedOut: false,
   }));
 }
+
+function answersForCounts(
+  {
+    A1 = 0,
+    A2 = 0,
+    B1 = 0,
+    upperListening = 0,
+    upperReading = 0,
+    upperLanguageUse = 0,
+  },
+  questions = coreQuestions,
+) {
+  const correctIds = new Set();
+  const select = (candidates, count, label) => {
+    assert.ok(count >= 0 && count <= candidates.length, `${label}: ${count}/${candidates.length}`);
+    candidates.slice(0, count).forEach((question) => correctIds.add(question.id));
+  };
+  const isUpperReading = (question) =>
+    question.section === "reading" && (question.slotId === "R09" || question.slotId === "R10");
+  const B1Questions = questions.filter((question) => question.evidenceBand === "B1");
+  const upperReadingQuestions = B1Questions.filter(isUpperReading);
+
+  select(questions.filter((question) => question.evidenceBand === "A1"), A1, "A1");
+  select(questions.filter((question) => question.evidenceBand === "A2"), A2, "A2");
+  select(upperReadingQuestions, upperReading, "upper reading");
+  select(
+    B1Questions.filter((question) => !isUpperReading(question)),
+    B1 - upperReading,
+    "remaining B1",
+  );
+  select(
+    questions.filter(
+      (question) => question.evidenceBand === "B2Entry" && question.section === "listening",
+    ),
+    upperListening,
+    "upper listening",
+  );
+  select(
+    questions.filter(
+      (question) => question.evidenceBand === "B2Entry" && question.section === "languageUse",
+    ),
+    upperLanguageUse,
+    "upper language use",
+  );
+
+  return questions.map((question) => ({
+    questionId: question.id,
+    selectedOption: correctIds.has(question.id)
+      ? question.correctOption
+      : wrongOption(question.correctOption),
+    submittedAt: "2026-01-01T00:00:00.000Z",
+    responseTimeMs: 1_000,
+    timedOut: false,
+  }));
+}
+
+function profileForCounts(counts, questions = coreQuestions) {
+  return scorePlacement(questions, answersForCounts(counts, questions), false);
+}
+
+const strongB2Counts = {
+  upperListening: 3,
+  upperReading: 2,
+  upperLanguageUse: 4,
+};
 
 function wrongOption(correct) {
   return correct === "A" ? "B" : "A";
@@ -713,6 +778,272 @@ test("seeded selection is stable and preserves block forms", () => {
   for (const question of selectedQuestions) {
     assert.equal(question.form, selected[question.blockId]);
   }
+});
+
+test("placement count gates match the fixed assessment evidence totals", () => {
+  assert.deepEqual(PLACEMENT_COUNT_GATES.A1, {
+    total: 6,
+    normalPass: 5,
+    borderline: 4,
+    extreme: 3,
+  });
+  assert.deepEqual(PLACEMENT_COUNT_GATES.A2, {
+    total: 7,
+    normalPass: 5,
+    borderline: 4,
+    extreme: 3,
+  });
+  assert.deepEqual(PLACEMENT_COUNT_GATES.B1, { total: 15, normalPass: 11, borderline: 10 });
+  assert.equal(PLACEMENT_COUNT_GATES.coreB2.B2Entry.normalPass, 5);
+  assert.equal(PLACEMENT_COUNT_GATES.coreB2.upperListening.normalPass, 2);
+  assert.equal(PLACEMENT_COUNT_GATES.coreB2.upperReading.normalPass, 1);
+  assert.equal(PLACEMENT_COUNT_GATES.coreB2.upperLanguageUse.normalPass, 3);
+  assert.equal(PLACEMENT_COUNT_GATES.confirmedB2.B2Entry.normalPass, 7);
+  assert.equal(PLACEMENT_COUNT_GATES.confirmedB2.upperListening.normalPass, 2);
+  assert.equal(PLACEMENT_COUNT_GATES.confirmedB2.upperReading.normalPass, 2);
+  assert.equal(PLACEMENT_COUNT_GATES.confirmedB2.upperLanguageUse.normalPass, 4);
+});
+
+test("A1 clear and extreme failures cannot jump more than one level", () => {
+  const perfectHigher = { A2: 7, B1: 15, ...strongB2Counts, upperLanguageUse: 5 };
+  const absoluteFailure = profileForCounts({ A1: 2, ...perfectHigher });
+  const weakExtreme = profileForCounts({ A1: 3, A2: 2, B1: 5 });
+  const insufficientExtreme = profileForCounts({ A1: 3, A2: 7, B1: 12 });
+  const qualifyingExtreme = profileForCounts({ A1: 3, A2: 7, B1: 13 });
+  const perfectExtreme = profileForCounts({ A1: 3, ...perfectHigher });
+
+  assert.equal(absoluteFailure.placement, "A1");
+  assert.equal(absoluteFailure.confidence, "low");
+  assert.equal(weakExtreme.placement, "A1");
+  assert.equal(insufficientExtreme.placement, "A1");
+  assert.equal(insufficientExtreme.confidence, "low");
+  assert.equal(qualifyingExtreme.placement, "A2");
+  assert.equal(qualifyingExtreme.confidence, "low");
+  assert.equal(perfectExtreme.placement, "A2");
+  assert.equal(perfectExtreme.confidence, "low");
+});
+
+test("A1 borderline recovery requires approved higher evidence and stops at A2", () => {
+  const weak = profileForCounts({ A1: 4, A2: 4, B1: 10 });
+  const strongA2 = profileForCounts({ A1: 4, A2: 6, B1: 5 });
+  const supportedA2 = profileForCounts({ A1: 4, A2: 5, B1: 12 });
+  const normalPass = profileForCounts({ A1: 5, A2: 2, B1: 15, ...strongB2Counts });
+
+  assert.equal(weak.placement, "A1");
+  assert.equal(weak.confidence, "medium");
+  assert.equal(strongA2.placement, "A2");
+  assert.equal(strongA2.confidence, "low");
+  assert.equal(supportedA2.placement, "A2");
+  assert.equal(supportedA2.confidence, "low");
+  assert.equal(normalPass.placement, "A2");
+});
+
+test("A2 clear and extreme failures use exceptional independent support only", () => {
+  const perfectHigher = { B1: 15, ...strongB2Counts, upperLanguageUse: 5 };
+  const absoluteFailure = profileForCounts({ A1: 6, A2: 2, ...perfectHigher });
+  const weakExtreme = profileForCounts({ A1: 6, A2: 3, B1: 8 });
+  const insufficientExtreme = profileForCounts({ A1: 6, A2: 3, B1: 13, ...strongB2Counts });
+  const corroboratedExtreme = profileForCounts({ A1: 6, A2: 3, B1: 14, ...strongB2Counts });
+  const perfectB1Extreme = profileForCounts({ A1: 6, A2: 3, B1: 15, upperReading: 2 });
+
+  assert.equal(absoluteFailure.placement, "A2");
+  assert.equal(absoluteFailure.confidence, "low");
+  assert.equal(weakExtreme.placement, "A2");
+  assert.equal(insufficientExtreme.placement, "A2");
+  assert.equal(insufficientExtreme.confidence, "low");
+  assert.equal(corroboratedExtreme.placement, "B1");
+  assert.equal(corroboratedExtreme.confidence, "low");
+  assert.equal(perfectB1Extreme.placement, "B1");
+  assert.equal(perfectB1Extreme.confidence, "low");
+});
+
+test("A2 borderline recovery requires approved B1 support and stops at B1", () => {
+  const weak = profileForCounts({ A1: 6, A2: 4, B1: 10 });
+  const supported = profileForCounts({ A1: 6, A2: 4, B1: 12, ...strongB2Counts });
+  const normalPass = profileForCounts({ A1: 6, A2: 5, B1: 9, ...strongB2Counts });
+
+  assert.equal(weak.placement, "A2");
+  assert.equal(weak.confidence, "medium");
+  assert.equal(supported.placement, "B1");
+  assert.equal(supported.confidence, "low");
+  assert.equal(normalPass.placement, "B1");
+});
+
+test("B1 clear failure and borderline protection cannot skip normal B2 evaluation", () => {
+  const clearFailure = profileForCounts({ A1: 6, A2: 7, B1: 9, ...strongB2Counts });
+  const weakBorderline = profileForCounts({ A1: 6, A2: 7, B1: 10 });
+  const narrowUpperEvidence = profileForCounts({
+    A1: 6,
+    A2: 7,
+    B1: 10,
+    upperListening: 2,
+    upperReading: 1,
+    upperLanguageUse: 4,
+  });
+  const confirmedPath = profileForCounts({
+    A1: 6,
+    A2: 7,
+    B1: 10,
+    upperListening: 3,
+    upperReading: 2,
+    upperLanguageUse: 3,
+  });
+
+  assert.equal(clearFailure.placement, "B1");
+  assert.equal(clearFailure.confidence, "low");
+  assert.equal(weakBorderline.placement, "B1");
+  assert.equal(narrowUpperEvidence.placement, "B1");
+  assert.equal(confirmedPath.placement, "B2");
+  assert.equal(confirmedPath.confirmationRequired, true);
+  assert.equal(confirmedPath.confidence, "low");
+});
+
+test("core B2 entry and upper-skill gates use exact integer boundaries", () => {
+  const base = { A1: 6, A2: 7, B1: 12 };
+  const entryBelow = profileForCounts({
+    ...base,
+    upperListening: 2,
+    upperReading: 2,
+    upperLanguageUse: 2,
+  });
+  const entryAt = profileForCounts({
+    ...base,
+    upperListening: 2,
+    upperReading: 2,
+    upperLanguageUse: 3,
+  });
+  const listeningBelow = profileForCounts({
+    ...base,
+    upperListening: 1,
+    upperReading: 2,
+    upperLanguageUse: 5,
+  });
+  const listeningAt = profileForCounts({
+    ...base,
+    upperListening: 2,
+    upperReading: 2,
+    upperLanguageUse: 4,
+  });
+  const readingBelow = profileForCounts({
+    ...base,
+    upperListening: 3,
+    upperReading: 0,
+    upperLanguageUse: 4,
+  });
+  const readingAt = profileForCounts({
+    ...base,
+    upperListening: 3,
+    upperReading: 1,
+    upperLanguageUse: 4,
+  });
+  const languageBelow = profileForCounts({
+    ...base,
+    upperListening: 3,
+    upperReading: 2,
+    upperLanguageUse: 2,
+  });
+  const languageAt = profileForCounts({
+    ...base,
+    upperListening: 3,
+    upperReading: 2,
+    upperLanguageUse: 3,
+  });
+
+  assert.equal(entryBelow.placement, "B1");
+  assert.equal(entryAt.placement, "B2");
+  assert.equal(entryAt.confirmationRequired, true);
+  assert.equal(listeningBelow.placement, "B1");
+  assert.equal(listeningAt.placement, "B2");
+  assert.equal(listeningAt.confirmationRequired, false);
+  assert.equal(readingBelow.placement, "B1");
+  assert.equal(readingAt.placement, "B2");
+  assert.equal(readingAt.confirmationRequired, true);
+  assert.equal(languageBelow.placement, "B1");
+  assert.equal(languageAt.placement, "B2");
+  assert.equal(languageAt.confirmationRequired, true);
+});
+
+test("post-confirmation B2 decisions use 7/12, 2/4, 2/3, and 4/7 counts", () => {
+  const coreAnswers = answersForCounts({
+    A1: 6,
+    A2: 7,
+    B1: 12,
+    upperListening: 2,
+    upperReading: 1,
+    upperLanguageUse: 3,
+  });
+  const confirmationQuestions = assessmentQuestions.filter(
+    (question) =>
+      question.isConfirmation &&
+      (question.form === "confirmation" || question.form === forms["L08-10"]),
+  );
+  const confirmationAnswers = (correctSlots) =>
+    confirmationQuestions.map((question) => ({
+      questionId: question.id,
+      selectedOption: correctSlots.has(question.slotId)
+        ? question.correctOption
+        : wrongOption(question.correctOption),
+      submittedAt: "2026-01-01T00:00:00.000Z",
+      responseTimeMs: 1_000,
+      timedOut: false,
+    }));
+  const questions = [...coreQuestions, ...confirmationQuestions];
+  const passed = scorePlacement(
+    questions,
+    [...coreAnswers, ...confirmationAnswers(new Set(["C02", "C03"]))],
+    true,
+  );
+  const failed = scorePlacement(
+    questions,
+    [...coreAnswers, ...confirmationAnswers(new Set(["C02"]))],
+    true,
+  );
+
+  assert.equal(passed.placement, "B2");
+  assert.equal(passed.confidence, "low");
+  assert.equal(failed.placement, "B1");
+  assert.equal(failed.confidence, "low");
+});
+
+test("count-based confidence distinguishes clear, boundary, bypass, and contradictory profiles", () => {
+  assert.equal(profileForCounts({ A1: 2, A2: 1, B1: 2 }).confidence, "high");
+  assert.equal(profileForCounts({ A1: 4, A2: 2, B1: 3 }).confidence, "medium");
+  assert.equal(profileForCounts({ A1: 3, A2: 6, B1: 5 }).confidence, "low");
+  assert.equal(profileForCounts({ A1: 4, A2: 6, B1: 5 }).confidence, "low");
+  assert.equal(profileForCounts({ A1: 6, A2: 4, B1: 12 }).confidence, "low");
+  assert.equal(profileForCounts({ A1: 6, A2: 7, B1: 8 }).confidence, "high");
+  assert.equal(
+    profileForCounts({ A1: 6, A2: 7, B1: 15, ...strongB2Counts }).confidence,
+    "high",
+  );
+});
+
+test("public evidence percentages remain reporting values derived from exact counts", () => {
+  const profile = profileForCounts({
+    A1: 4,
+    A2: 5,
+    B1: 10,
+    upperListening: 2,
+    upperReading: 1,
+    upperLanguageUse: 3,
+  });
+  assert.deepEqual(profile.evidence, { A1: 67, A2: 71, B1: 67, B2Entry: 63 });
+});
+
+test("count scoring is equivalent across all-A and all-B form selections", () => {
+  const allA = Object.fromEntries(Object.keys(forms).map((blockId) => [blockId, "A"]));
+  const allB = Object.fromEntries(Object.keys(forms).map((blockId) => [blockId, "B"]));
+  const formAQuestions = getQuestions(buildCoreSequence(assessmentQuestions, allA));
+  const formBQuestions = getQuestions(buildCoreSequence(assessmentQuestions, allB));
+  const counts = { A1: 4, A2: 6, B1: 12, ...strongB2Counts };
+  const formAProfile = profileForCounts(counts, formAQuestions);
+  const formBProfile = profileForCounts(counts, formBQuestions);
+
+  assert.equal(formAQuestions.length, 36);
+  assert.equal(formBQuestions.length, 36);
+  assert.equal(formAProfile.placement, "A2");
+  assert.equal(formBProfile.placement, "A2");
+  assert.deepEqual(formAProfile.evidence, formBProfile.evidence);
 });
 
 test("clear A1 case", () => {
