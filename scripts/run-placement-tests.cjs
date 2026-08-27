@@ -135,11 +135,62 @@ function profileForCounts(counts, questions = coreQuestions) {
   return scorePlacement(questions, answersForCounts(counts, questions), false);
 }
 
-const strongB2Counts = {
-  upperListening: 3,
-  upperReading: 2,
-  upperLanguageUse: 4,
-};
+function answersForSkillCounts(
+  { listening = 0, reading = 0, languageUse = 0 },
+  questions = coreQuestions,
+  requiredCorrectIds = [],
+) {
+  const targets = { listening, reading, languageUse };
+  const correctIds = new Set(requiredCorrectIds);
+
+  for (const section of Object.keys(targets)) {
+    const sectionQuestions = questions.filter((question) => question.section === section);
+    const required = sectionQuestions.filter((question) => correctIds.has(question.id));
+    const target = targets[section];
+    assert.ok(target >= required.length && target <= sectionQuestions.length, `${section}: ${target}`);
+    sectionQuestions
+      .filter((question) => !correctIds.has(question.id))
+      .slice(0, target - required.length)
+      .forEach((question) => correctIds.add(question.id));
+  }
+
+  return questions.map((question) => ({
+    questionId: question.id,
+    selectedOption: correctIds.has(question.id)
+      ? question.correctOption
+      : wrongOption(question.correctOption),
+    submittedAt: "2026-01-01T00:00:00.000Z",
+    responseTimeMs: 1_000,
+    timedOut: false,
+  }));
+}
+
+function profileForSkillCounts(counts, requiredCorrectIds = [], questions = coreQuestions) {
+  return scorePlacement(
+    questions,
+    answersForSkillCounts(counts, questions, requiredCorrectIds),
+    false,
+  );
+}
+
+function b2BoundaryCorrectIds(questions = coreQuestions) {
+  const select = (predicate, count) => questions.filter(predicate).slice(0, count).map(({ id }) => id);
+  return [
+    ...select(
+      (question) => question.section === "listening" && question.evidenceBand === "B2Entry",
+      2,
+    ),
+    ...select(
+      (question) => question.section === "languageUse" && question.evidenceBand === "B2Entry",
+      3,
+    ),
+    ...select(
+      (question) =>
+        question.section === "reading" && (question.slotId === "R09" || question.slotId === "R10"),
+      1,
+    ),
+  ];
+}
 
 function wrongOption(correct) {
   return correct === "A" ? "B" : "A";
@@ -196,6 +247,25 @@ async function createReadingFixture(name, questionIds) {
     attempt.budgetRunningSince = new Date().toISOString();
   });
   return token;
+}
+
+async function finalizeOnGlobalTimeout(name, skillCounts) {
+  const { token } = await createStoredAttempt("en", `lead-test-global-timeout-${name}`);
+  await updateStoredAttempt(token, (attempt) => {
+    const questions = getQuestions(attempt.coreSequence);
+    attempt.status = "in_progress";
+    attempt.startedAt = new Date().toISOString();
+    attempt.answers = answersForSkillCounts(skillCounts, questions);
+    attempt.currentIndex = attempt.coreSequence.length;
+    attempt.budgetRemainingMs = 0;
+    attempt.budgetRunningSince = null;
+    attempt.resultWebhookSentAt = new Date().toISOString();
+  });
+
+  await getPublicAttemptState(token);
+  const stored = await readStoredAttempt(token);
+  assert.ok(stored?.finalProfile);
+  return stored.finalProfile;
 }
 
 test("assessment layout has stable module-level component identity", () => {
@@ -780,20 +850,18 @@ test("seeded selection is stable and preserves block forms", () => {
   }
 });
 
-test("placement count gates match the fixed assessment evidence totals", () => {
-  assert.deepEqual(PLACEMENT_COUNT_GATES.A1, {
-    total: 6,
-    normalPass: 5,
-    borderline: 4,
-    extreme: 3,
+test("placement count gates match the 36-item core and skill floors", () => {
+  assert.deepEqual(PLACEMENT_COUNT_GATES.core, { total: 36, A2: 18, B1: 23, B2: 29 });
+  assert.deepEqual(PLACEMENT_COUNT_GATES.B1Skills, {
+    listening: 4,
+    reading: 4,
+    languageUse: 7,
   });
-  assert.deepEqual(PLACEMENT_COUNT_GATES.A2, {
-    total: 7,
-    normalPass: 5,
-    borderline: 4,
-    extreme: 3,
+  assert.deepEqual(PLACEMENT_COUNT_GATES.B2Skills, {
+    listening: 6,
+    reading: 6,
+    languageUse: 10,
   });
-  assert.deepEqual(PLACEMENT_COUNT_GATES.B1, { total: 15, normalPass: 11, borderline: 10 });
   assert.equal(PLACEMENT_COUNT_GATES.coreB2.B2Entry.normalPass, 5);
   assert.equal(PLACEMENT_COUNT_GATES.coreB2.upperListening.normalPass, 2);
   assert.equal(PLACEMENT_COUNT_GATES.coreB2.upperReading.normalPass, 1);
@@ -804,98 +872,104 @@ test("placement count gates match the fixed assessment evidence totals", () => {
   assert.equal(PLACEMENT_COUNT_GATES.confirmedB2.upperLanguageUse.normalPass, 4);
 });
 
-test("A1 clear and extreme failures cannot jump more than one level", () => {
-  const perfectHigher = { A2: 7, B1: 15, ...strongB2Counts, upperLanguageUse: 5 };
-  const absoluteFailure = profileForCounts({ A1: 2, ...perfectHigher });
-  const weakExtreme = profileForCounts({ A1: 3, A2: 2, B1: 5 });
-  const insufficientExtreme = profileForCounts({ A1: 3, A2: 7, B1: 12 });
-  const qualifyingExtreme = profileForCounts({ A1: 3, A2: 7, B1: 13 });
-  const perfectExtreme = profileForCounts({ A1: 3, ...perfectHigher });
+test("core totals use exact A1, A2, and B1 count boundaries", () => {
+  const profiles = [
+    [17, { listening: 4, reading: 4, languageUse: 9 }, "A1"],
+    [18, { listening: 4, reading: 4, languageUse: 10 }, "A2"],
+    [22, { listening: 6, reading: 6, languageUse: 10 }, "A2"],
+    [23, { listening: 4, reading: 4, languageUse: 15 }, "B1"],
+    [28, { listening: 7, reading: 7, languageUse: 14 }, "B1"],
+  ];
 
-  assert.equal(absoluteFailure.placement, "A1");
-  assert.equal(absoluteFailure.confidence, "low");
-  assert.equal(weakExtreme.placement, "A1");
-  assert.equal(insufficientExtreme.placement, "A1");
-  assert.equal(insufficientExtreme.confidence, "low");
-  assert.equal(qualifyingExtreme.placement, "A2");
-  assert.equal(qualifyingExtreme.confidence, "low");
-  assert.equal(perfectExtreme.placement, "A2");
-  assert.equal(perfectExtreme.confidence, "low");
+  for (const [coreCorrect, skills, placement] of profiles) {
+    const profile = profileForSkillCounts(skills);
+    assert.equal(
+      profile.listening.correct + profile.reading.correct + profile.languageUse.correct,
+      coreCorrect,
+    );
+    assert.equal(profile.placement, placement);
+    assert.equal(profile.confidence, "medium");
+  }
 });
 
-test("A1 borderline recovery requires approved higher evidence and stops at A2", () => {
-  const weak = profileForCounts({ A1: 4, A2: 4, B1: 10 });
-  const strongA2 = profileForCounts({ A1: 4, A2: 6, B1: 5 });
-  const supportedA2 = profileForCounts({ A1: 4, A2: 5, B1: 12 });
-  const normalPass = profileForCounts({ A1: 5, A2: 2, B1: 15, ...strongB2Counts });
+test("B1 skill floors cap only severely weak skills at A2", () => {
+  const listeningBelow = profileForSkillCounts({ listening: 3, reading: 7, languageUse: 13 });
+  const listeningAt = profileForSkillCounts({ listening: 4, reading: 4, languageUse: 15 });
+  const readingBelow = profileForSkillCounts({ listening: 7, reading: 3, languageUse: 13 });
+  const readingAt = profileForSkillCounts({ listening: 4, reading: 4, languageUse: 15 });
+  const languageBelow = profileForSkillCounts({ listening: 8, reading: 9, languageUse: 6 });
+  const languageAt = profileForSkillCounts({ listening: 8, reading: 8, languageUse: 7 });
 
-  assert.equal(weak.placement, "A1");
-  assert.equal(weak.confidence, "medium");
-  assert.equal(strongA2.placement, "A2");
-  assert.equal(strongA2.confidence, "low");
-  assert.equal(supportedA2.placement, "A2");
-  assert.equal(supportedA2.confidence, "low");
-  assert.equal(normalPass.placement, "A2");
+  for (const profile of [listeningBelow, readingBelow, languageBelow]) {
+    assert.equal(profile.placement, "A2");
+    assert.equal(profile.confidence, "low");
+  }
+  for (const profile of [listeningAt, readingAt, languageAt]) {
+    assert.equal(profile.placement, "B1");
+  }
 });
 
-test("A2 clear and extreme failures use exceptional independent support only", () => {
-  const perfectHigher = { B1: 15, ...strongB2Counts, upperLanguageUse: 5 };
-  const absoluteFailure = profileForCounts({ A1: 6, A2: 2, ...perfectHigher });
-  const weakExtreme = profileForCounts({ A1: 6, A2: 3, B1: 8 });
-  const insufficientExtreme = profileForCounts({ A1: 6, A2: 3, B1: 13, ...strongB2Counts });
-  const corroboratedExtreme = profileForCounts({ A1: 6, A2: 3, B1: 14, ...strongB2Counts });
-  const perfectB1Extreme = profileForCounts({ A1: 6, A2: 3, B1: 15, upperReading: 2 });
+test("B2 skill floors control entry to existing B2 protection", () => {
+  const required = b2BoundaryCorrectIds();
+  const listeningBelow = profileForSkillCounts(
+    { listening: 5, reading: 8, languageUse: 16 },
+    required,
+  );
+  const listeningAt = profileForSkillCounts(
+    { listening: 6, reading: 7, languageUse: 16 },
+    required,
+  );
+  const readingBelow = profileForSkillCounts(
+    { listening: 8, reading: 5, languageUse: 16 },
+    required,
+  );
+  const readingAt = profileForSkillCounts(
+    { listening: 7, reading: 6, languageUse: 16 },
+    required,
+  );
+  const languageBelow = profileForSkillCounts(
+    { listening: 10, reading: 10, languageUse: 9 },
+    required,
+  );
+  const languageAt = profileForSkillCounts(
+    { listening: 9, reading: 10, languageUse: 10 },
+    required,
+  );
 
-  assert.equal(absoluteFailure.placement, "A2");
-  assert.equal(absoluteFailure.confidence, "low");
-  assert.equal(weakExtreme.placement, "A2");
-  assert.equal(insufficientExtreme.placement, "A2");
-  assert.equal(insufficientExtreme.confidence, "low");
-  assert.equal(corroboratedExtreme.placement, "B1");
-  assert.equal(corroboratedExtreme.confidence, "low");
-  assert.equal(perfectB1Extreme.placement, "B1");
-  assert.equal(perfectB1Extreme.confidence, "low");
+  for (const profile of [listeningBelow, readingBelow, languageBelow]) {
+    assert.equal(profile.placement, "B1");
+    assert.equal(profile.confirmationRequired, false);
+    assert.equal(profile.confidence, "low");
+  }
+  for (const profile of [listeningAt, readingAt, languageAt]) {
+    assert.equal(profile.placement, "B2");
+    assert.equal(profile.confirmationRequired, true);
+  }
 });
 
-test("A2 borderline recovery requires approved B1 support and stops at B1", () => {
-  const weak = profileForCounts({ A1: 6, A2: 4, B1: 10 });
-  const supported = profileForCounts({ A1: 6, A2: 4, B1: 12, ...strongB2Counts });
-  const normalPass = profileForCounts({ A1: 6, A2: 5, B1: 9, ...strongB2Counts });
+test("calibration candidates follow core score and skill guardrails", () => {
+  const profiles = [
+    ["Candidate-004", { listening: 6, reading: 9, languageUse: 10 }, "B1"],
+    ["Candidate-006", { listening: 2, reading: 7, languageUse: 14 }, "A2"],
+    ["Candidate-011", { listening: 7, reading: 9, languageUse: 6 }, "A2"],
+    ["Candidate-016", { listening: 6, reading: 7, languageUse: 10 }, "B1"],
+    ["Candidate-023", { listening: 7, reading: 9, languageUse: 10 }, "B1"],
+    ["Candidate-027", { listening: 8, reading: 5, languageUse: 7 }, "A2"],
+    ["Candidate-030", { listening: 7, reading: 7, languageUse: 12 }, "B1"],
+  ];
 
-  assert.equal(weak.placement, "A2");
-  assert.equal(weak.confidence, "medium");
-  assert.equal(supported.placement, "B1");
-  assert.equal(supported.confidence, "low");
-  assert.equal(normalPass.placement, "B1");
+  for (const [candidate, skills, placement] of profiles) {
+    assert.equal(profileForSkillCounts(skills).placement, placement, candidate);
+  }
 });
 
-test("B1 clear failure and borderline protection cannot skip normal B2 evaluation", () => {
-  const clearFailure = profileForCounts({ A1: 6, A2: 7, B1: 9, ...strongB2Counts });
-  const weakBorderline = profileForCounts({ A1: 6, A2: 7, B1: 10 });
-  const narrowUpperEvidence = profileForCounts({
-    A1: 6,
-    A2: 7,
-    B1: 10,
-    upperListening: 2,
-    upperReading: 1,
-    upperLanguageUse: 4,
-  });
-  const confirmedPath = profileForCounts({
-    A1: 6,
-    A2: 7,
-    B1: 10,
-    upperListening: 3,
-    upperReading: 2,
-    upperLanguageUse: 3,
-  });
-
-  assert.equal(clearFailure.placement, "B1");
-  assert.equal(clearFailure.confidence, "low");
-  assert.equal(weakBorderline.placement, "B1");
-  assert.equal(narrowUpperEvidence.placement, "B1");
-  assert.equal(confirmedPath.placement, "B2");
-  assert.equal(confirmedPath.confirmationRequired, true);
-  assert.equal(confirmedPath.confidence, "low");
+test("confidence is medium only at core boundaries unless a guardrail forces low", () => {
+  assert.equal(profileForSkillCounts({ listening: 4, reading: 4, languageUse: 8 }).confidence, "high");
+  assert.equal(profileForSkillCounts({ listening: 4, reading: 4, languageUse: 9 }).confidence, "medium");
+  assert.equal(profileForSkillCounts({ listening: 4, reading: 4, languageUse: 10 }).confidence, "medium");
+  assert.equal(profileForSkillCounts({ listening: 6, reading: 6, languageUse: 9 }).confidence, "high");
+  assert.equal(profileForSkillCounts({ listening: 6, reading: 6, languageUse: 10 }).confidence, "medium");
+  assert.equal(profileForSkillCounts({ listening: 3, reading: 7, languageUse: 13 }).confidence, "low");
 });
 
 test("core B2 entry and upper-skill gates use exact integer boundaries", () => {
@@ -1005,17 +1079,54 @@ test("post-confirmation B2 decisions use 7/12, 2/4, 2/3, and 4/7 counts", () => 
   assert.equal(failed.confidence, "low");
 });
 
-test("count-based confidence distinguishes clear, boundary, bypass, and contradictory profiles", () => {
-  assert.equal(profileForCounts({ A1: 2, A2: 1, B1: 2 }).confidence, "high");
-  assert.equal(profileForCounts({ A1: 4, A2: 2, B1: 3 }).confidence, "medium");
-  assert.equal(profileForCounts({ A1: 3, A2: 6, B1: 5 }).confidence, "low");
-  assert.equal(profileForCounts({ A1: 4, A2: 6, B1: 5 }).confidence, "low");
-  assert.equal(profileForCounts({ A1: 6, A2: 4, B1: 12 }).confidence, "low");
-  assert.equal(profileForCounts({ A1: 6, A2: 7, B1: 8 }).confidence, "high");
-  assert.equal(
-    profileForCounts({ A1: 6, A2: 7, B1: 15, ...strongB2Counts }).confidence,
-    "high",
-  );
+test("an individual question timeout does not impose a placement cap", () => {
+  const answers = answersWhere(() => true);
+  answers[0] = { ...answers[0], selectedOption: null, timedOut: true };
+  const profile = scorePlacement(coreQuestions, answers, false);
+
+  assert.equal(profile.placement, "B2");
+  assert.equal(profile.confirmationRequired, false);
+});
+
+test("global timeout caps a persisted B2-caliber profile at B1 low", async () => {
+  const profile = await finalizeOnGlobalTimeout("b2", {
+    listening: 10,
+    reading: 10,
+    languageUse: 16,
+  });
+  assert.equal(profile.placement, "B1");
+  assert.equal(profile.confidence, "low");
+  assert.equal(profile.b2Readiness, false);
+});
+
+test("global timeout keeps a B1 profile at B1 and forces low confidence", async () => {
+  const profile = await finalizeOnGlobalTimeout("b1", {
+    listening: 8,
+    reading: 8,
+    languageUse: 10,
+  });
+  assert.equal(profile.placement, "B1");
+  assert.equal(profile.confidence, "low");
+});
+
+test("global timeout keeps an A2 profile at A2 and forces low confidence", async () => {
+  const profile = await finalizeOnGlobalTimeout("a2", {
+    listening: 6,
+    reading: 6,
+    languageUse: 8,
+  });
+  assert.equal(profile.placement, "A2");
+  assert.equal(profile.confidence, "low");
+});
+
+test("global timeout keeps an A1 profile at A1 and forces low confidence", async () => {
+  const profile = await finalizeOnGlobalTimeout("a1", {
+    listening: 4,
+    reading: 4,
+    languageUse: 8,
+  });
+  assert.equal(profile.placement, "A1");
+  assert.equal(profile.confidence, "low");
 });
 
 test("public evidence percentages remain reporting values derived from exact counts", () => {
@@ -1035,14 +1146,14 @@ test("count scoring is equivalent across all-A and all-B form selections", () =>
   const allB = Object.fromEntries(Object.keys(forms).map((blockId) => [blockId, "B"]));
   const formAQuestions = getQuestions(buildCoreSequence(assessmentQuestions, allA));
   const formBQuestions = getQuestions(buildCoreSequence(assessmentQuestions, allB));
-  const counts = { A1: 4, A2: 6, B1: 12, ...strongB2Counts };
-  const formAProfile = profileForCounts(counts, formAQuestions);
-  const formBProfile = profileForCounts(counts, formBQuestions);
+  const counts = { listening: 7, reading: 7, languageUse: 12 };
+  const formAProfile = profileForSkillCounts(counts, [], formAQuestions);
+  const formBProfile = profileForSkillCounts(counts, [], formBQuestions);
 
   assert.equal(formAQuestions.length, 36);
   assert.equal(formBQuestions.length, 36);
-  assert.equal(formAProfile.placement, "A2");
-  assert.equal(formBProfile.placement, "A2");
+  assert.equal(formAProfile.placement, "B1");
+  assert.equal(formBProfile.placement, "B1");
   assert.deepEqual(formAProfile.evidence, formBProfile.evidence);
 });
 
@@ -1051,20 +1162,12 @@ test("clear A1 case", () => {
 });
 
 test("clear A2 case", () => {
-  const profile = scorePlacement(
-    coreQuestions,
-    answersWhere((question) => question.evidenceBand === "A1"),
-    false,
-  );
+  const profile = profileForSkillCounts({ listening: 6, reading: 6, languageUse: 8 });
   assert.equal(profile.placement, "A2");
 });
 
 test("clear B1 case", () => {
-  const profile = scorePlacement(
-    coreQuestions,
-    answersWhere((question) => question.evidenceBand === "A1" || question.evidenceBand === "A2"),
-    false,
-  );
+  const profile = profileForSkillCounts({ listening: 7, reading: 7, languageUse: 12 });
   assert.equal(profile.placement, "B1");
 });
 
