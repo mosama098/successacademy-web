@@ -40,24 +40,52 @@ jobs:
           git reset --hard origin/main
 
           echo "=== Loading public build variables ==="
-          set -a
-          source .env.local
-          set +a
+          read_dotenv_value() {
+            local key="$1"
+
+            awk -v key="$key" '
+              index($0, key "=") == 1 {
+                value = substr($0, length(key) + 2)
+                sub(/\r$/, "", value)
+
+                if ((substr(value, 1, 1) == "\"" && substr(value, length(value), 1) == "\"") ||
+                    (substr(value, 1, 1) == "\047" && substr(value, length(value), 1) == "\047")) {
+                  value = substr(value, 2, length(value) - 2)
+                }
+
+                printf "%s", value
+                exit
+              }
+            ' .env.local
+          }
+
+          NEXT_PUBLIC_SITE_URL="$(read_dotenv_value NEXT_PUBLIC_SITE_URL)"
+          NEXT_PUBLIC_GTM_ID="$(read_dotenv_value NEXT_PUBLIC_GTM_ID)"
+          NEXT_PUBLIC_GA4_ID="$(read_dotenv_value NEXT_PUBLIC_GA4_ID)"
+          NEXT_PUBLIC_META_PIXEL_ID="$(read_dotenv_value NEXT_PUBLIC_META_PIXEL_ID)"
+          NEXT_PUBLIC_TIKTOK_PIXEL_ID="$(read_dotenv_value NEXT_PUBLIC_TIKTOK_PIXEL_ID)"
+          NEXT_PUBLIC_WHATSAPP_NUMBER="$(read_dotenv_value NEXT_PUBLIC_WHATSAPP_NUMBER)"
+          NEXT_PUBLIC_CALL_NUMBER="$(read_dotenv_value NEXT_PUBLIC_CALL_NUMBER)"
+          NEXT_PUBLIC_FACEBOOK_URL="$(read_dotenv_value NEXT_PUBLIC_FACEBOOK_URL)"
+          NEXT_PUBLIC_INSTAGRAM_URL="$(read_dotenv_value NEXT_PUBLIC_INSTAGRAM_URL)"
+          NEXT_PUBLIC_TIKTOK_URL="$(read_dotenv_value NEXT_PUBLIC_TIKTOK_URL)"
+          NEXT_PUBLIC_YOUTUBE_URL="$(read_dotenv_value NEXT_PUBLIC_YOUTUBE_URL)"
+          NEXT_PUBLIC_LINKEDIN_URL="$(read_dotenv_value NEXT_PUBLIC_LINKEDIN_URL)"
 
           echo "=== Building new Docker image ==="
           docker build \
-            --build-arg NEXT_PUBLIC_SITE_URL \
-            --build-arg NEXT_PUBLIC_GTM_ID \
-            --build-arg NEXT_PUBLIC_GA4_ID \
-            --build-arg NEXT_PUBLIC_META_PIXEL_ID \
-            --build-arg NEXT_PUBLIC_TIKTOK_PIXEL_ID \
-            --build-arg NEXT_PUBLIC_WHATSAPP_NUMBER \
-            --build-arg NEXT_PUBLIC_CALL_NUMBER \
-            --build-arg NEXT_PUBLIC_FACEBOOK_URL \
-            --build-arg NEXT_PUBLIC_INSTAGRAM_URL \
-            --build-arg NEXT_PUBLIC_TIKTOK_URL \
-            --build-arg NEXT_PUBLIC_YOUTUBE_URL \
-            --build-arg NEXT_PUBLIC_LINKEDIN_URL \
+            --build-arg NEXT_PUBLIC_SITE_URL="$NEXT_PUBLIC_SITE_URL" \
+            --build-arg NEXT_PUBLIC_GTM_ID="$NEXT_PUBLIC_GTM_ID" \
+            --build-arg NEXT_PUBLIC_GA4_ID="$NEXT_PUBLIC_GA4_ID" \
+            --build-arg NEXT_PUBLIC_META_PIXEL_ID="$NEXT_PUBLIC_META_PIXEL_ID" \
+            --build-arg NEXT_PUBLIC_TIKTOK_PIXEL_ID="$NEXT_PUBLIC_TIKTOK_PIXEL_ID" \
+            --build-arg NEXT_PUBLIC_WHATSAPP_NUMBER="$NEXT_PUBLIC_WHATSAPP_NUMBER" \
+            --build-arg NEXT_PUBLIC_CALL_NUMBER="$NEXT_PUBLIC_CALL_NUMBER" \
+            --build-arg NEXT_PUBLIC_FACEBOOK_URL="$NEXT_PUBLIC_FACEBOOK_URL" \
+            --build-arg NEXT_PUBLIC_INSTAGRAM_URL="$NEXT_PUBLIC_INSTAGRAM_URL" \
+            --build-arg NEXT_PUBLIC_TIKTOK_URL="$NEXT_PUBLIC_TIKTOK_URL" \
+            --build-arg NEXT_PUBLIC_YOUTUBE_URL="$NEXT_PUBLIC_YOUTUBE_URL" \
+            --build-arg NEXT_PUBLIC_LINKEDIN_URL="$NEXT_PUBLIC_LINKEDIN_URL" \
             -t successacademy-main-web:deploy .
 
           echo "=== Preparing safe container replacement ==="
