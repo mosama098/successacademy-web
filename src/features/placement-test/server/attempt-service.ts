@@ -351,7 +351,13 @@ function finalizeAttempt(attempt: PlacementAttempt, now: Date, globalTimeout: bo
   attempt.budgetRunningSince = null;
   clearQuestionClock(attempt);
 
-  if (globalTimeout) attempt.finalProfile.confidence = "low";
+  if (globalTimeout) {
+    if (attempt.finalProfile.placement === "B2") {
+      attempt.finalProfile.placement = "B1";
+      attempt.finalProfile.b2Readiness = false;
+    }
+    attempt.finalProfile.confidence = "low";
+  }
 }
 
 function completeRemainingAsTimeouts(attempt: PlacementAttempt, now: Date) {

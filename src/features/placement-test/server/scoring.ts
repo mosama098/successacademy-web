@@ -8,10 +8,35 @@ import type {
   StoredAnswer,
 } from "../types";
 
+const A2_MIN_CORE_CORRECT = 18;
+const B1_MIN_CORE_CORRECT = 23;
+const B2_MIN_CORE_CORRECT = 29;
+
+const B1_MIN_LISTENING_CORRECT = 4;
+const B1_MIN_READING_CORRECT = 4;
+const B1_MIN_LANGUAGE_USE_CORRECT = 7;
+
+const B2_MIN_LISTENING_CORRECT = 6;
+const B2_MIN_READING_CORRECT = 6;
+const B2_MIN_LANGUAGE_USE_CORRECT = 10;
+
 export const PLACEMENT_COUNT_GATES = {
-  A1: { total: 6, normalPass: 5, borderline: 4, extreme: 3 },
-  A2: { total: 7, normalPass: 5, borderline: 4, extreme: 3 },
-  B1: { total: 15, normalPass: 11, borderline: 10 },
+  core: {
+    total: 36,
+    A2: A2_MIN_CORE_CORRECT,
+    B1: B1_MIN_CORE_CORRECT,
+    B2: B2_MIN_CORE_CORRECT,
+  },
+  B1Skills: {
+    listening: B1_MIN_LISTENING_CORRECT,
+    reading: B1_MIN_READING_CORRECT,
+    languageUse: B1_MIN_LANGUAGE_USE_CORRECT,
+  },
+  B2Skills: {
+    listening: B2_MIN_LISTENING_CORRECT,
+    reading: B2_MIN_READING_CORRECT,
+    languageUse: B2_MIN_LANGUAGE_USE_CORRECT,
+  },
   coreB2: {
     B2Entry: { total: 8, normalPass: 5, strong: 6 },
     upperListening: { total: 3, normalPass: 2, strong: 3 },
@@ -26,6 +51,8 @@ export const PLACEMENT_COUNT_GATES = {
     upperLanguageUse: { total: 7, normalPass: 4 },
   },
 } as const;
+
+const CORE_DECISION_BOUNDARIES = new Set([17, 18, 22, 23, 28, 29]);
 
 type CountScore = {
   correct: number;
@@ -43,6 +70,8 @@ type EvidenceCounts = {
   upperLanguageUse: CountScore;
 };
 
+type CoreSkillCounts = Record<AssessmentSection, CountScore>;
+
 type B2CountGates = {
   B2Entry: { normalPass: number };
   upperListening: { normalPass: number };
@@ -50,16 +79,11 @@ type B2CountGates = {
   upperLanguageUse: { normalPass: number };
 };
 
-type BoundaryBypass =
-  | "A1-borderline"
-  | "A1-extreme"
-  | "A2-borderline"
-  | "A2-extreme"
-  | "B1-borderline";
+type PlacementGuardrail = "B1-skill-floor" | "B2-skill-floor" | "B2-protection";
 
 type PlacementDecision = {
   placement: PlacementLevel;
-  bypass: BoundaryBypass | null;
+  guardrail: PlacementGuardrail | null;
 };
 
 export function scorePlacement(
@@ -69,28 +93,32 @@ export function scorePlacement(
 ): PlacementProfile {
   const answerByQuestion = new Map(answers.map((answer) => [answer.questionId, answer]));
   const scoredQuestions = questions.filter((question) => answerByQuestion.has(question.id));
-  const coreQuestions = scoredQuestions.filter((question) => !question.isConfirmation);
+  const coreQuestions = questions.filter((question) => !question.isConfirmation);
 
   const counts = scoreEvidence(scoredQuestions, answerByQuestion);
   const coreCounts = scoreEvidence(coreQuestions, answerByQuestion);
-  const strongB2 = hasStrongB2Evidence(coreCounts);
-  const supportAboveA2 = hasSupportAboveA2(coreCounts, strongB2);
-  const supportAboveA1 = hasSupportAboveA1(coreCounts, supportAboveA2);
+  const coreSkills: CoreSkillCounts = {
+    listening: scoreSkill(coreQuestions, answerByQuestion, "listening"),
+    reading: scoreSkill(coreQuestions, answerByQuestion, "reading"),
+    languageUse: scoreSkill(coreQuestions, answerByQuestion, "languageUse"),
+  };
+  const coreCorrect = Object.values(coreSkills).reduce(
+    (total, skill) => total + skill.correct,
+    0,
+  );
+  const passesB1SkillFloor = passesSkillFloor(coreSkills, PLACEMENT_COUNT_GATES.B1Skills);
+  const passesB2SkillFloor = passesSkillFloor(coreSkills, PLACEMENT_COUNT_GATES.B2Skills);
   const canEvaluateB2 =
-    coreCounts.A1.correct >= PLACEMENT_COUNT_GATES.A1.normalPass &&
-    coreCounts.A2.correct >= PLACEMENT_COUNT_GATES.A2.normalPass &&
-    (coreCounts.B1.correct >= PLACEMENT_COUNT_GATES.B1.normalPass ||
-      (coreCounts.B1.correct === PLACEMENT_COUNT_GATES.B1.borderline && strongB2));
+    coreCorrect >= B2_MIN_CORE_CORRECT && passesB1SkillFloor && passesB2SkillFloor;
   const b2Gates = confirmationUsed
     ? PLACEMENT_COUNT_GATES.confirmedB2
     : PLACEMENT_COUNT_GATES.coreB2;
   const coreB2EvidencePasses = passesB2Gates(coreCounts, PLACEMENT_COUNT_GATES.coreB2);
   const b2Readiness = canEvaluateB2 && passesB2Gates(counts, b2Gates);
   const decision = determinePlacement({
-    counts: coreCounts,
-    strongB2,
-    supportAboveA1,
-    supportAboveA2,
+    coreCorrect,
+    passesB1SkillFloor,
+    passesB2SkillFloor,
     b2Readiness,
   });
   const confirmationRequired =
@@ -111,12 +139,7 @@ export function scorePlacement(
     placement: decision.placement,
     confidence: classifyConfidence({
       decision,
-      counts: coreCounts,
-      b2Gates,
-      coreB2EvidencePasses,
-      strongB2,
-      supportAboveA1,
-      supportAboveA2,
+      coreCorrect,
       confirmationRequired,
       confirmationUsed,
     }),
@@ -138,59 +161,41 @@ export function scorePlacement(
 }
 
 function determinePlacement(values: {
-  counts: EvidenceCounts;
-  strongB2: boolean;
-  supportAboveA1: boolean;
-  supportAboveA2: boolean;
+  coreCorrect: number;
+  passesB1SkillFloor: boolean;
+  passesB2SkillFloor: boolean;
   b2Readiness: boolean;
 }): PlacementDecision {
-  const { counts, strongB2, supportAboveA1, supportAboveA2, b2Readiness } = values;
-  const A1 = counts.A1.correct;
-  const A2 = counts.A2.correct;
-  const B1 = counts.B1.correct;
+  const { coreCorrect, passesB1SkillFloor, passesB2SkillFloor, b2Readiness } = values;
 
-  if (A1 <= PLACEMENT_COUNT_GATES.A1.extreme - 1) {
-    return { placement: "A1", bypass: null };
+  if (coreCorrect < A2_MIN_CORE_CORRECT) {
+    return { placement: "A1", guardrail: null };
   }
-  if (A1 === PLACEMENT_COUNT_GATES.A1.extreme) {
-    const extremeSupport = A2 === PLACEMENT_COUNT_GATES.A2.total && B1 >= 13;
-    return extremeSupport
-      ? { placement: "A2", bypass: "A1-extreme" }
-      : { placement: "A1", bypass: null };
+  if (coreCorrect < B1_MIN_CORE_CORRECT) {
+    return { placement: "A2", guardrail: null };
   }
-  if (A1 === PLACEMENT_COUNT_GATES.A1.borderline) {
-    return supportAboveA1
-      ? { placement: "A2", bypass: "A1-borderline" }
-      : { placement: "A1", bypass: null };
+  if (!passesB1SkillFloor) {
+    return { placement: "A2", guardrail: "B1-skill-floor" };
   }
+  if (coreCorrect < B2_MIN_CORE_CORRECT) {
+    return { placement: "B1", guardrail: null };
+  }
+  if (!passesB2SkillFloor) {
+    return { placement: "B1", guardrail: "B2-skill-floor" };
+  }
+  if (!b2Readiness) {
+    return { placement: "B1", guardrail: "B2-protection" };
+  }
+  return { placement: "B2", guardrail: null };
+}
 
-  if (A2 <= PLACEMENT_COUNT_GATES.A2.extreme - 1) {
-    return { placement: "A2", bypass: null };
-  }
-  if (A2 === PLACEMENT_COUNT_GATES.A2.extreme) {
-    const extremeSupport =
-      B1 === PLACEMENT_COUNT_GATES.B1.total || (B1 >= 14 && strongB2);
-    return extremeSupport
-      ? { placement: "B1", bypass: "A2-extreme" }
-      : { placement: "A2", bypass: null };
-  }
-  if (A2 === PLACEMENT_COUNT_GATES.A2.borderline) {
-    return supportAboveA2
-      ? { placement: "B1", bypass: "A2-borderline" }
-      : { placement: "A2", bypass: null };
-  }
-
-  if (B1 <= PLACEMENT_COUNT_GATES.B1.borderline - 1) {
-    return { placement: "B1", bypass: null };
-  }
-  if (B1 === PLACEMENT_COUNT_GATES.B1.borderline && !strongB2) {
-    return { placement: "B1", bypass: null };
-  }
-
-  return {
-    placement: b2Readiness ? "B2" : "B1",
-    bypass: B1 === PLACEMENT_COUNT_GATES.B1.borderline ? "B1-borderline" : null,
-  };
+function passesSkillFloor(
+  skills: CoreSkillCounts,
+  minimums: Readonly<Record<AssessmentSection, number>>,
+) {
+  return (Object.keys(minimums) as AssessmentSection[]).every(
+    (skill) => skills[skill].correct >= minimums[skill],
+  );
 }
 
 function scoreEvidence(
@@ -206,29 +211,6 @@ function scoreEvidence(
     upperReading: scoreUpperSkill(questions, answerByQuestion, "reading"),
     upperLanguageUse: scoreUpperSkill(questions, answerByQuestion, "languageUse"),
   };
-}
-
-function hasStrongB2Evidence(counts: EvidenceCounts) {
-  const gates = PLACEMENT_COUNT_GATES.coreB2;
-  const strongSkills = [
-    counts.upperListening.correct >= gates.upperListening.strong,
-    counts.upperReading.correct >= gates.upperReading.strong,
-    counts.upperLanguageUse.correct >= gates.upperLanguageUse.strong,
-  ].filter(Boolean).length;
-
-  return (
-    counts.B2Entry.correct >= gates.B2Entry.strong &&
-    passesB2Gates(counts, gates) &&
-    strongSkills >= gates.requiredStrongSkills
-  );
-}
-
-function hasSupportAboveA2(counts: EvidenceCounts, strongB2: boolean) {
-  return counts.B1.correct >= 12 || (counts.B1.correct >= 11 && strongB2);
-}
-
-function hasSupportAboveA1(counts: EvidenceCounts, supportAboveA2: boolean) {
-  return counts.A2.correct >= 6 || (counts.A2.correct >= 5 && supportAboveA2);
 }
 
 function passesB2Gates(counts: EvidenceCounts, gates: B2CountGates) {
@@ -319,112 +301,13 @@ function bandFromPercent(percent: number): PlacementLevel {
 
 function classifyConfidence(values: {
   decision: PlacementDecision;
-  counts: EvidenceCounts;
-  b2Gates: B2CountGates;
-  coreB2EvidencePasses: boolean;
-  strongB2: boolean;
-  supportAboveA1: boolean;
-  supportAboveA2: boolean;
+  coreCorrect: number;
   confirmationRequired: boolean;
   confirmationUsed: boolean;
 }): PlacementConfidence {
-  const {
-    decision,
-    counts,
-    b2Gates,
-    coreB2EvidencePasses,
-    strongB2,
-    supportAboveA1,
-    supportAboveA2,
-    confirmationRequired,
-    confirmationUsed,
-  } = values;
+  const { decision, coreCorrect, confirmationRequired, confirmationUsed } = values;
 
-  if (decision.bypass || confirmationRequired || confirmationUsed) return "low";
-  if (
-    hasStrongContradiction(
-      decision.placement,
-      counts,
-      strongB2,
-      supportAboveA1,
-      supportAboveA2,
-    )
-  ) {
-    return "low";
-  }
-  if (
-    hasModerateContradiction(decision.placement, counts, coreB2EvidencePasses) ||
-    isOnDecisionBoundary(decision.placement, counts, b2Gates)
-  ) {
-    return "medium";
-  }
+  if (decision.guardrail || confirmationRequired || confirmationUsed) return "low";
+  if (CORE_DECISION_BOUNDARIES.has(coreCorrect)) return "medium";
   return "high";
-}
-
-function hasStrongContradiction(
-  placement: PlacementLevel,
-  counts: EvidenceCounts,
-  strongB2: boolean,
-  supportAboveA1: boolean,
-  supportAboveA2: boolean,
-) {
-  if (placement === "A1") return supportAboveA1;
-  if (placement === "A2") return supportAboveA2;
-  if (placement === "B1") {
-    return counts.B1.correct <= PLACEMENT_COUNT_GATES.B1.borderline - 1 && strongB2;
-  }
-  return false;
-}
-
-function hasModerateContradiction(
-  placement: PlacementLevel,
-  counts: EvidenceCounts,
-  coreB2EvidencePasses: boolean,
-) {
-  if (placement === "A1") {
-    return (
-      counts.A2.correct >= PLACEMENT_COUNT_GATES.A2.normalPass ||
-      counts.B1.correct >= PLACEMENT_COUNT_GATES.B1.normalPass
-    );
-  }
-  if (placement === "A2") {
-    return counts.B1.correct >= PLACEMENT_COUNT_GATES.B1.normalPass;
-  }
-  if (placement === "B1") return coreB2EvidencePasses;
-  return false;
-}
-
-function isOnDecisionBoundary(
-  placement: PlacementLevel,
-  counts: EvidenceCounts,
-  b2Gates: B2CountGates,
-) {
-  if (placement === "A1") return counts.A1.correct === PLACEMENT_COUNT_GATES.A1.borderline;
-  if (placement === "A2") {
-    return (
-      counts.A1.correct === PLACEMENT_COUNT_GATES.A1.normalPass ||
-      counts.A2.correct === PLACEMENT_COUNT_GATES.A2.borderline
-    );
-  }
-
-  const lowerBoundary =
-    counts.A1.correct === PLACEMENT_COUNT_GATES.A1.normalPass ||
-    counts.A2.correct === PLACEMENT_COUNT_GATES.A2.normalPass ||
-    counts.B1.correct === PLACEMENT_COUNT_GATES.B1.normalPass ||
-    counts.B1.correct === PLACEMENT_COUNT_GATES.B1.borderline;
-  if (lowerBoundary) return true;
-  if (placement === "B1" && counts.B1.correct < PLACEMENT_COUNT_GATES.B1.normalPass) {
-    return false;
-  }
-
-  const b2Values = [
-    [counts.B2Entry.correct, b2Gates.B2Entry.normalPass],
-    [counts.upperListening.correct, b2Gates.upperListening.normalPass],
-    [counts.upperReading.correct, b2Gates.upperReading.normalPass],
-    [counts.upperLanguageUse.correct, b2Gates.upperLanguageUse.normalPass],
-  ] as const;
-
-  return b2Values.some(([correct, minimum]) =>
-    placement === "B2" ? correct === minimum : correct === minimum - 1,
-  );
 }
