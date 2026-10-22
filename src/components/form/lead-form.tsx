@@ -21,6 +21,11 @@ import {
 } from "@/lib/tracking";
 import { normalizeEgyptianMobile } from "@/lib/phone";
 import { getLeadMetadata, getWhatsAppHref } from "@/lib/utm";
+import {
+  clearLeadSubmissionId,
+  getOrCreateLeadSubmissionId,
+  submitLead,
+} from "@/features/leads/client/lead-submission";
 
 type FieldName = Exclude<keyof FormState, "company">;
 type FocusableField = HTMLInputElement | HTMLTextAreaElement;
@@ -50,6 +55,7 @@ const validationOrder: FieldName[] = [
 
 const inputClassName =
   "scroll-mb-[148px] w-full rounded-[13px] border border-[#d9d0e5] bg-white px-4 text-[15px] font-bold text-[#391B68] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:font-semibold placeholder:text-[#766b82] hover:border-[#391B68]/45 focus:border-[#391B68] focus:ring-4 focus:ring-[#391B68]/12 disabled:cursor-not-allowed disabled:bg-[#f2eef6] disabled:text-[#80758e] lg:rounded-[12px] lg:px-3.5 lg:text-[14px]";
+const submissionStorageKey = "sa_home_lead_submission";
 
 export function LeadForm({ locale, copy }: LeadFormProps) {
   const [form, setForm] = useState<FormState>(initialState);
@@ -61,8 +67,16 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const fieldRefs = useRef<Partial<Record<FieldName, FocusableField>>>({});
   const started = useRef(false);
+  const submissionInFlight = useRef(false);
+  const submissionId = useRef<string | null>(null);
   const isArabic = locale === "ar";
   const whatsappHref = getWhatsAppHref(locale);
+
+  function getSubmissionId() {
+    if (submissionId.current) return submissionId.current;
+    submissionId.current = getOrCreateLeadSubmissionId(submissionStorageKey);
+    return submissionId.current;
+  }
 
   function markStarted() {
     if (started.current) return;
@@ -168,26 +182,26 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
   async function submitForm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     markStarted();
-    if (status === "loading" || !validateForm()) return;
+    if (submissionInFlight.current || status === "loading" || !validateForm()) return;
 
     const normalizedPhone = normalizeEgyptianMobile(form.phone);
     if (!normalizedPhone) return;
 
+    submissionInFlight.current = true;
     setStatus("loading");
 
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          phone: normalizedPhone,
-          metadata: getLeadMetadata(locale),
-        }),
+      const result = await submitLead({
+        ...form,
+        source: "website",
+        submissionId: getSubmissionId(),
+        phone: normalizedPhone,
+        metadata: getLeadMetadata(locale),
       });
+      if (result.kind !== "success") throw new Error(`lead_${result.kind}`);
 
-      if (!response.ok) throw new Error("Lead submission failed");
-
+      clearLeadSubmissionId(submissionStorageKey);
+      submissionId.current = null;
       setStatus("success");
       trackFormSubmit({
         locale,
@@ -195,6 +209,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         preferredAssessmentTime: form.preferredAssessmentTime,
       });
     } catch {
+      submissionInFlight.current = false;
       setStatus("idle");
       setErrors((current) => ({
         ...current,

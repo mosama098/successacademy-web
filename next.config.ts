@@ -15,6 +15,7 @@ const storyblokAssetHostname = configuredRegion && configuredRegion in storyblok
 
 const contentSecurityPolicyReportOnly = [
   "default-src 'self'",
+  "upgrade-insecure-requests",
   "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com https://aanlytics-ipv6.tiktokw.us https://*.wistia.com https://*.wistia.net https://src.litix.io https://*.sentry-cdn.com",
   "style-src 'self' 'unsafe-inline' blob: https://fast.wistia.com",
   `img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://www.google.com https://*.google.com https://www.facebook.com https://analytics.tiktok.com https://aanlytics-ipv6.tiktokw.us https://${storyblokAssetHostname} https://*.wistia.com https://*.wistia.net`,
@@ -47,6 +48,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  allowedDevOrigins: process.env.NODE_ENV === "development" ? ["127.0.0.1"] : undefined,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

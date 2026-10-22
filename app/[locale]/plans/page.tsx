@@ -1,15 +1,16 @@
 import { notFound } from "next/navigation";
 import { SitePageShell } from "@/components/site-page-shell";
+import { PlansLeadGate } from "@/features/plans/components/plans-lead-gate";
 import { RecommendedPlanPage } from "@/features/plans/components/recommended-plan-page";
-import { isLearningLevel } from "@/features/plans/config";
+import { isLearningLevel, resolveProgramType } from "@/features/plans/config";
 import { plansCopy } from "@/features/plans/copy";
-import { getPlacementPlanContext } from "@/features/plans/server/placement-plan-context";
+import { getPlansAccessContext } from "@/features/plans/server/plans-access";
 import { locales, type Locale } from "@/lib/i18n";
 import { createPageMetadata } from "@/lib/page-metadata";
 
 type PlansPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ level?: string; source?: string }>;
+  searchParams: Promise<{ level?: string; target?: string; program?: string }>;
 };
 
 export async function generateMetadata({ params }: PlansPageProps) {
@@ -18,36 +19,49 @@ export async function generateMetadata({ params }: PlansPageProps) {
 
   const copy = plansCopy[locale as Locale];
   return createPageMetadata({
-    title: `${copy.badge} | Success Academy`,
-    description: copy.heroDescription,
+    title: copy.meta.title,
+    description: copy.meta.description,
     path: `/${locale}/plans`,
   });
 }
 
 export default async function PlansPage({ params, searchParams }: PlansPageProps) {
-  const [{ locale }, query, placementContext] = await Promise.all([
+  const [{ locale }, query] = await Promise.all([
     params,
     searchParams,
-    getPlacementPlanContext(),
   ]);
   if (!locales.includes(locale as Locale)) notFound();
 
   const currentLocale = locale as Locale;
-  const initialCurrentLevel = placementContext?.currentLevel ?? (isLearningLevel(query.level) ? query.level : null);
-  const fromAssessment = Boolean(placementContext || (initialCurrentLevel && query.source === "placement"));
-  const pagePath = fromAssessment
-    ? `plans?level=${initialCurrentLevel}&source=placement`
-    : initialCurrentLevel
-      ? `plans?level=${initialCurrentLevel}`
-      : "plans";
+  const { registered, placementContext } = await getPlansAccessContext();
+  const initialProgramType = resolveProgramType(query.program) ?? "group";
+  const initialStartLevel = placementContext?.startLevel ?? (isLearningLevel(query.level) ? query.level : null);
+  const initialTargetLevel = isLearningLevel(query.target) ? query.target : null;
+  const pageQuery = new URLSearchParams();
+  if (initialProgramType !== "group") pageQuery.set("program", initialProgramType);
+  if (initialStartLevel) pageQuery.set("level", initialStartLevel);
+  if (initialTargetLevel) pageQuery.set("target", initialTargetLevel);
+  const pagePath = pageQuery.size ? `plans?${pageQuery.toString()}` : "plans";
 
   return (
-    <SitePageShell locale={currentLocale} page="plans" pagePath={pagePath}>
-      <RecommendedPlanPage
-        locale={currentLocale}
-        initialCurrentLevel={initialCurrentLevel}
-        fromAssessment={fromAssessment}
-      />
+    <SitePageShell
+      locale={currentLocale}
+      page="plans"
+      pagePath={pagePath}
+      whatsappContext="plans"
+      whatsappSource="plans_floating_help"
+    >
+      {registered ? (
+        <RecommendedPlanPage
+          locale={currentLocale}
+          initialStartLevel={initialStartLevel}
+          initialTargetLevel={initialTargetLevel}
+          initialProgramType={initialProgramType}
+          fromAssessment={Boolean(placementContext)}
+        />
+      ) : (
+        <PlansLeadGate locale={currentLocale} />
+      )}
     </SitePageShell>
   );
 }

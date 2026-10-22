@@ -2,11 +2,11 @@
 
 import type { Locale } from "@/lib/i18n";
 import type { LandingContent } from "@/content";
-import { getCallHref, getWhatsAppHref } from "@/lib/utm";
+import { getCallHref, getWhatsAppHref, getWhatsAppMessage } from "@/lib/utm";
 import { trackRequestCallClick, trackWhatsAppClick } from "@/lib/tracking";
 
 export function ThankYouActions({ locale, copy }: { locale: Locale; copy: LandingContent["thankYou"] }) {
-  const whatsappHref = getWhatsAppHref(locale);
+  const whatsappHref = getWhatsAppHref(locale, getWhatsAppMessage(locale, "thank_you"));
   const callHref = getCallHref();
 
   return (

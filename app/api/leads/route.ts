@@ -1,6 +1,7 @@
 import { isIP } from "node:net";
-import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { isAllowedBrowserRequest } from "@/features/leads/server/request-origin";
+import { setLeadRegistrationCookie } from "@/features/leads/server/registration-cookie";
 import { readAttemptToken, setAttemptCookie } from "@/features/placement-test/server/cookie";
 import { getExistingAttempt } from "@/features/placement-test/server/attempt-service";
 import { createStoredAttempt } from "@/features/placement-test/server/storage";
@@ -11,7 +12,7 @@ type LeadMetadata = Record<string, string>;
 type ValidationFailure = { ok: false; missing: string[] };
 
 const MAX_REQUEST_BODY_BYTES = 32 * 1024;
-const WEBHOOK_TIMEOUT_MS = 8_000;
+const WEBHOOK_TIMEOUT_MS = 30_000;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_REQUESTS = 10;
 const RATE_LIMIT_CLEANUP_INTERVAL_MS = 60 * 1000;
@@ -19,6 +20,7 @@ const RATE_LIMIT_MAX_ENTRIES = 10_000;
 
 const individualFields = new Set([
   "source",
+  "submissionId",
   "fullName",
   "phone",
   "email",
@@ -49,6 +51,18 @@ const corporateFields = new Set([
 
 const placementFields = new Set([
   "source",
+  "submissionId",
+  "fullName",
+  "phone",
+  "email",
+  "consent",
+  "company",
+  "metadata",
+]);
+
+const plansFields = new Set([
+  "source",
+  "submissionId",
   "fullName",
   "phone",
   "email",
@@ -118,12 +132,14 @@ export async function POST(request: Request) {
   const source = readOptionalString(body, "source", 32, envelopeIssues);
   const isCorporate = source === "corporate_training";
   const isPlacement = source === "placement_test";
+  const isPlans = source === "plans_pricing";
 
   if (
     Object.hasOwn(body, "source") &&
     source !== "website" &&
     source !== "corporate_training" &&
-    source !== "placement_test"
+    source !== "placement_test" &&
+    source !== "plans_pricing"
   ) {
     addIssue(envelopeIssues, "source");
   }
@@ -132,7 +148,9 @@ export async function POST(request: Request) {
     ? corporateFields
     : isPlacement
       ? placementFields
-      : individualFields;
+      : isPlans
+        ? plansFields
+        : individualFields;
   if (Object.keys(body).some((field) => !allowedFields.has(field))) {
     addIssue(envelopeIssues, "request");
   }
@@ -148,7 +166,9 @@ export async function POST(request: Request) {
     ? prepareCorporateLead(body, request)
     : isPlacement
       ? preparePlacementLead(body, request)
-      : prepareIndividualLead(body, request);
+      : isPlans
+        ? preparePlansLead(body, request)
+        : prepareIndividualLead(body, request);
 
   if (!result.ok) return validationError(result.missing);
 
@@ -156,7 +176,9 @@ export async function POST(request: Request) {
     const existingToken = readAttemptToken(request.headers.get("cookie"));
     const existingAttempt = existingToken ? await getExistingAttempt(existingToken) : null;
     if (existingAttempt) {
-      return NextResponse.json({ ok: true, placementAttempt: true, existing: true });
+      const existingResponse = NextResponse.json({ ok: true, placementAttempt: true, existing: true });
+      setLeadRegistrationCookie(existingResponse);
+      return existingResponse;
     }
   }
 
@@ -178,7 +200,7 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+      return NextResponse.json({ ok: false, error: "submission_rejected" }, { status: 502 });
     }
 
     let webhookResult: unknown;
@@ -186,11 +208,11 @@ export async function POST(request: Request) {
     try {
       webhookResult = await response.json();
     } catch {
-      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+      return NextResponse.json({ ok: false, error: "submission_invalid_response" }, { status: 502 });
     }
 
     if (!isSuccessfulWebhookResponse(webhookResult)) {
-      return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+      return NextResponse.json({ ok: false, error: "submission_rejected" }, { status: 502 });
     }
 
     if (
@@ -204,6 +226,7 @@ export async function POST(request: Request) {
         );
         const placementResponse = NextResponse.json({ ok: true, placementAttempt: true });
         setAttemptCookie(placementResponse, token);
+        setLeadRegistrationCookie(placementResponse);
         return placementResponse;
       } catch {
         return NextResponse.json(
@@ -213,20 +236,61 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ ok: false, error: "submission_failed" }, { status: 502 });
+    const successResponse = NextResponse.json({ ok: true });
+    if (isPlans) setLeadRegistrationCookie(successResponse);
+    return successResponse;
+  } catch (failure) {
+    return isTimeoutFailure(failure)
+      ? NextResponse.json({ ok: false, error: "submission_timeout" }, { status: 504 })
+      : NextResponse.json({ ok: false, error: "submission_network_failed" }, { status: 502 });
   }
 }
 
-function preparePlacementLead(body: JsonObject, request: Request) {
+function preparePlansLead(body: JsonObject, request: Request) {
   const missing: string[] = [];
+  const submissionId = readRequiredString(body, "submissionId", 36, missing);
   const fullName = readRequiredString(body, "fullName", 120, missing);
   const phone = readRequiredString(body, "phone", 32, missing);
   const email = readOptionalString(body, "email", 254, missing);
   const metadata = readMetadata(body.metadata, missing);
   const normalizedPhone = normalizeEgyptianMobile(phone);
 
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) {
+    addIssue(missing, "submissionId");
+  }
+  if (!normalizedPhone) addIssue(missing, "phone");
+  if (email && !emailPattern.test(email.trim())) addIssue(missing, "email");
+  if (body.consent !== true) addIssue(missing, "consent");
+
+  if (missing.length > 0 || !normalizedPhone) {
+    return { ok: false as const, missing } satisfies ValidationFailure;
+  }
+
+  return {
+    ok: true as const,
+    payload: {
+      status: "new_plans_lead",
+      source: "plans_pricing",
+      leadReference: submissionId.toLowerCase(),
+      submittedAt: new Date().toISOString(),
+      fullName: fullName.trim(),
+      phone: normalizedPhone,
+      email: email.trim(),
+      metadata: buildMetadata(metadata, request),
+    },
+  };
+}
+
+function preparePlacementLead(body: JsonObject, request: Request) {
+  const missing: string[] = [];
+  const submissionId = readRequiredString(body, "submissionId", 36, missing);
+  const fullName = readRequiredString(body, "fullName", 120, missing);
+  const phone = readRequiredString(body, "phone", 32, missing);
+  const email = readOptionalString(body, "email", 254, missing);
+  const metadata = readMetadata(body.metadata, missing);
+  const normalizedPhone = normalizeEgyptianMobile(phone);
+
+  if (!isSubmissionId(submissionId)) addIssue(missing, "submissionId");
   if (!normalizedPhone) addIssue(missing, "phone");
   if (email && !emailPattern.test(email.trim())) addIssue(missing, "email");
   if (body.consent !== true) addIssue(missing, "consent");
@@ -240,7 +304,7 @@ function preparePlacementLead(body: JsonObject, request: Request) {
     payload: {
       status: "registered_not_started",
       source: "placement_test",
-      leadReference: randomUUID(),
+      leadReference: submissionId.toLowerCase(),
       locale: metadata?.locale === "en" ? "en" : "ar",
       submittedAt: new Date().toISOString(),
       fullName: fullName.trim(),
@@ -253,6 +317,7 @@ function preparePlacementLead(body: JsonObject, request: Request) {
 
 function prepareIndividualLead(body: JsonObject, request: Request) {
   const missing: string[] = [];
+  const submissionId = readRequiredString(body, "submissionId", 36, missing);
   const fullName = readRequiredString(body, "fullName", 120, missing);
   const phone = readRequiredString(body, "phone", 32, missing);
   const email = readOptionalString(body, "email", 254, missing);
@@ -264,6 +329,7 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
   const metadata = readMetadata(body.metadata, missing);
   const normalizedPhone = normalizeEgyptianMobile(phone);
 
+  if (!isSubmissionId(submissionId)) addIssue(missing, "submissionId");
   if (!normalizedPhone) addIssue(missing, "phone");
   if (email && !emailPattern.test(email.trim())) addIssue(missing, "email");
   if (!individualGoals.has(learningGoal)) addIssue(missing, "learningGoal");
@@ -280,7 +346,7 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
     payload: {
       status: "new_assessment_lead",
       source: "website",
-      leadReference: randomUUID(),
+      leadReference: submissionId.toLowerCase(),
       submittedAt: new Date().toISOString(),
       fullName: fullName.trim(),
       phone: normalizedPhone,
@@ -341,24 +407,6 @@ function prepareCorporateLead(body: JsonObject, request: Request) {
 function hasJsonContentType(request: Request) {
   const contentType = request.headers.get("content-type");
   return contentType?.split(";", 1)[0].trim().toLowerCase() === "application/json";
-}
-
-function isAllowedBrowserRequest(request: Request) {
-  if (request.headers.get("sec-fetch-site")?.toLowerCase() === "cross-site") return false;
-
-  const originHeader = request.headers.get("origin");
-  if (!originHeader) return true;
-
-  try {
-    const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-    const allowedOrigin = configuredSiteUrl
-      ? new URL(configuredSiteUrl).origin
-      : new URL(request.url).origin;
-
-    return new URL(originHeader).origin === allowedOrigin;
-  } catch {
-    return false;
-  }
 }
 
 async function readJsonObject(request: Request): Promise<JsonObject | null> {
@@ -618,4 +666,12 @@ function isPlainObject(value: unknown): value is JsonObject {
 
 function isSuccessfulWebhookResponse(value: unknown): value is { success: true } {
   return typeof value === "object" && value !== null && "success" in value && value.success === true;
+}
+
+function isSubmissionId(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function isTimeoutFailure(value: unknown) {
+  return value instanceof DOMException && value.name === "TimeoutError";
 }

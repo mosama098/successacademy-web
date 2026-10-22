@@ -3,7 +3,7 @@ import { CorporateLeadForm } from "@/components/business/corporate-lead-form";
 import { CtaLink } from "@/components/ui/cta-link";
 import { sitePagesContent } from "@/content/site-pages";
 import type { Locale } from "@/lib/i18n";
-import { getWhatsAppHref } from "@/lib/utm";
+import { getWhatsAppHref, getWhatsAppMessage } from "@/lib/utm";
 
 function CheckIcon({ className = "size-4" }: { className?: string }) {
   return (
@@ -65,7 +65,7 @@ export function BusinessPageContent({ locale }: { locale: Locale }) {
             <p className="mt-4 max-w-[650px] text-[15px] font-semibold leading-[1.8] text-[#665A70] sm:text-[16px]">{copy.heroDescription}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <CtaLink href="#corporate-lead-form" locale={locale} source="business_hero" className="!min-h-[50px] !rounded-[14px] !px-6">{copy.heroCta}</CtaLink>
-              <CtaLink href={getWhatsAppHref(locale)} locale={locale} source="corporate_hero_whatsapp" event="whatsapp" variant="ghost" className="!inline-flex !min-h-[48px] !items-center !justify-center !rounded-[13px] !border-[#391B68]/18 !bg-white !px-5 !text-[14px] !font-black !text-[#391B68] hover:!border-[#391B68]/40 hover:!bg-[#F4F0F7]">
+              <CtaLink href={getWhatsAppHref(locale, getWhatsAppMessage(locale, "business"))} locale={locale} source="corporate_hero_whatsapp" event="whatsapp" variant="ghost" className="!inline-flex !min-h-[48px] !items-center !justify-center !rounded-[13px] !border-[#391B68]/18 !bg-white !px-5 !text-[14px] !font-black !text-[#391B68] hover:!border-[#391B68]/40 hover:!bg-[#F4F0F7]">
                 {copy.heroSecondaryCta}
               </CtaLink>
             </div>

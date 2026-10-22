@@ -4,6 +4,8 @@ import { content } from "@/content";
 import { locales, localeDirection, type Locale } from "@/lib/i18n";
 import { PageTracker } from "@/components/page-tracker";
 import { ThankYouActions } from "@/components/thank-you-actions";
+import { DesktopFloatingWhatsApp } from "@/components/ui/desktop-floating-whatsapp";
+import { getWhatsAppMessage } from "@/lib/utm";
 
 type PageProps = {
   params: Promise<{
@@ -25,8 +27,8 @@ export async function generateMetadata({ params }: PageProps) {
   return {
     title: isArabic ? "تم تسجيل طلبك | Success Academy" : "Request received | Success Academy",
     description: isArabic
-      ? "وصلنا بياناتك وفريق Success Academy هيتواصل معاك بخصوص التقييم المجاني."
-      : "We received your details and the Success Academy team will contact you about the free level check.",
+      ? "وصلنا بياناتك وتقدر تبدأ اختبار تحديد المستوى أو تستكشف الباقات والخطوة المناسبة."
+      : "We received your details. You can start the placement test or explore plans and your next step.",
   };
 }
 
@@ -71,6 +73,7 @@ export default async function ThankYouPage({ params }: PageProps) {
           <ThankYouActions locale={currentLocale} copy={t.thankYou} />
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-6 text-white/64">{t.thankYou.note}</p>
         </section>
+        <DesktopFloatingWhatsApp locale={currentLocale} message={getWhatsAppMessage(currentLocale, "thank_you")} source="thank_you_floating_help" showOnMobile avoidMobileOverlap />
       </div>
     </main>
   );

@@ -173,22 +173,24 @@ function LanguageOption({ option, locale, label, href }: { option: Locale; local
 
 type FooterSectionProps = LandingSectionProps & {
   pagePath?: string;
+  whatsappMessage?: string;
 };
 
-export function FooterSection({ locale, copy, pagePath }: FooterSectionProps) {
+export function FooterSection({ locale, copy, pagePath, whatsappMessage }: FooterSectionProps) {
   const isArabic = locale === "ar";
-  const whatsappHref = getWhatsAppHref(locale);
+  const whatsappHref = getWhatsAppHref(locale, whatsappMessage);
   const callHref = getCallHref();
   const footer = copy.footer;
   const quickLinks = [
-    { href: "/blog", label: footer.quickLinks.blog },
-    { href: "/business", label: footer.quickLinks.business },
-    { href: "#lead-form", label: footer.quickLinks.assessment },
-    { href: "#faq", label: footer.quickLinks.faq },
-    { href: "#why", label: footer.quickLinks.why },
-    { href: "#trainers", label: footer.quickLinks.trainers },
-    { href: "#registration-steps", label: footer.quickLinks.registration },
-    { href: "#about-success-academy", label: footer.quickLinks.about },
+    { href: `/${locale}/blog`, label: footer.quickLinks.blog },
+    { href: `/${locale}/business`, label: footer.quickLinks.business },
+    { href: `/${locale}/placement-test`, label: footer.quickLinks.assessment },
+    { href: `/${locale}/plans`, label: footer.quickLinks.plans },
+    { href: `/${locale}#faq`, label: footer.quickLinks.faq },
+    { href: `/${locale}#why`, label: footer.quickLinks.why },
+    { href: `/${locale}#trainers`, label: footer.quickLinks.trainers },
+    { href: `/${locale}#registration-steps`, label: footer.quickLinks.registration },
+    { href: `/${locale}#about-success-academy`, label: footer.quickLinks.about },
   ];
 
   return (
@@ -222,7 +224,7 @@ export function FooterSection({ locale, copy, pagePath }: FooterSectionProps) {
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <a
-                    href={`/${locale}${link.href}`}
+                    href={link.href}
                     className="flex min-h-10 items-center gap-2 rounded-lg px-1 text-[13.5px] font-bold leading-[1.35] text-[#665A70] transition-colors hover:text-[#EC911F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F] lg:min-h-0 lg:text-[14px]"
                   >
                     <span className={isArabic ? "rotate-180" : ""}><ChevronIcon /></span>

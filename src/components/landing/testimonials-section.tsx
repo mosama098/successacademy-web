@@ -65,7 +65,7 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     ctaHeadline: "جاهز تبدأ قصتك أنت؟",
     ctaSupport:
       "ابدأ من مستواك الحقيقي، وإحنا نساعدك نحدد الطريق المناسب لهدفك.",
-    cta: "ابدأ بتقييم مستواك مجانًا",
+    cta: "اعرف مستواك مجانًا",
     privacy:
       "تم اختصار بعض الرسائل مع الحفاظ على معناها، وإخفاء البيانات الشخصية حفاظًا على خصوصية الطلاب.",
     featured: {
@@ -148,7 +148,7 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     ctaHeadline: "Ready to Start Your Own Story?",
     ctaSupport:
       "Start from your real level, and we’ll help you choose the right path for your goal.",
-    cta: "Start Your Free Assessment",
+    cta: "Know Your Level for Free",
     privacy:
       "Some messages have been shortened without changing their meaning, and personal details have been hidden to protect student privacy.",
     featured: {

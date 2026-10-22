@@ -1,7 +1,9 @@
+import { Fragment } from "react";
 import { CtaLink } from "@/components/ui/cta-link";
 import { sitePagesContent } from "@/content/site-pages";
+import { trainingRules, TRAINING_TERMS_VERSION } from "@/content/training-rules";
 import type { Locale } from "@/lib/i18n";
-import { getCallHref, getWhatsAppHref } from "@/lib/utm";
+import { getCallHref, getWhatsAppHref, getWhatsAppMessage } from "@/lib/utm";
 
 export function LegalPageContent({ locale }: { locale: Locale }) {
   const copy = sitePagesContent[locale].legal;
@@ -46,6 +48,7 @@ export function LegalPageContent({ locale }: { locale: Locale }) {
 
           <div className="grid gap-4">
             {copy.sections.map((section) => (
+              <Fragment key={section.id}>
               <section
                 key={section.id}
                 id={section.id}
@@ -73,7 +76,7 @@ export function LegalPageContent({ locale }: { locale: Locale }) {
                 {section.id === "contact" ? (
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     <CtaLink
-                      href={getWhatsAppHref(locale)}
+                      href={getWhatsAppHref(locale, getWhatsAppMessage(locale, "legal"))}
                       locale={locale}
                       source="legal_whatsapp"
                       event="whatsapp"
@@ -94,10 +97,45 @@ export function LegalPageContent({ locale }: { locale: Locale }) {
                   </div>
                 ) : null}
               </section>
+              {section.id === "terms" ? <TrainingRulesSection /> : null}
+              </Fragment>
             ))}
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+function TrainingRulesSection() {
+  return (
+    <section
+      id="training-rules"
+      lang="ar"
+      dir="rtl"
+      data-policy-version={TRAINING_TERMS_VERSION}
+      className="min-w-0 scroll-mt-28 rounded-[20px] border border-[#391B68]/12 bg-white p-5 shadow-[0_10px_30px_rgba(57,27,104,0.045)] sm:p-7"
+      aria-labelledby="training-rules-heading"
+    >
+      <div className="flex items-center gap-3">
+        <span className="h-8 w-1 shrink-0 rounded-full bg-[#EC911F]" aria-hidden="true" />
+        <h2 id="training-rules-heading" className="text-[24px] font-black leading-[1.4] text-[#391B68] sm:text-[27px]">{trainingRules.title}</h2>
+      </div>
+      <div className="mt-5 grid gap-6 text-[15px] font-medium leading-[1.85] text-[#5F5369] sm:text-[16px]">
+        {trainingRules.groups.map((group) => (
+          <div key={group.title}>
+            <h3 className="text-[17px] font-black leading-[1.6] text-[#391B68] sm:text-[18px]">{group.title}</h3>
+            <ol start={group.clauses[0].number} className="mt-3 grid list-decimal gap-3 ps-6">
+              {group.clauses.map((clause) => (
+                <li key={clause.number} value={clause.number} className="ps-1">
+                  <strong>{clause.title}:</strong>{" "}
+                  {clause.body.map((part, index) => typeof part === "string" ? part : <strong key={index}>{part.strong}</strong>)}
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

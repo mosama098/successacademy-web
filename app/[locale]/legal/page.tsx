@@ -27,7 +27,7 @@ export default async function LegalPage({ params }: LegalPageProps) {
 
   const currentLocale = locale as Locale;
   return (
-    <SitePageShell locale={currentLocale} page="legal" pagePath="legal">
+    <SitePageShell locale={currentLocale} page="legal" pagePath="legal" whatsappContext="legal" whatsappSource="legal_floating_help">
       <LegalPageContent locale={currentLocale} />
     </SitePageShell>
   );

@@ -131,6 +131,7 @@ export type LandingContent = {
       trainers: string;
       registration: string;
       assessment: string;
+      plans: string;
       faq: string;
       about: string;
       blog: string;

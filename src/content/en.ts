@@ -3,7 +3,7 @@ import type { LandingContent } from "./types";
 export const enContent: LandingContent = {
   nav: {
     why: "The problem",
-    assessment: "Free Level Check",
+    assessment: "Placement Test",
     process: "The path",
     faq: "FAQ",
     language: "العربية",
@@ -16,33 +16,33 @@ export const enContent: LandingContent = {
       "If you have started more than once and stopped, the problem is probably not your ability. It is joining a course without diagnosis, without a clear goal, and without follow-up that pushes you to actually use the language.",
     primaryCta: "Get Your Free Level Check",
     whatsappCta: "Talk to a Success Manager",
-    badge: "Programs start from 1750 EGP",
-    note: "The assessment is free and external. Register, choose a suitable time, and our follow-up team will explain the next step.",
+    badge: "Programs start from 2250 EGP",
+    note: "The placement test is free and available on this website immediately after registration. Your result helps identify the right starting level.",
     cardLabel: "Direction plan",
     directionRows: [
-      { title: "Free assessment", description: "Know your starting point before deciding." },
+      { title: "Free placement test", description: "Know your starting point before deciding." },
       { title: "Clear goal", description: "We understand why you need English." },
       { title: "Right plan", description: "Practical training for your level and goal." },
       { title: "Real follow-up", description: "A team helps you stay consistent and continue." },
     ],
   },
   cta: {
-    title: "Start with a free level check before choosing any program",
+    title: "Start with a free placement test before choosing any programme",
     description:
-      "You do not need to make a big decision now. Register, choose a suitable time, and after the assessment you will know the right path for you.",
-    primary: "Start with a Free Level Check",
+      "Register your details, start the placement test, and find the right starting point.",
+    primary: "Start Your Placement Test",
     secondary: "Talk to a Success Manager",
   },
   faq: {
     title: "Important Questions Before You Register",
     items: [
       {
-        question: "Is the Assessment Free?",
-        answer: "Yes. The assessment is free and helps us identify your current level and recommend the right starting point before registration.",
+        question: "Is the Placement Test Free?",
+        answer: "Yes. The placement test is free and helps us identify your current level and recommend the right starting point before registration.",
       },
       {
-        question: "How Does the Assessment Work?",
-        answer: "After you submit your details, our follow-up team will contact you to confirm the time and explain the assessment process.",
+        question: "How Does the Placement Test Work?",
+        answer: "After you submit your details, you can start the placement test on this website immediately. It covers Language Use, Reading, and Listening, then shows your result and recommended starting point.",
       },
       {
         question: "Do I Need to Be Good at English Before I Start?",
@@ -70,7 +70,7 @@ export const enContent: LandingContent = {
       },
       {
         question: "How Much Do the Programmes Cost?",
-        answer: "Programmes start from EGP 1,750, and our follow-up team will explain the suitable option and available payment methods.",
+        answer: "Programmes start from EGP 2,250, and our follow-up team will explain the suitable option and available payment methods.",
       },
     ],
   },
@@ -87,12 +87,12 @@ export const enContent: LandingContent = {
   },
   form: {
     badge: "Take the First Step",
-    title: "Start with a Free Assessment and Find the Right Starting Point",
-    subtitle: "Complete your details in under a minute and choose the learning method and time that suit you.",
+    title: "Know Your Level and Start in the Right Place",
+    subtitle: "Register your details, then start your free placement test immediately.",
     trustItems: [
       "Your details are shared only with our follow-up team",
-      "The assessment helps us recommend the right starting point",
-      "Our team will explain every step before you begin",
+      "The placement test helps us recommend the right starting point",
+      "You can start the test on this website immediately after registration",
     ],
     optional: "Optional",
     labels: {
@@ -101,15 +101,15 @@ export const enContent: LandingContent = {
       email: "Email Address",
       learningGoal: "Your English Goal",
       preferredLearningMode: "How Would You Prefer to Learn?",
-      preferredAssessmentTime: "Preferred Contact or Assessment Time",
+      preferredAssessmentTime: "Best Time to Contact You",
       notes: "Additional Notes",
-      consent: "I agree to be contacted by the Success Academy team regarding the free assessment.",
+      consent: "I agree to be contacted by the Success Academy team about the placement test.",
     },
     placeholders: {
       fullName: "Enter your full name",
       phone: "Enter your mobile number",
       email: "example@email.com",
-      notes: "Anything you would like us to know before we contact you",
+      notes: "Anything you would like us to know so we can help you better",
     },
     learningGoalOptions: [
       { value: "work", label: "Work" },
@@ -122,7 +122,7 @@ export const enContent: LandingContent = {
       { value: "dokki", label: "Dokki Branch" },
     ],
     assessmentTimeOptions: [
-      { value: "earliest", label: "First Available Time" },
+      { value: "earliest", label: "As Soon as Possible" },
       { value: "morning", label: "Morning" },
       { value: "evening", label: "Evening" },
     ],
@@ -132,17 +132,17 @@ export const enContent: LandingContent = {
       email: "Enter a valid email address",
       learningGoal: "Choose your English goal",
       preferredLearningMode: "Choose a learning method",
-      preferredAssessmentTime: "Choose a preferred time",
+      preferredAssessmentTime: "Choose the best time to contact you",
       consent: "Consent is required to submit the request",
     },
     buttons: {
-      submit: "Book Your Free Assessment",
+      submit: "Register & Start Your Placement Test",
       loading: "Submitting Your Request…",
     },
-    reassurance: "Our follow-up team will contact you to confirm the time and explain the next step.",
+    reassurance: "After registration, you can start the placement test immediately on this website.",
     success: {
       title: "Your Request Has Been Submitted",
-      message: "The Success Academy team will contact you to confirm the time and explain the next step.",
+      message: "You can start the placement test now, and the Success Academy team is available if you need help.",
       whatsapp: "Contact Us on WhatsApp",
       back: "Back to Website",
     },
@@ -156,10 +156,10 @@ export const enContent: LandingContent = {
   thankYou: {
     title: "Your request has been received",
     subtitle:
-      "We received your details. The Success Academy team will contact you to explain your assessment appointment and the right next step for your level and goal.",
+      "We received your details. You can start the placement test on this website, and our team is available if you need help.",
     whatsapp: "Open WhatsApp",
     requestCall: "Request a call",
-    note: "You do not need to decide now. Start with the level check, then we will guide you toward the right path.",
+    note: "The placement test helps identify the best starting point before you continue your journey.",
   },
   sticky: {
     primary: "Free Level Check",
@@ -178,7 +178,8 @@ export const enContent: LandingContent = {
       why: "Why Success Academy?",
       trainers: "Training Team",
       registration: "Registration Steps",
-      assessment: "Free Assessment",
+      assessment: "Placement Test",
+      plans: "Plans & Pricing",
       faq: "Frequently Asked Questions",
       about: "About Us",
       blog: "Blog",

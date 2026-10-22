@@ -5,7 +5,7 @@ import { PLACEMENT_ATTEMPT_COOKIE } from "@/features/placement-test/server/cooki
 import type { LearningLevel } from "../config";
 
 export type PlacementPlanContext = {
-  currentLevel: LearningLevel;
+  startLevel: LearningLevel;
   hasLeadReference: true;
 };
 
@@ -17,7 +17,7 @@ export async function getPlacementPlanContext(): Promise<PlacementPlanContext | 
   if (!attempt?.finalProfile || !attempt.leadReference) return null;
 
   return {
-    currentLevel: attempt.finalProfile.placement,
+    startLevel: attempt.finalProfile.placement,
     hasLeadReference: true,
   };
 }

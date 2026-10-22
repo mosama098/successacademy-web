@@ -34,51 +34,42 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
     titleLead: "من أول التسجيل لحد ما تبدأ…",
     titleHighlight: "كل خطوة واضحة",
     description:
-      "من غير خطوات معقدة: سجّل بياناتك، اختار الموعد، اعمل التقييم، وإحنا نحدد لك البداية المناسبة.",
-    ctaSupport: "جاهز تبدأ أول خطوة؟",
-    cta: "ابدأ بتسجيل بياناتك",
-    reassurance: "هنوضح لك كل خطوة قبل ما تبدأ.",
+      "سجّل بياناتك، ابدأ اختبار تحديد المستوى داخل الموقع فورًا، واعرف البداية الأنسب ليك.",
+    ctaSupport: "جاهز تعرف أنسب بداية ليك؟",
+    cta: "ابدأ اختبار تحديد المستوى",
+    reassurance: "مش لازم تنتظر مكالمة علشان تبدأ الاختبار.",
     steps: [
       {
         title: "سجّل بياناتك",
         description: [
-          { text: "اكتب اسمك ورقم واتساب علشان نبدأ التواصل معاك." },
+          { text: "اكتب بياناتك علشان تبدأ اختبار تحديد المستوى من غير انتظار." },
         ],
         icon: "details",
       },
       {
-        title: "اختار طريقتك وموعدك",
+        title: "ابدأ اختبار تحديد المستوى",
         description: [
           {
-            text: "حدّد أونلاين أو فرع الدقي، واختار اليوم والوقت المناسب ليك.",
-          },
-        ],
-        icon: "schedule",
-      },
-      {
-        title: "اعمل تقييم المستوى",
-        description: [
-          {
-            text: "تقييم يحدد مستواك الحقيقي ونقاط القوة والاحتياج.",
+            text: "ابدأ الاختبار داخل الموقع فورًا واعرف نقاط قوتك والجوانب اللي محتاجة تطوير.",
           },
         ],
         icon: "assessment",
       },
       {
-        title: "استلم نتيجتك وخطتك",
+        title: "اعرف مستواك والبداية الأنسب ليك",
         description: [
           {
-            text: "نعرفك مستواك ونرشح لك البداية والمجموعة الأنسب لهدفك.",
+            text: "اعرف مستوى البداية المناسب ليك وشوف ملف مهاراتك بشكل واضح.",
           },
         ],
         icon: "result",
       },
       {
-        title: "أكّد تسجيلك وابدأ",
+        title: "شوف البرنامج المناسب وكمل التسجيل",
         description: [
-          { text: "تختار مجموعتك، تؤكد التسجيل، ويبدأ معاك الـ " },
-          { text: "Success Manager", ltr: true },
-          { text: "." },
+          {
+            text: "انتقل للباقات بالمستوى المقترح واختار الخطة المناسبة لهدفك.",
+          },
         ],
         icon: "start",
       },
@@ -86,55 +77,46 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
   },
   en: {
     badge: "How to Get Started",
-    titleLead: "From Registration to Your First Session —",
+    titleLead: "From Registration to Your Starting Plan —",
     titleHighlight: "Every Step Is Clear",
     description:
-      "No complicated process: submit your details, choose a suitable time, complete your assessment, and we’ll guide you to the right starting point.",
-    ctaSupport: "Ready to Take the First Step?",
-    cta: "Submit Your Details",
-    reassurance: "We’ll explain every step before you begin.",
+      "Register, start the placement test immediately on this website, and discover the right starting point.",
+    ctaSupport: "Ready to Find Your Best Starting Point?",
+    cta: "Start the Placement Test",
+    reassurance: "You do not need to wait for a call before starting the test.",
     steps: [
       {
-        title: "Submit Your Details",
+        title: "Register Your Details",
         description: [
           {
-            text: "Enter your name and WhatsApp number so our team can contact you.",
+            text: "Enter your details to start the placement test without waiting.",
           },
         ],
         icon: "details",
       },
       {
-        title: "Choose Your Format and Time",
+        title: "Start the Placement Test",
         description: [
           {
-            text: "Choose online learning or our Dokki branch, then select a suitable day and time.",
-          },
-        ],
-        icon: "schedule",
-      },
-      {
-        title: "Complete Your Level Assessment",
-        description: [
-          {
-            text: "The assessment identifies your current level, strengths, and learning needs.",
+            text: "Start the test immediately on this website and identify your strengths and improvement areas.",
           },
         ],
         icon: "assessment",
       },
       {
-        title: "Receive Your Result and Plan",
+        title: "Find Your Level and Starting Point",
         description: [
           {
-            text: "We explain your result and recommend the right starting point and group for your goal.",
+            text: "See your recommended starting level and a clear profile of your skills.",
           },
         ],
         icon: "result",
       },
       {
-        title: "Confirm and Start",
+        title: "See the Right Programme and Continue",
         description: [
           {
-            text: "Choose your group, confirm your registration, and begin with support from your Success Manager.",
+            text: "Continue to Plans with your recommended level and choose the right path for your goal.",
           },
         ],
         icon: "start",
@@ -386,7 +368,7 @@ export function RegistrationStepsSection({
               />
             </div>
 
-            <ol className="relative grid gap-[22px] lg:grid-cols-5 lg:gap-0">
+            <ol className="relative grid gap-[22px] lg:grid-cols-4 lg:gap-0">
               {content.steps.map((step, index) => {
                 const isDestination = index === content.steps.length - 1;
 
@@ -445,7 +427,7 @@ export function RegistrationStepsSection({
                         </h3>
                       </div>
                       <p
-                        className={`max-w-[390px] text-[14.5px] font-bold leading-[1.65] text-[#6d6578] lg:max-w-[205px] lg:text-[15px] ${
+                        className={`max-w-[390px] text-[14.5px] font-bold leading-[1.65] text-[#6d6578] lg:max-w-[245px] lg:text-[15px] ${
                           isArabic ? "text-right" : "text-left"
                         }`}
                       >

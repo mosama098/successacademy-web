@@ -24,8 +24,58 @@ const trackedParams = [
   "ttclid",
 ] as const;
 
-export const SUCCESS_ACADEMY_WHATSAPP_NUMBER = "201204110111";
-export const PLACEMENT_TEST_WHATSAPP_NUMBER = "201204006361";
+export const SUCCESS_ACADEMY_WHATSAPP_NUMBER = "201204006361";
+export const PLACEMENT_TEST_WHATSAPP_NUMBER = SUCCESS_ACADEMY_WHATSAPP_NUMBER;
+
+export type WhatsAppPageContext =
+  | "home"
+  | "plans"
+  | "placement_test"
+  | "package_review"
+  | "payment"
+  | "payment_status"
+  | "blog"
+  | "blog_article"
+  | "business"
+  | "legal"
+  | "thank_you";
+
+type WhatsAppMessageDetails = {
+  packageName?: string | null;
+  bookingReference?: string | null;
+  articleTitle?: string | null;
+};
+
+export function getWhatsAppMessage(locale: string, context: WhatsAppPageContext, details: WhatsAppMessageDetails = {}) {
+  const ar = locale === "ar";
+  const packageName = safeWhatsAppText(details.packageName);
+  const arabicPackageName = packageName ? (/^باقة(?:\s|$)/.test(packageName) ? packageName : `باقة ${packageName}`) : "";
+  const articleTitle = safeWhatsAppText(details.articleTitle);
+  const bookingReference = /^SA-[A-Z0-9]{8}$/.test(details.bookingReference ?? "") ? details.bookingReference : "";
+
+  switch (context) {
+    case "plans": return ar ? "مرحبًا، أحتاج مساعدة في اختيار الباقة المناسبة." : "Hello, I need help choosing the right package.";
+    case "placement_test": return ar ? "مرحبًا، أحتاج مساعدة بخصوص اختبار تحديد المستوى." : "Hello, I need help with the placement test.";
+    case "package_review": return packageName
+      ? (ar ? `مرحبًا، أحتاج مساعدة بخصوص مراجعة ${arabicPackageName} قبل إتمام الحجز.` : `Hello, I need help reviewing the ${packageName} package before booking.`)
+      : (ar ? "مرحبًا، أحتاج مساعدة بخصوص مراجعة الباقة قبل إتمام الحجز." : "Hello, I need help reviewing a package before booking.");
+    case "payment": return packageName
+      ? (ar ? `مرحبًا، أحتاج مساعدة بخصوص إتمام الدفع لـ ${arabicPackageName}.` : `Hello, I need help completing payment for the ${packageName} package.`)
+      : (ar ? "مرحبًا، أحتاج مساعدة بخصوص إتمام الدفع." : "Hello, I need help completing payment.");
+    case "payment_status": return bookingReference
+      ? (ar ? `مرحبًا، أحتاج مساعدة بخصوص حالة طلبي ${bookingReference}.` : `Hello, I need help with the status of my order ${bookingReference}.`)
+      : (ar ? "مرحبًا، أحتاج مساعدة بخصوص حالة طلبي." : "Hello, I need help with my order status.");
+    case "blog_article": return articleTitle
+      ? (ar ? `مرحبًا، لدي استفسار بخصوص مقال: ${articleTitle}.` : `Hello, I have a question about the article: ${articleTitle}.`)
+      : (ar ? "مرحبًا، لدي استفسار بخصوص هذا المقال." : "Hello, I have a question about this article.");
+    case "blog": return ar ? "مرحبًا، أحتاج مساعدة بخصوص أحد مقالات Success Academy." : "Hello, I need help with a Success Academy article.";
+    case "business": return ar ? "مرحبًا، أحتاج مساعدة بخصوص تدريب اللغة الإنجليزية للشركات." : "Hello, I need help with corporate English training.";
+    case "legal": return ar ? "مرحبًا، أحتاج مساعدة بخصوص سياسات وشروط Success Academy." : "Hello, I need help with Success Academy's policies and terms.";
+    case "thank_you": return ar ? "مرحبًا، أرسلت طلبًا وأحتاج مساعدة في الخطوة التالية." : "Hello, I submitted a request and need help with the next step.";
+    case "home":
+    default: return ar ? "مرحبًا، أحتاج مساعدة بخصوص برامج Success Academy." : "Hello, I need help with Success Academy programs.";
+  }
+}
 
 export function getLeadMetadata(locale: string): LeadMetadata {
   if (typeof window === "undefined") {
@@ -62,19 +112,15 @@ export function getLeadMetadata(locale: string): LeadMetadata {
 export function getWhatsAppHref(locale: string, customMessage?: string) {
   const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
     || SUCCESS_ACADEMY_WHATSAPP_NUMBER;
-  const message = customMessage ?? (locale === "ar"
-    ? "مرحبًا، أنا سجلت للتقييم المجاني في Success Academy وعايز أعرف الخطوة الجاية."
-    : "Hi, I registered for the free level check at Success Academy and I would like to know the next step.");
+  const message = customMessage ?? getWhatsAppMessage(locale, "home");
 
   return buildWhatsAppHref(number, message);
 }
 
 export function getPlacementWhatsAppHref(locale: string, customMessage?: string) {
-  const message = customMessage ?? (locale === "ar"
-    ? "مرحبًا، أنا خلصت اختبار تحديد المستوى وعايز أعرف تفاصيل المستوى المناسب والحجز."
-    : "Hi, I completed the placement test and would like to know more about my recommended level and booking.");
+  const message = customMessage ?? getWhatsAppMessage(locale, "placement_test");
 
-  return buildWhatsAppHref(PLACEMENT_TEST_WHATSAPP_NUMBER, message);
+  return buildWhatsAppHref(resolveWhatsAppNumber(), message);
 }
 
 export function getCallHref() {
@@ -84,4 +130,12 @@ export function getCallHref() {
 
 function buildWhatsAppHref(number: string, message: string) {
   return `https://wa.me/${number.replace(/[^\d]/g, "")}?text=${encodeURIComponent(message)}`;
+}
+
+function resolveWhatsAppNumber() {
+  return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || SUCCESS_ACADEMY_WHATSAPP_NUMBER;
+}
+
+function safeWhatsAppText(value: string | null | undefined) {
+  return (value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
 }

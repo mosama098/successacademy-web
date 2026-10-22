@@ -49,7 +49,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const relatedArticles = articles.filter((candidate) => candidate.slug !== slug).slice(0, 2);
 
   return (
-    <SitePageShell locale={currentLocale} page="blog_article" pagePath={`blog/${slug}`}>
+    <SitePageShell locale={currentLocale} page="blog_article" pagePath={`blog/${slug}`} whatsappContext="blog_article" whatsappDetails={{ articleTitle: article.title }} whatsappSource="blog_article_floating_help">
       <BlogArticle locale={currentLocale} article={article} relatedArticles={relatedArticles} />
     </SitePageShell>
   );

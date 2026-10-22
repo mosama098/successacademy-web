@@ -39,7 +39,7 @@ const sectionContent: Record<"ar" | "en", SectionContent> = {
     titleHighlight: "توصل لإيه؟",
     description: "اختار أقرب هدف ليك، وشوف إزاي التدريب هيجهزك لمواقف حقيقية في حياتك.",
     ctaSupport: "قولنا هدفك… وإحنا نحدد لك البداية المناسبة.",
-    cta: "ابدأ بتقييم مستواك",
+    cta: "ابدأ تحديد مستواك",
     goals: [
       {
         id: "work",
@@ -88,7 +88,7 @@ const sectionContent: Record<"ar" | "en", SectionContent> = {
     titleHighlight: "Help You Achieve?",
     description: "Choose the goal closest to you and see the real-life situations your training will prepare you for.",
     ctaSupport: "Tell us your goal, and we will help you find the right starting point.",
-    cta: "Start Your Level Assessment",
+    cta: "Start Your Placement Test",
     goals: [
       {
         id: "work",

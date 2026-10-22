@@ -3,6 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { normalizeEgyptianMobile } from "@/lib/phone";
+import {
+  clearLeadSubmissionId,
+  getOrCreateLeadSubmissionId,
+  submitLead,
+} from "@/features/leads/client/lead-submission";
 import { trackFormStart, trackFormSubmit, trackPlacementTestEvent } from "@/lib/tracking";
 import { getLeadMetadata } from "@/lib/utm";
 import { placementCopy } from "../copy";
@@ -18,6 +23,7 @@ type PlacementRegistrationProps = {
 };
 
 type FormErrors = Partial<Record<"fullName" | "phone" | "email" | "consent" | "form", string>>;
+const submissionStorageKey = "sa_placement_lead_submission";
 
 export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
   const copy = placementCopy[locale];
@@ -25,7 +31,15 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const startedTracking = useRef(false);
+  const submissionInFlight = useRef(false);
+  const submissionId = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  function getSubmissionId() {
+    if (submissionId.current) return submissionId.current;
+    submissionId.current = getOrCreateLeadSubmissionId(submissionStorageKey);
+    return submissionId.current;
+  }
 
   function trackStartOnce() {
     if (startedTracking.current) return;
@@ -35,7 +49,7 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (submissionInFlight.current || submitting) return;
     const form = new FormData(event.currentTarget);
     const fullName = String(form.get("fullName") ?? "").trim();
     const phone = String(form.get("phone") ?? "").trim();
@@ -53,34 +67,34 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
       return;
     }
 
+    submissionInFlight.current = true;
     setSubmitting(true);
     setErrors({});
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: "placement_test",
-          fullName,
-          phone,
-          email,
-          consent,
-          company: String(form.get("company") ?? ""),
-          metadata: getLeadMetadata(locale),
-        }),
+      const result = await submitLead({
+        source: "placement_test",
+        submissionId: getSubmissionId(),
+        fullName,
+        phone,
+        email,
+        consent,
+        company: String(form.get("company") ?? ""),
+        metadata: getLeadMetadata(locale),
       });
-      const result: unknown = await response.json().catch(() => null);
-      if (!response.ok || !isSuccess(result)) {
-        setErrors({ form: response.status === 400 ? copy.formError : copy.serverError });
+      if (result.kind !== "success") {
+        setErrors({ form: result.kind === "validation" ? copy.formError : copy.serverError });
         return;
       }
 
+      clearLeadSubmissionId(submissionStorageKey);
+      submissionId.current = null;
       trackFormSubmit({ form: "placement_test", source: "placement_test", locale });
       trackPlacementTestEvent("placement_test_registration_complete", { locale });
       router.replace(`/${locale}/placement-test/assessment`);
     } catch {
       setErrors({ form: copy.serverError });
     } finally {
+      submissionInFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -166,10 +180,6 @@ function Field({ label, name, error, required, type = "text", inputMode = "text"
       {error ? <p id={errorId} className="mt-1.5 text-sm font-bold text-red-700">{error}</p> : null}
     </div>
   );
-}
-
-function isSuccess(value: unknown): value is { ok: true } {
-  return typeof value === "object" && value !== null && "ok" in value && value.ok === true;
 }
 
 function ShieldIcon() {

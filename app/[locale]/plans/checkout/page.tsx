@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
 import { SitePageShell } from "@/components/site-page-shell";
 import { CheckoutFoundation } from "@/features/plans/components/checkout-foundation";
-import { getPlanRecommendation, isLearningLevel } from "@/features/plans/config";
+import {
+  getPlanRecommendation,
+  isAttendanceMode,
+  isLearningLevel,
+  isLearningPackageId,
+  resolveProgramType,
+} from "@/features/plans/config";
 import { plansCopy } from "@/features/plans/copy";
 import { getPlacementPlanContext } from "@/features/plans/server/placement-plan-context";
 import { locales, type Locale } from "@/lib/i18n";
@@ -9,7 +15,7 @@ import { createPageMetadata } from "@/lib/page-metadata";
 
 type CheckoutPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ current?: string; target?: string; package?: string }>;
+  searchParams: Promise<{ program?: string; start?: string; target?: string; package?: string; attendance?: string }>;
 };
 
 export async function generateMetadata({ params }: CheckoutPageProps) {
@@ -18,8 +24,8 @@ export async function generateMetadata({ params }: CheckoutPageProps) {
 
   const copy = plansCopy[locale as Locale];
   return createPageMetadata({
-    title: `${copy.checkoutBadge} | Success Academy`,
-    description: copy.checkoutDescription,
+    title: copy.checkout.metaTitle,
+    description: copy.checkout.metaDescription,
     path: `/${locale}/plans/checkout`,
   });
 }
@@ -33,20 +39,33 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   if (!locales.includes(locale as Locale)) notFound();
 
   const currentLocale = locale as Locale;
-  const recommendation = isLearningLevel(query.current) && isLearningLevel(query.target)
-    ? getPlanRecommendation(query.current, query.target)
+  const programType = resolveProgramType(query.program);
+  const startMatchesContext = !placementContext || query.start === placementContext.startLevel;
+  const recommendation = programType && startMatchesContext && isLearningLevel(query.start) && isLearningLevel(query.target)
+    ? getPlanRecommendation(programType, query.start, query.target)
     : null;
-  const validRecommendation = recommendation?.package.id === query.package ? recommendation : null;
+  const validRecommendation = isLearningPackageId(query.package) && recommendation?.package.id === query.package
+    ? recommendation
+    : null;
+  const initialAttendanceMode = isAttendanceMode(query.attendance) ? query.attendance : null;
   const pagePath = validRecommendation
-    ? `plans/checkout?current=${validRecommendation.currentLevel}&target=${validRecommendation.targetLevel}&package=${validRecommendation.package.id}`
+    ? `plans/checkout?program=${validRecommendation.programType}&start=${validRecommendation.startLevel}&target=${validRecommendation.targetLevel}&package=${validRecommendation.package.id}${initialAttendanceMode ? `&attendance=${initialAttendanceMode}` : ""}`
     : "plans/checkout";
 
   return (
-    <SitePageShell locale={currentLocale} page="plans_checkout" pagePath={pagePath}>
+    <SitePageShell
+      locale={currentLocale}
+      page="plans_checkout"
+      pagePath={pagePath}
+      whatsappContext="package_review"
+      whatsappDetails={{ packageName: validRecommendation?.package.name[currentLocale] }}
+      whatsappSource="plans_checkout_floating_help"
+    >
       <CheckoutFoundation
         locale={currentLocale}
         recommendation={validRecommendation}
         hasExistingLead={Boolean(placementContext?.hasLeadReference)}
+        initialAttendanceMode={initialAttendanceMode}
       />
     </SitePageShell>
   );

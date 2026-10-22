@@ -20,7 +20,8 @@ export function Navbar({ locale, copy, pagePath }: NavbarProps) {
     { href: `/${locale}#why`, label: locale === "ar" ? "لماذا Success Academy؟" : "Why Success Academy?" },
     { href: `/${locale}/blog`, label: locale === "ar" ? "المدونة" : "Blog" },
     { href: `/${locale}/business`, label: locale === "ar" ? "تدريب الشركات" : "Corporate Training" },
-    { href: `/${locale}#lead-form`, label: locale === "ar" ? "التقييم المجاني" : "Free Assessment" },
+    { href: `/${locale}/plans`, label: locale === "ar" ? "الباقات والأسعار" : "Plans & Pricing" },
+    { href: `/${locale}#lead-form`, label: locale === "ar" ? "اختبار تحديد المستوى" : "Placement Test" },
     { href: `/${locale}#faq`, label: locale === "ar" ? "الأسئلة" : "FAQ" },
   ];
 
@@ -40,11 +41,20 @@ export function Navbar({ locale, copy, pagePath }: NavbarProps) {
             <a className="nav-link" href="#why">{copy.nav.why}</a>
             <a className="nav-link" href="#process">{copy.nav.process}</a>
             <a className="nav-link" href="#assessment">{copy.nav.assessment}</a>
+            <Link className="nav-link whitespace-nowrap" href={`/${locale}/plans`}>
+              {locale === "ar" ? "الباقات والأسعار" : "Plans & Pricing"}
+            </Link>
             <a className="nav-link" href="#faq">{copy.nav.faq}</a>
           </div>
         )}
 
         <div className="flex items-center gap-2">
+          <Link
+            href={`/${locale}/plans`}
+            className={`${isInternalPage ? "lg:hidden" : "md:hidden"} inline-flex min-h-10 items-center rounded-[7px] px-2 text-[12px] font-black text-[#391B68] transition-colors hover:bg-[#EEE9F4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC911F]`}
+          >
+            {locale === "ar" ? "الباقات والأسعار" : "Plans & Pricing"}
+          </Link>
           <CtaLink href={alternateHref} locale={locale} source="navbar_language" event="language" variant="ghost">
             {copy.nav.language}
           </CtaLink>

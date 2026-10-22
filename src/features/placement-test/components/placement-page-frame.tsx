@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { placementCopy } from "../copy";
 import type { PlacementLocale } from "../types";
+import { DesktopFloatingWhatsApp } from "@/components/ui/desktop-floating-whatsapp";
+import { getWhatsAppMessage } from "@/lib/utm";
 
 type PlacementPageFrameProps = {
   locale: PlacementLocale;
@@ -34,6 +36,7 @@ export function PlacementPageFrame({ locale, route, children }: PlacementPageFra
         </div>
       </header>
       {children}
+      <DesktopFloatingWhatsApp locale={locale} message={getWhatsAppMessage(locale, "placement_test")} source="placement_test_floating_help" showOnMobile avoidMobileOverlap />
     </main>
   );
 }

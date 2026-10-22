@@ -44,7 +44,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
   const pagePath = paginatedArticles.currentPage > 1 ? `blog?page=${paginatedArticles.currentPage}` : "blog";
 
   return (
-    <SitePageShell locale={currentLocale} page="blog" pagePath={pagePath}>
+    <SitePageShell locale={currentLocale} page="blog" pagePath={pagePath} whatsappContext="blog" whatsappSource="blog_floating_help">
       <BlogIndex locale={currentLocale} {...paginatedArticles} />
     </SitePageShell>
   );

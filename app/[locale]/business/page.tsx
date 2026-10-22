@@ -27,7 +27,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
   const currentLocale = locale as Locale;
   return (
-    <SitePageShell locale={currentLocale} page="business" pagePath="business">
+    <SitePageShell locale={currentLocale} page="business" pagePath="business" whatsappContext="business" whatsappSource="business_floating_help">
       <BusinessPageContent locale={currentLocale} />
     </SitePageShell>
   );

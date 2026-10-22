@@ -10,7 +10,7 @@ const journeyContent = {
     badge: "ليه تختار Success Academy؟",
     title: "كل اللي تحتاجه عشان تتعلم الإنجليزي وتكمل",
     intro: "تقييم واضح، تدريب مرن، ممارسة حقيقية، ومتابعة تساعدك تكمل.",
-    cta: "ابدأ بتقييم مجاني",
+    cta: "ابدأ تحديد مستواك",
     imageAlt: "ميزة {stage} في نظام الدراسة مع Success Academy",
     stages: [
       {
@@ -47,7 +47,7 @@ const journeyContent = {
     badge: "Why Choose Success Academy?",
     title: "Everything You Need to Learn English and Keep Progressing",
     intro: "Clear assessment, flexible training, real practice, and continuous support.",
-    cta: "Start with a Free Assessment",
+    cta: "Start Your Placement Test",
     imageAlt: "The {stage} benefit of studying with Success Academy",
     stages: [
       {

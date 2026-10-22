@@ -56,6 +56,14 @@ const {
   root,
   "src/features/placement-test/server/attempt-service.ts",
 ));
+const {
+  getAvailableTargets,
+  getPlanRecommendation,
+  getTargetForPackage,
+  isAttendanceMode,
+  learningPackages,
+} = require(path.join(root, "src/features/plans/config.ts"));
+const { placementCopy } = require(path.join(root, "src/features/placement-test/copy.ts"));
 
 const tests = [];
 function test(name, run) {
@@ -715,13 +723,140 @@ test("result keeps final CEFR, uses qualitative skills, and renders both safe CT
   assert.doesNotMatch(result, />\{evidence\.estimatedBand\}</);
   assert.match(result, /href=\{`\/\$\{locale\}\/plans\?level=\$\{result\.placement\}&source=placement`\}/);
   assert.match(result, /copy\.homepageCta/);
+  assert.equal(placementCopy.ar.homepageCta, "ابدأ خطوتك الجاية");
+  assert.equal(placementCopy.en.homepageCta, "Start Your Next Step");
   assert.match(result, /copy\.whatsappCta/);
   assert.match(result, /getPlacementWhatsAppHref\(locale, whatsAppMessage\)/);
   assert.match(result, /ctaType/);
   assert.doesNotMatch(result, /attemptToken|attemptId|fullName|phone|email|correctOption/);
 });
 
-test("placement WhatsApp uses the approved number and encodes the dynamic result message", () => {
+test("homepage assessment CTAs return to the established lead-form journey", () => {
+  const componentFiles = [
+    "hero-section.tsx",
+    "problem-section.tsx",
+    "video-preview-section.tsx",
+    "journey-section.tsx",
+    "testimonials-section.tsx",
+    "registration-steps-section.tsx",
+    "final-cta-section.tsx",
+    "navbar.tsx",
+  ];
+  const activeHomepageCtas = componentFiles
+    .map((file) => fs.readFileSync(path.join(root, "src/components/landing", file), "utf8"))
+    .join("\n");
+  const sticky = fs.readFileSync(
+    path.join(root, "src/components/ui/sticky-mobile-cta.tsx"),
+    "utf8",
+  );
+  const landingTypes = fs.readFileSync(
+    path.join(root, "src/components/landing/types.ts"),
+    "utf8",
+  );
+  const footer = fs.readFileSync(
+    path.join(root, "src/components/landing/footer-section.tsx"),
+    "utf8",
+  );
+  const assessmentPage = fs.readFileSync(
+    path.join(root, "app/[locale]/placement-test/assessment/page.tsx"),
+    "utf8",
+  );
+
+  assert.match(activeHomepageCtas, /bookingHref/);
+  assert.match(landingTypes, /bookingHref = "#lead-form"/);
+  assert.match(sticky, /href=\{bookingHref\}/);
+  assert.doesNotMatch(activeHomepageCtas, /registrationHref|intent=pricing|intent=assessment/);
+  assert.match(footer, /\{ href: `\/\$\{locale\}\/placement-test`, label: footer\.quickLinks\.assessment \}/);
+  assert.doesNotMatch(footer, /\{ href: `\/\$\{locale\}#lead-form`, label: footer\.quickLinks\.assessment \}/);
+  assert.match(assessmentPage, /if \(!token\) redirect/);
+  assert.match(assessmentPage, /if \(!state\) redirect/);
+});
+
+test("placement registration remains assessment-specific and authoritative", () => {
+  const registrationPage = fs.readFileSync(
+    path.join(root, "app/[locale]/placement-test/page.tsx"),
+    "utf8",
+  );
+  const registration = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-registration.tsx"),
+    "utf8",
+  );
+  const leadRoute = fs.readFileSync(path.join(root, "app/api/leads/route.ts"), "utf8");
+
+  assert.equal((registration.match(/submitLead\(\{/g) ?? []).length, 1);
+  assert.match(registration, /if \(result\.kind !== "success"\)/);
+  assert.match(registration, /submissionId: getSubmissionId\(\)/);
+  assert.match(registration, /router\.replace\(`\/\$\{locale\}\/placement-test\/assessment`\)/);
+  assert.match(registration, /placement_test_registration_complete/);
+  assert.doesNotMatch(`${registrationPage}\n${registration}`, /intent|pricing|getPricingPlansHref/);
+  assert.match(leadRoute, /\(isPlacement \|\| result\.payload\.source === "website"\)/);
+  assert.match(leadRoute, /setAttemptCookie\(placementResponse, token\)/);
+});
+
+test("Plans use a separate lead gate while placement results keep the server lock", () => {
+  const plansPage = fs.readFileSync(path.join(root, "app/[locale]/plans/page.tsx"), "utf8");
+  const plansComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/recommended-plan-page.tsx"),
+    "utf8",
+  );
+  const resultSource = fs.readFileSync(
+    path.join(root, "src/features/placement-test/components/placement-assessment.tsx"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(plansPage, /redirect\(|entry=pricing|isPricingEntry|hasPlacementRegistrationContext|getRegistrationHref/);
+  assert.match(plansPage, /getPlansAccessContext\(\)/);
+  assert.match(plansPage, /registered \? \(/);
+  assert.match(plansPage, /<PlansLeadGate locale=\{currentLocale\} \/>/);
+  assert.match(plansPage, /fromAssessment=\{Boolean\(placementContext\)\}/);
+  assert.match(resultSource, /source=placement/);
+  assert.match(plansComponent, /fromAssessment && startLevel/);
+  assert.match(plansComponent, /<LevelSeal level=\{startLevel\} locked \/>/);
+});
+
+test("homepage lead success restores the established assessment and WhatsApp actions", () => {
+  const leadForm = fs.readFileSync(
+    path.join(root, "src/components/form/lead-form.tsx"),
+    "utf8",
+  );
+
+  assert.match(leadForm, /status === "success"/);
+  assert.match(leadForm, /<SuccessState/);
+  assert.match(leadForm, /if \(result\.kind !== "success"\) throw new Error/);
+  assert.equal((leadForm.match(/submitLead\(\{/g) ?? []).length, 1);
+  assert.match(leadForm, /submissionId: getSubmissionId\(\)/);
+  assert.match(leadForm, /href=\{`\/\$\{locale\}\/placement-test\/assessment`\}/);
+  assert.match(leadForm, /href=\{whatsappHref\}/);
+  assert.doesNotMatch(leadForm, /RegistrationSuccessActions|getPricingPlansHref|View Plans & Pricing|شاهد الباقات والأسعار/);
+});
+
+test("active homepage copy describes the immediate internal placement journey", () => {
+  const ar = fs.readFileSync(path.join(root, "src/content/ar.ts"), "utf8");
+  const en = fs.readFileSync(path.join(root, "src/content/en.ts"), "utf8");
+  const steps = fs.readFileSync(
+    path.join(root, "src/components/landing/registration-steps-section.tsx"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(ar, /التقييم مجاني وخارجي|تأكيد الموعد|ميعاد التقييم|اختار وقت مناسب/);
+  assert.doesNotMatch(en, /assessment is free and external|confirm the time|assessment appointment|choose a suitable time/i);
+  assert.doesNotMatch(`${ar}\n${en}`, /intent=pricing|entry=pricing/);
+  assert.match(ar, /title: "اعرف مستواك وابدأ من المكان الصح"/);
+  assert.match(ar, /submit: "سجّل وابدأ اختبار تحديد المستوى"/);
+  assert.match(ar, /preferredAssessmentTime: "الوقت الأنسب للتواصل معاك"/);
+  assert.match(ar, /assessment: "اختبار تحديد المستوى"/);
+  assert.match(en, /title: "Know Your Level and Start in the Right Place"/);
+  assert.match(en, /submit: "Register & Start Your Placement Test"/);
+  assert.match(en, /preferredAssessmentTime: "Best Time to Contact You"/);
+  assert.match(en, /assessment: "Placement Test"/);
+  assert.match(steps, /title: "ابدأ اختبار تحديد المستوى"/);
+  assert.match(steps, /title: "Start the Placement Test"/);
+  assert.match(steps, /ابدأ الاختبار داخل الموقع فورًا/);
+  assert.match(steps, /Start the test immediately on this website/);
+  assert.match(steps, /lg:grid-cols-4/);
+});
+
+test("placement WhatsApp uses the centralized destination and encodes the dynamic result message", () => {
   const {
     getPlacementWhatsAppHref,
     PLACEMENT_TEST_WHATSAPP_NUMBER,
@@ -730,11 +865,11 @@ test("placement WhatsApp uses the approved number and encodes the dynamic result
   const message = "المستوى المناسب: B1\nأقوى مهارة: الاستماع";
 
   try {
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER = "201204110111";
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER = "201000000000";
     assert.equal(PLACEMENT_TEST_WHATSAPP_NUMBER, "201204006361");
     assert.equal(
       getPlacementWhatsAppHref("ar", message),
-      `https://wa.me/201204006361?text=${encodeURIComponent(message)}`,
+      `https://wa.me/201000000000?text=${encodeURIComponent(message)}`,
     );
   } finally {
     if (previousNumber === undefined) delete process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
@@ -1345,6 +1480,246 @@ test("expired answers are recorded as timeouts and refresh cannot reset them", a
 test("invalid opaque attempt tokens are rejected", async () => {
   assert.equal(await readStoredAttempt("predictable-token"), null);
   assert.equal(await getPublicAttemptState("predictable-token"), null);
+});
+
+test("plans use the inclusive start-through-target business matrix", () => {
+  const cases = [
+    ["A1", "A1", 30, 10, "starter-30", 2250],
+    ["A1", "A2", 60, 20, "progress-60", 4500],
+    ["A1", "B1", 90, 30, "proficiency-90", 6750],
+    ["A1", "B2", 120, 40, "excellence-120", 9000],
+    ["A2", "A2", 30, 10, "starter-30", 2250],
+    ["A2", "B1", 60, 20, "progress-60", 4500],
+    ["A2", "B2", 90, 30, "proficiency-90", 6750],
+    ["B1", "B1", 30, 10, "starter-30", 2250],
+    ["B1", "B2", 60, 20, "progress-60", 4500],
+    ["B2", "B2", 30, 10, "starter-30", 2250],
+  ];
+
+  for (const [start, target, hours, sessions, packageId, price] of cases) {
+    const recommendation = getPlanRecommendation(start, target);
+    assert.ok(recommendation, `${start} -> ${target} should resolve`);
+    assert.equal(recommendation.requiredHours, hours);
+    assert.equal(recommendation.package.sessions, sessions);
+    assert.equal(recommendation.package.id, packageId);
+    assert.equal(recommendation.package.priceEgp, price);
+    assert.equal(recommendation.levelsToStudy[0], start);
+    assert.equal(recommendation.levelsToStudy.at(-1), target);
+  }
+});
+
+test("plans reject backward targets and expose only valid inclusive targets", () => {
+  assert.equal(getPlanRecommendation("A2", "A1"), null);
+  assert.equal(getPlanRecommendation("B1", "A2"), null);
+  assert.equal(getPlanRecommendation("B2", "B1"), null);
+  assert.deepEqual(getAvailableTargets("A1"), ["A1", "A2", "B1", "B2"]);
+  assert.deepEqual(getAvailableTargets("A2"), ["A2", "B1", "B2"]);
+  assert.deepEqual(getAvailableTargets("B1"), ["B1", "B2"]);
+  assert.deepEqual(getAvailableTargets("B2"), ["B2"]);
+});
+
+test("package configuration is the single deterministic target mapping", () => {
+  assert.deepEqual(
+    learningPackages.map((item) => [
+      item.id,
+      item.hours,
+      item.sessions,
+      item.priceEgp,
+      item.regularPriceEgp,
+      item.savingEgp,
+    ]),
+    [
+      ["starter-30", 30, 10, 2250, null, 0],
+      ["progress-60", 60, 20, 4500, null, 0],
+      ["proficiency-90", 90, 30, 6750, null, 0],
+      ["excellence-120", 120, 40, 9000, null, 0],
+    ],
+  );
+  assert.equal(getTargetForPackage("A1", "excellence-120"), "B2");
+  assert.equal(getTargetForPackage("A2", "proficiency-90"), "B2");
+  assert.equal(getTargetForPackage("B1", "proficiency-90"), null);
+  assert.equal(getTargetForPackage("B2", "starter-30"), "B2");
+});
+
+test("plans and checkout render centralized package prices without built-in discount presentation", () => {
+  const planComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/recommended-plan-page.tsx"),
+    "utf8",
+  );
+  const checkoutComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
+    "utf8",
+  );
+
+  assert.match(planComponent, /recommendation\.package\.priceEgp/);
+  assert.doesNotMatch(planComponent, /regularPriceEgp|savingEgp/);
+  assert.match(checkoutComponent, /recommendation\.package\.priceEgp/);
+  assert.doesNotMatch(checkoutComponent, /regularPriceEgp|savingEgp/);
+  assert.doesNotMatch(`${planComponent}\n${checkoutComponent}`, /2250|4500|5000|6750|9000|10000|15000|20000/);
+});
+
+test("plans trust server placement context and never create a duplicate lead", () => {
+  const plansPage = fs.readFileSync(path.join(root, "app/[locale]/plans/page.tsx"), "utf8");
+  const checkoutPage = fs.readFileSync(
+    path.join(root, "app/[locale]/plans/checkout/page.tsx"),
+    "utf8",
+  );
+  const planComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/recommended-plan-page.tsx"),
+    "utf8",
+  );
+  const checkoutComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
+    "utf8",
+  );
+
+  assert.match(plansPage, /fromAssessment=\{Boolean\(placementContext\)\}/);
+  assert.doesNotMatch(plansPage, /source === ["']placement["']/);
+  assert.match(checkoutPage, /query\.start === placementContext\.startLevel/);
+  assert.match(checkoutPage, /recommendation\?\.package\.id === query\.package/);
+  assert.doesNotMatch(`${planComponent}\n${checkoutComponent}`, /fetch\s*\(/);
+  assert.doesNotMatch(`${planComponent}\n${checkoutComponent}`, /\/api\/leads/);
+});
+
+test("plans checkout validates and preserves attendance mode without backend writes", () => {
+  const checkoutPage = fs.readFileSync(
+    path.join(root, "app/[locale]/plans/checkout/page.tsx"),
+    "utf8",
+  );
+  const checkoutComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
+    "utf8",
+  );
+
+  assert.equal(isAttendanceMode("online"), true);
+  assert.equal(isAttendanceMode("branch"), true);
+  assert.equal(isAttendanceMode("dokki"), false);
+  assert.equal(isAttendanceMode(null), false);
+  assert.match(checkoutPage, /isAttendanceMode\(query\.attendance\)/);
+  assert.match(checkoutComponent, /url\.searchParams\.set\("attendance", mode\)/);
+  assert.match(checkoutComponent, /aria-pressed=\{selected\}/);
+  assert.match(checkoutComponent, /disabled=\{!attendanceMode\}/);
+  assert.match(checkoutComponent, /attendanceMode \? copy\.checkout\.continueToPayment : copy\.checkout\.attendanceRequired/);
+  assert.match(checkoutComponent, /copy\.checkout\.continueToPayment/);
+  assert.match(checkoutComponent, /router\.push\(`\/\$\{locale\}\/plans\/payment\?/);
+  assert.match(checkoutComponent, /attendance: attendanceMode/);
+  assert.doesNotMatch(checkoutComponent, /fetch\s*\(/);
+});
+
+test("plans checkout is a compact review step without sales or payment execution panels", () => {
+  const checkoutComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
+    "utf8",
+  );
+  const copy = fs.readFileSync(path.join(root, "src/features/plans/copy.ts"), "utf8");
+
+  assert.match(checkoutComponent, /lg:grid-cols-\[1\.08fr_0\.92fr\]/);
+  assert.match(checkoutComponent, /plannedPaymentMethods\.map/);
+  assert.doesNotMatch(checkoutComponent, /recommendation\.package\.savingEgp/);
+  assert.match(checkoutComponent, /xl:grid-cols-\[repeat\(5,minmax\(min-content,1fr\)\)\]/);
+  assert.match(checkoutComponent, /durationEquivalent/);
+  assert.match(checkoutComponent, /whitespace-nowrap/);
+  assert.match(checkoutComponent, /method\.id === "instapay"/);
+  assert.doesNotMatch(checkoutComponent, /recommendation\.levelsToStudy\.map/);
+  assert.doesNotMatch(checkoutComponent, /recommendation\.package\.regularPriceEgp/);
+  assert.doesNotMatch(checkoutComponent, /copy\.support\./);
+  assert.doesNotMatch(checkoutComponent, /plans_checkout_help/);
+  assert.doesNotMatch(checkoutComponent, /existingLeadNote|privacyNote|displayOnly|Eyebrow/);
+  assert.doesNotMatch(checkoutComponent, /fetch\s*\(|\/api\/|payment intent|createOrder/i);
+  assert.match(copy, /راجع خطتك قبل الحجز/);
+  assert.match(copy, /اختار طريقة الدفع في الخطوة التالية/);
+  assert.match(copy, /اختر طريقة الحضور للمتابعة/);
+  assert.match(copy, /سيتم تفعيل الدفع قريباً/);
+  assert.doesNotMatch(copy, /لا توجد أي عملية دفع أو إنشاء طلب في هذه المرحلة/);
+});
+
+test("customer routes use one global mobile WhatsApp CTA with contextual bilingual messages", () => {
+  const planComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/recommended-plan-page.tsx"),
+    "utf8",
+  );
+  const checkoutComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
+    "utf8",
+  );
+  const siteShell = fs.readFileSync(path.join(root, "src/components/site-page-shell.tsx"), "utf8");
+  const footer = fs.readFileSync(path.join(root, "src/components/landing/footer-section.tsx"), "utf8");
+  const floatingWhatsApp = fs.readFileSync(
+    path.join(root, "src/components/ui/desktop-floating-whatsapp.tsx"),
+    "utf8",
+  );
+  const plansPage = fs.readFileSync(path.join(root, "app/[locale]/plans/page.tsx"), "utf8");
+  const checkoutPage = fs.readFileSync(
+    path.join(root, "app/[locale]/plans/checkout/page.tsx"),
+    "utf8",
+  );
+  const paymentPage = fs.readFileSync(path.join(root, "app/[locale]/plans/payment/page.tsx"), "utf8");
+  const successPage = fs.readFileSync(path.join(root, "app/[locale]/plans/payment/success/page.tsx"), "utf8");
+  const placementFrame = fs.readFileSync(path.join(root, "src/features/placement-test/components/placement-page-frame.tsx"), "utf8");
+  const landingPage = fs.readFileSync(path.join(root, "src/components/landing-page.tsx"), "utf8");
+  const blogPage = fs.readFileSync(path.join(root, "app/[locale]/blog/page.tsx"), "utf8");
+  const articlePage = fs.readFileSync(path.join(root, "app/[locale]/blog/[slug]/page.tsx"), "utf8");
+  const { SUCCESS_ACADEMY_WHATSAPP_NUMBER, getWhatsAppMessage, getWhatsAppHref } = require(path.join(root, "src/lib/utm.ts"));
+
+  assert.doesNotMatch(planComponent, /getWhatsAppHref|plans_mobile_sticky_help|WhatsAppIcon/);
+  assert.doesNotMatch(checkoutComponent, /getWhatsAppHref|WhatsAppIcon/);
+  assert.match(siteShell, /getWhatsAppMessage\(locale, whatsappContext, whatsappDetails\)/);
+  assert.match(siteShell, /message=\{contextualWhatsAppMessage\}/);
+  assert.match(siteShell, /showOnMobile=\{showFloatingWhatsAppOnMobile\}/);
+  assert.match(footer, /getWhatsAppHref\(locale, whatsappMessage\)/);
+  assert.match(floatingWhatsApp, /getWhatsAppHref\(locale, message\)/);
+  assert.match(floatingWhatsApp, /bg-\[#25D366\]/);
+  assert.match(floatingWhatsApp, /env\(safe-area-inset-bottom\)/);
+  assert.match(floatingWhatsApp, /target="_blank" rel="noopener noreferrer"/);
+  assert.doesNotMatch(floatingWhatsApp, /flex justify-center bg-\[#f7f3ed\]/);
+  assert.match(plansPage, /whatsappContext="plans"/);
+  assert.match(checkoutPage, /whatsappContext="package_review"/);
+  assert.match(checkoutPage, /packageName: validRecommendation\?\.package\.name\[currentLocale\]/);
+  assert.match(paymentPage, /whatsappContext="payment"/);
+  assert.match(successPage, /whatsappContext="payment_status"/);
+  assert.match(successPage, /bookingDisplayReference\(order\)/);
+  assert.match(placementFrame, /DesktopFloatingWhatsApp/);
+  assert.match(placementFrame, /getWhatsAppMessage\(locale, "placement_test"\)/);
+  assert.match(landingPage, /getWhatsAppMessage\(locale, "home"\)/);
+  assert.match(blogPage, /whatsappContext="blog"/);
+  assert.match(articlePage, /whatsappContext="blog_article"/);
+  assert.match(articlePage, /articleTitle: article\.title/);
+  assert.equal((planComponent.match(/DesktopFloatingWhatsApp/g) ?? []).length, 0);
+  assert.doesNotMatch(`${planComponent}\n${checkoutComponent}`, /getPlacementWhatsAppHref/);
+  assert.equal(getWhatsAppMessage("ar", "home"), "مرحبًا، أحتاج مساعدة بخصوص برامج Success Academy.");
+  assert.equal(getWhatsAppMessage("en", "plans"), "Hello, I need help choosing the right package.");
+  assert.match(getWhatsAppMessage("ar", "package_review", { packageName: "باقة التميز" }), /باقة التميز/);
+  assert.match(getWhatsAppMessage("en", "payment_status", { bookingReference: "SA-1234ABCD" }), /SA-1234ABCD/);
+  const href = getWhatsAppHref("en", getWhatsAppMessage("en", "blog_article", { articleTitle: "Study Tips" }));
+  assert.match(href, /^https:\/\/wa\.me\/\d+\?text=/);
+  assert.doesNotMatch(decodeURIComponent(href), /accessToken|proofUrl|Order_Snapshot|HMAC|API key|idempotency/i);
+  assert.equal(SUCCESS_ACADEMY_WHATSAPP_NUMBER, "201204006361");
+});
+
+test("plans mobile-first visual flow uses compact swipe comparison without a duplicate WhatsApp control", () => {
+  const planComponent = fs.readFileSync(
+    path.join(root, "src/features/plans/components/recommended-plan-page.tsx"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(planComponent, /\/images\/trainer-model\.png/);
+  assert.doesNotMatch(planComponent, /\/journey\/follow-up\.png/);
+  assert.doesNotMatch(planComponent, /from "next\/image"/);
+  assert.doesNotMatch(planComponent, /comparison\.inclusions\.map/);
+  assert.doesNotMatch(planComponent, /comparison\.inclusions\.slice/);
+  assert.doesNotMatch(planComponent, /benefits\.items\.map/);
+  assert.match(planComponent, /benefits\.groups\.map/);
+  assert.match(planComponent, /snap-x snap-mandatory/);
+  assert.match(planComponent, /w-\[84vw\]/);
+  assert.match(planComponent, /mobilePackages/);
+  assert.match(planComponent, /dir="ltr" role="region"/);
+  assert.match(planComponent, /md:hidden/);
+  assert.match(planComponent, /xl:grid-cols-4/);
+  assert.match(planComponent, /grid grid-cols-2 gap-2\.5 lg:gap-3/);
+  assert.match(planComponent, /lg:grid-cols-2/);
+  assert.doesNotMatch(planComponent, /plans_desktop_floating_help/);
+  assert.doesNotMatch(planComponent, /plans_mobile_sticky_help|WhatsAppIcon|getWhatsAppHref/);
+  assert.doesNotMatch(planComponent, /https?:\/\//);
 });
 
 (async () => {
