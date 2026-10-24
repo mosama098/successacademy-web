@@ -207,7 +207,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
         locale,
         goal: form.learningGoal,
         preferredAssessmentTime: form.preferredAssessmentTime,
-      });
+      }, { metaEventId: result.metaLeadEventId });
     } catch {
       submissionInFlight.current = false;
       setStatus("idle");

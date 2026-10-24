@@ -88,7 +88,10 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
 
       clearLeadSubmissionId(submissionStorageKey);
       submissionId.current = null;
-      trackFormSubmit({ form: "placement_test", source: "placement_test", locale });
+      trackFormSubmit(
+        { form: "placement_test", source: "placement_test", locale },
+        { metaEventId: result.metaLeadEventId },
+      );
       trackPlacementTestEvent("placement_test_registration_complete", { locale });
       router.replace(`/${locale}/placement-test/assessment`);
     } catch {

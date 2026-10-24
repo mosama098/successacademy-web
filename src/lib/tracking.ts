@@ -1,6 +1,7 @@
 "use client";
 
 export type TrackingPayload = Record<string, string | number | boolean | null | undefined>;
+type FormSubmitTrackingOptions = { metaEventId?: string };
 
 declare global {
   interface Window {
@@ -45,9 +46,14 @@ export function trackFormStart(payload: TrackingPayload = {}) {
   tiktokEvent("ClickButton", payload);
 }
 
-export function trackFormSubmit(payload: TrackingPayload = {}) {
+export function trackFormSubmit(
+  payload: TrackingPayload = {},
+  options: FormSubmitTrackingOptions = {},
+) {
   googleEvent("generate_lead", payload);
-  metaEvent("Lead", payload, true);
+  if (options.metaEventId) {
+    window.fbq?.("track", "Lead", payload, { eventID: options.metaEventId });
+  }
   tiktokEvent("SubmitForm", payload);
 }
 

@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import type { BusinessFormContent } from "@/content/site-pages";
+import {
+  clearLeadSubmissionId,
+  getOrCreateLeadSubmissionId,
+  submitLead,
+} from "@/features/leads/client/lead-submission";
 import type { Locale } from "@/lib/i18n";
 import { normalizeEgyptianMobile } from "@/lib/phone";
 import { trackFormStart, trackFormSubmit } from "@/lib/tracking";
@@ -38,6 +43,7 @@ const initialForm: CorporateFormData = {
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const submissionStorageKey = "sa_corporate_lead_submission";
 
 function CheckIcon() {
   return (
@@ -50,13 +56,20 @@ function CheckIcon() {
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? <p id={id} className="mt-1.5 text-[12.5px] font-bold text-[#B42318]">{message}</p> : null;
 }
-
 export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: BusinessFormContent }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const formRef = useRef<HTMLFormElement>(null);
   const started = useRef(false);
+  const submissionInFlight = useRef(false);
+  const submissionId = useRef<string | null>(null);
+
+  function getSubmissionId() {
+    if (submissionId.current) return submissionId.current;
+    submissionId.current = getOrCreateLeadSubmissionId(submissionStorageKey);
+    return submissionId.current;
+  }
 
   function markStarted() {
     if (started.current) return;
@@ -102,7 +115,7 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (status === "loading") return;
+    if (submissionInFlight.current || status === "loading") return;
 
     markStarted();
     const nextErrors = validate();
@@ -118,35 +131,39 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
     const normalizedPhone = normalizeEgyptianMobile(form.phone);
     if (!normalizedPhone) return;
 
+    submissionInFlight.current = true;
     setStatus("loading");
 
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: "corporate_training",
-          companyName: form.companyName.trim(),
-          contactName: form.contactName.trim(),
-          phone: normalizedPhone,
-          email: form.email.trim(),
-          employeeCount: form.employeeCount,
-          preferredTrainingMode: form.preferredTrainingMode,
-          trainingGoal: form.trainingGoal.trim(),
-          notes: form.notes.trim(),
-          consent: form.consent,
-          company: form.company,
-          metadata: getLeadMetadata(locale),
-        }),
+      const result = await submitLead({
+        source: "corporate_training",
+        submissionId: getSubmissionId(),
+        companyName: form.companyName.trim(),
+        contactName: form.contactName.trim(),
+        phone: normalizedPhone,
+        email: form.email.trim(),
+        employeeCount: form.employeeCount,
+        preferredTrainingMode: form.preferredTrainingMode,
+        trainingGoal: form.trainingGoal.trim(),
+        notes: form.notes.trim(),
+        consent: form.consent,
+        company: form.company,
+        metadata: getLeadMetadata(locale),
       });
 
-      const result: unknown = await response.json().catch(() => null);
-      if (!response.ok || !isSuccessfulResponse(result)) throw new Error("submission_failed");
+      if (result.kind !== "success") throw new Error(`lead_${result.kind}`);
 
+      clearLeadSubmissionId(submissionStorageKey);
+      submissionId.current = null;
       setStatus("success");
-      trackFormSubmit({ locale, source: "corporate_training" });
+      trackFormSubmit(
+        { locale, source: "corporate_training" },
+        { metaEventId: result.metaLeadEventId },
+      );
     } catch {
       setStatus("error");
+    } finally {
+      submissionInFlight.current = false;
     }
   }
 
@@ -413,8 +430,4 @@ export function CorporateLeadForm({ locale, copy }: { locale: Locale; copy: Busi
       <p className="mt-1.5 text-center text-[12px] font-semibold leading-[1.5] text-[#786C81]">{copy.reassurance}</p>
     </form>
   );
-}
-
-function isSuccessfulResponse(value: unknown): value is { ok: true } {
-  return typeof value === "object" && value !== null && "ok" in value && value.ok === true;
 }

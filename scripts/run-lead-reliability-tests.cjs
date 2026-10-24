@@ -74,6 +74,14 @@ test("validation, rejection, downstream failure and honeypot skip remain distinc
   assert.deepEqual(await request(200, { ok: true, skipped: true }), { kind: "skipped" });
 });
 
+test("the client preserves only a valid authoritative Meta Lead event ID", async () => {
+  const validId = "lead:11111111-1111-4111-8111-111111111111";
+  const valid = await submitLead({}, async () => Response.json({ ok: true, metaLeadEventId: validId }));
+  const invalid = await submitLead({}, async () => Response.json({ ok: true, metaLeadEventId: "lead:forged" }));
+  assert.deepEqual(valid, { kind: "success", metaLeadEventId: validId });
+  assert.deepEqual(invalid, { kind: "success" });
+});
+
 test("timeout and network failures are classified without an automatic replay", async () => {
   let timeoutCalls = 0;
   const timeout = await submitLead({}, async () => {
@@ -91,11 +99,12 @@ test("timeout and network failures are classified without an automatic replay", 
   assert.equal(networkCalls, 1);
 });
 
-test("Homepage, Placement and Plans keep locale-independent per-session submission identities", () => {
+test("Homepage, Placement, Plans and Corporate keep locale-independent per-session submission identities", () => {
   for (const [file, key] of [
     ["src/components/form/lead-form.tsx", "sa_home_lead_submission"],
     ["src/features/placement-test/components/placement-registration.tsx", "sa_placement_lead_submission"],
     ["src/features/plans/components/plans-lead-gate.tsx", "sa_plans_lead_submission"],
+    ["src/components/business/corporate-lead-form.tsx", "sa_corporate_lead_submission"],
   ]) {
     const source = read(file);
     assert.match(source, new RegExp(`submissionStorageKey = ["']${key}["']`));
@@ -135,7 +144,7 @@ test("submission identity remains stable when sessionStorage is unavailable and 
 
 test("the API derives every scoped downstream leadReference from the stable submission ID", () => {
   const route = read("app/api/leads/route.ts");
-  assert.equal((route.match(/"submissionId"/g) ?? []).length >= 3, true);
+  assert.equal((route.match(/"submissionId"/g) ?? []).length >= 4, true);
   assert.equal((route.match(/leadReference: submissionId\.toLowerCase\(\)/g) ?? []).length, 3);
   assert.doesNotMatch(route, /leadReference: randomUUID\(\)/);
 });
@@ -221,13 +230,14 @@ test("only genuine success can advance journeys or emit Lead tracking", () => {
     read("src/components/form/lead-form.tsx"),
     read("src/features/placement-test/components/placement-registration.tsx"),
     read("src/features/plans/components/plans-lead-gate.tsx"),
+    read("src/components/business/corporate-lead-form.tsx"),
   ];
   for (const source of files) {
     const successGuard = source.indexOf('result.kind !== "success"');
     const tracking = source.lastIndexOf("trackFormSubmit");
     assert.ok(successGuard >= 0 && tracking > successGuard);
   }
-  assert.match(read("src/features/leads/client/lead-submission.ts"), /result\.skipped === true \? \{ kind: "skipped" \}/);
+  assert.match(read("src/features/leads/client/lead-submission.ts"), /result\.skipped === true\) return \{ kind: "skipped" \}/);
 });
 
 test("Homepage and Placement do not advance before confirmed persistence", () => {

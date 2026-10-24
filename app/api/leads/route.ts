@@ -2,6 +2,11 @@ import { isIP } from "node:net";
 import { NextResponse } from "next/server";
 import { isAllowedBrowserRequest } from "@/features/leads/server/request-origin";
 import { setLeadRegistrationCookie } from "@/features/leads/server/registration-cookie";
+import {
+  deliverMetaLeadFailOpen,
+  metaLeadEventId,
+  readMetaLeadCookies,
+} from "@/features/leads/server/meta-lead-capi";
 import { readAttemptToken, setAttemptCookie } from "@/features/placement-test/server/cookie";
 import { getExistingAttempt } from "@/features/placement-test/server/attempt-service";
 import { createStoredAttempt } from "@/features/placement-test/server/storage";
@@ -36,6 +41,7 @@ const individualFields = new Set([
 
 const corporateFields = new Set([
   "source",
+  "submissionId",
   "companyName",
   "contactName",
   "phone",
@@ -112,7 +118,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const rateLimit = checkRateLimit(getClientIp(request));
+  const clientIp = getClientIp(request);
+  const rateLimit = checkRateLimit(clientIp);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { ok: false, error: "rate_limited" },
@@ -215,6 +222,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "submission_rejected" }, { status: 502 });
     }
 
+    const metaLeadEventIdValue = metaLeadEventId(String(body.submissionId));
+    const metaCookies = readMetaLeadCookies(request.headers.get("cookie"));
+    const metaLeadSource = isCorporate
+      ? "corporate_training"
+      : isPlacement
+        ? "placement_test"
+        : isPlans
+          ? "plans_pricing"
+          : "website";
+    await deliverMetaLeadFailOpen({
+      submissionId: String(body.submissionId),
+      source: metaLeadSource,
+      locale: result.payload.metadata.locale,
+      pagePath: result.payload.metadata.pagePath,
+      email: result.payload.email,
+      phone: result.payload.phone,
+      clientIp: clientIp === "unknown" ? null : clientIp,
+      clientUserAgent: request.headers.get("user-agent"),
+      fbp: metaCookies.fbp,
+      fbc: metaCookies.fbc,
+      occurredAt: new Date().toISOString(),
+    });
+
     if (
       (isPlacement || result.payload.source === "website") &&
       "leadReference" in result.payload
@@ -224,7 +254,11 @@ export async function POST(request: Request) {
           result.payload.metadata.locale === "en" ? "en" : "ar",
           result.payload.leadReference,
         );
-        const placementResponse = NextResponse.json({ ok: true, placementAttempt: true });
+        const placementResponse = NextResponse.json({
+          ok: true,
+          placementAttempt: true,
+          metaLeadEventId: metaLeadEventIdValue,
+        });
         setAttemptCookie(placementResponse, token);
         setLeadRegistrationCookie(placementResponse);
         return placementResponse;
@@ -236,7 +270,10 @@ export async function POST(request: Request) {
       }
     }
 
-    const successResponse = NextResponse.json({ ok: true });
+    const successResponse = NextResponse.json({
+      ok: true,
+      metaLeadEventId: metaLeadEventIdValue,
+    });
     if (isPlans) setLeadRegistrationCookie(successResponse);
     return successResponse;
   } catch (failure) {
@@ -363,6 +400,7 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
 
 function prepareCorporateLead(body: JsonObject, request: Request) {
   const missing: string[] = [];
+  const submissionId = readRequiredString(body, "submissionId", 36, missing);
   const companyName = readRequiredString(body, "companyName", 160, missing);
   const contactName = readRequiredString(body, "contactName", 120, missing);
   const phone = readRequiredString(body, "phone", 32, missing);
@@ -374,6 +412,7 @@ function prepareCorporateLead(body: JsonObject, request: Request) {
   const metadata = readMetadata(body.metadata, missing);
   const normalizedPhone = normalizeEgyptianMobile(phone);
 
+  if (!isSubmissionId(submissionId)) addIssue(missing, "submissionId");
   if (!normalizedPhone) addIssue(missing, "phone");
   if (!emailPattern.test(email.trim())) addIssue(missing, "email");
   if (!corporateEmployeeCounts.has(employeeCount)) addIssue(missing, "employeeCount");

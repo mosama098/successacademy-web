@@ -5,7 +5,7 @@ const submissionIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f
 const volatileSubmissionIds = new Map<string, string>();
 
 export type LeadSubmissionOutcome =
-  | { kind: "success" }
+  | { kind: "success"; metaLeadEventId?: string }
   | { kind: "skipped" }
   | { kind: "validation" }
   | { kind: "timeout" }
@@ -35,7 +35,10 @@ export async function submitLead(
   }
 
   if (response.ok && isRecord(result) && result.ok === true) {
-    return result.skipped === true ? { kind: "skipped" } : { kind: "success" };
+    if (result.skipped === true) return { kind: "skipped" };
+    return typeof result.metaLeadEventId === "string" && isMetaLeadEventId(result.metaLeadEventId)
+      ? { kind: "success", metaLeadEventId: result.metaLeadEventId }
+      : { kind: "success" };
   }
   if (response.status === 400 || response.status === 422) return { kind: "validation" };
   if (response.status === 504 || (isRecord(result) && result.error === "submission_timeout")) {
@@ -84,4 +87,8 @@ function isTimeoutFailure(value: unknown) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isMetaLeadEventId(value: string) {
+  return value.startsWith("lead:") && submissionIdPattern.test(value.slice("lead:".length));
 }

@@ -162,7 +162,7 @@ test("failure and honeypot paths do not establish registration", () => {
   assert.match(route, /if \(company\.trim\(\)\) \{\s*return NextResponse\.json\(\{ ok: true, skipped: true \}\);\s*\}/);
   assert.match(route, /if \(!response\.ok\) \{\s*return NextResponse\.json\(\{ ok: false, error: "submission_rejected" \}/);
   assert.match(route, /if \(!isSuccessfulWebhookResponse\(webhookResult\)\) \{\s*return NextResponse\.json\(\{ ok: false, error: "submission_rejected" \}/);
-  assert.match(submission, /result\.skipped === true \? \{ kind: "skipped" \} : \{ kind: "success" \}/);
+  assert.match(submission, /result\.skipped === true\) return \{ kind: "skipped" \}/);
 });
 
 test("lead origin validation stays strict in production and permits matching loopback development origins", () => {

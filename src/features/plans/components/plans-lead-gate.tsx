@@ -94,7 +94,10 @@ export function PlansLeadGate({ locale }: { locale: Locale }) {
 
       if (!trackedSuccess.current) {
         trackedSuccess.current = true;
-        trackFormSubmit({ form: "plans_pricing", source: "plans_pricing", locale });
+        trackFormSubmit(
+          { form: "plans_pricing", source: "plans_pricing", locale },
+          { metaEventId: result.metaLeadEventId },
+        );
       }
       clearLeadSubmissionId(submissionStorageKey);
       submissionId.current = null;

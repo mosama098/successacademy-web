@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test:placement": "node scripts/run-placement-tests.cjs",
     "test:plans-gate": "node scripts/run-plans-gate-tests.cjs",
-    "test:plans-programs": "node scripts/run-group-private-plans-tests.cjs"
+    "test:plans-programs": "node scripts/run-group-private-plans-tests.cjs",
+    "test:meta-lead": "node scripts/run-meta-lead-tests.cjs"
   },
   "dependencies": {
     "next": "16.3.0",
