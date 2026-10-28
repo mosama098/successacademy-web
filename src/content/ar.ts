@@ -11,9 +11,9 @@ export const arContent: LandingContent = {
   },
   hero: {
     eyebrow: "Success Academy | Not Just A Course... A Direction",
-    title: "معظم الناس مش بتفشل في تعلّم الإنجليزية...\nهي بتتعلمها بالطريقة الغلط.",
+    title: "اتعلم الإنجليزي Live أونلاين على Zoom\nوابدأ من مستواك الحقيقي.",
     subtitle:
-      "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك. المشكلة إنك بتدخل كورس من غير تشخيص، من غير هدف واضح، ومن غير متابعة تخليك تستخدم اللغة فعلاً.",
+      "تدريب مباشر وتفاعلي، Group من 7–10 أو Private 1:1، وكل محاضرة Live بتتسجل علشان تراجعها وقت ما تحتاج.",
     primaryCta: "اعرف مستواك مجانًا",
     whatsappCta: "تحدث مع Success Manager",
     badge: "البرامج تبدأ من 2250 جنيه",
@@ -28,7 +28,7 @@ export const arContent: LandingContent = {
   },
   cta: {
     title: "ابدأ باختبار تحديد المستوى قبل ما تختار أي برنامج",
-    description: "سجّل بياناتك، ابدأ اختبار تحديد المستوى، واعرف البداية الأنسب ليك.",
+    description: "سجّل بياناتك، اعرف مستواك، وابدأ تجربة Live أونلاين كاملة على Zoom.",
     primary: "ابدأ تحديد مستواك",
     secondary: "تحدث مع Success Manager",
   },
@@ -48,24 +48,24 @@ export const arContent: LandingContent = {
         answer: "لا، بنبدأ معاك من مستواك الحقيقي، سواء مبتدئ أو عندك أساسيات وعايز تطور مستواك.",
       },
       {
-        question: "هل التدريب أونلاين ولا حضوري؟",
-        answer: "متاح أونلاين، ومتاح حضور في فرع الدقي، وتختار الطريقة الأنسب ليك.",
+        question: "المحاضرات Live ولا مسجلة؟",
+        answer: "كل الشرح Live بالكامل على Zoom مع المدرب. كمان كل محاضرة Live بتتسجل وبتفضل متاحة على حسابك علشان تراجعها بعدين.",
       },
       {
-        question: "إيه اللي بيميز Success Academy؟",
-        answer: "تدريب عملي، أنشطة ومحادثات، متابعة مع Success Manager، وFeedback واضح على تقدمك.",
+        question: "التدريب الأونلاين بيتم إزاي؟",
+        answer: "بتحضر Live على Zoom، وتشارك مع المدرب في المحادثات والأنشطة والممارسة العملية من أي مكان، ومعاك متابعة من Success Manager.",
       },
       {
         question: "مين المدربين؟",
         answer: "فريق يضم أكتر من 30 مدرب، بخبرة تتجاوز 5 سنوات، وحاصلين على CELTA وTEFL.",
       },
       {
-        question: "عدد المتدربين في المجموعة كام؟",
-        answer: "المجموعة بتكون محدودة علشان تقدر تشارك، تتدرب، وتحصل على متابعة حقيقية.",
+        question: "أختار Group ولا Private 1:1؟",
+        answer: "الـGroup بيضم من 7–10 متدربين وفيه تفاعل وأنشطة جماعية بسعر أقل. Private 1:1 بيديك اهتمام شخصي وسرعة تدريب مركزة على مستواك وهدفك.",
       },
       {
-        question: "مدة المستوى قد إيه؟",
-        answer: "كل مستوى 30 ساعة تدريب، مقسمة على 10 محاضرات، كل محاضرة 3 ساعات.",
+        question: "لو فاتتني محاضرة أو حبيت أراجعها؟",
+        answer: "كل محاضرة Live بتتسجل وبتفضل متاحة على حسابك علشان ترجع لها وتراجع الشرح وقت ما تحتاج.",
       },
       {
         question: "التكلفة تبدأ من كام؟",
@@ -80,7 +80,7 @@ export const arContent: LandingContent = {
     stats: [
       { value: "2015", label: "منذ البداية" },
       { value: "+100K", label: "متدرب وثقوا فينا" },
-      { value: "أونلاين وفرع الدقي", label: "تعلّم بالطريقة المناسبة ليك" },
+      { value: "Live على Zoom", label: "اتعلم من أي مكان" },
     ],
     slogan: "Not Just A Course... A Direction",
   },
@@ -99,7 +99,6 @@ export const arContent: LandingContent = {
       phone: "رقم الموبايل أو واتساب",
       email: "البريد الإلكتروني",
       learningGoal: "هدفك من الإنجليزي",
-      preferredLearningMode: "تفضّل تتعلم إزاي؟",
       preferredAssessmentTime: "الوقت الأنسب للتواصل معاك",
       notes: "ملاحظات إضافية",
       consent: "أوافق إن فريق Success Academy يتواصل معايا بخصوص اختبار تحديد المستوى.",
@@ -116,10 +115,6 @@ export const arContent: LandingContent = {
       { value: "travel_everyday", label: "السفر والحياة" },
       { value: "general", label: "تطوير المستوى بشكل عام" },
     ],
-    learningModeOptions: [
-      { value: "online", label: "أونلاين" },
-      { value: "dokki", label: "فرع الدقي" },
-    ],
     assessmentTimeOptions: [
       { value: "earliest", label: "في أقرب وقت" },
       { value: "morning", label: "صباحًا" },
@@ -130,7 +125,6 @@ export const arContent: LandingContent = {
       phone: "من فضلك اكتب رقم موبايل صحيح، مثل 01012345678 أو +966501234567",
       email: "اكتب بريد إلكتروني صحيح",
       learningGoal: "اختار هدفك من الإنجليزي",
-      preferredLearningMode: "اختار طريقة التعلم المناسبة",
       preferredAssessmentTime: "اختار الوقت الأنسب للتواصل معاك",
       consent: "لازم توافق على التواصل لإرسال الطلب",
     },
@@ -166,12 +160,12 @@ export const arContent: LandingContent = {
   },
   footer: {
     slogan: "Not Just A Course... A Direction",
-    description: "تدريب عملي، متابعة واضحة، وطريق يناسب هدفك.",
+    description: "تدريب إنجليزي Live أونلاين على Zoom، ممارسة تفاعلية، ومتابعة تساعدك تكمل.",
     rights: "© Success Academy — جميع الحقوق محفوظة",
     whatsapp: "تواصل على واتساب",
     call: "اتصل بنا",
-    online: "أونلاين",
-    branch: "فرع الدقي",
+    online: "Live على Zoom",
+    recordings: "المحاضرات متاحة للمراجعة",
     quickLinksTitle: "الموقع",
     quickLinks: {
       why: "ليه تختار Success Academy",

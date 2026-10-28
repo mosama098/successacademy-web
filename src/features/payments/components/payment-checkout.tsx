@@ -12,7 +12,7 @@ import { trackPaymentPreparation } from "../tracking";
 import type { LegalPolicyLinks, PublicOrder } from "../types";
 import type { PricingSnapshot } from "../../promos/types";
 import { manualPaymentConfig } from "../manual-payment-config";
-import { paymentMethodPreferences, requiresPaymentProof } from "../validation";
+import { publicPaymentMethodPreferences, requiresPaymentProof } from "../validation";
 import { validateEnrollment } from "../../customers/validation";
 import { enrollmentFields, type EnrollmentForm, type EnrollmentErrors } from "../../customers/types";
 import { CustomerEnrollmentFields } from "./customer-enrollment-fields";
@@ -296,8 +296,8 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
             <fieldset data-payment-section="methods" className="mt-4" disabled={submitting} aria-describedby={methodError ? "payment-method-error" : "payment-method-hint"}>
               <legend className="text-lg font-black text-[#321d43]">{copy.methodTitle}</legend>
               <p id="payment-method-hint" className="mt-1 text-sm leading-6 text-[#563a64]">{copy.methodHint}</p>
-              <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-[minmax(0,1.7fr)_repeat(4,minmax(0,1fr))]">
-                {paymentMethodPreferences.map((id) => (
+              <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-[minmax(0,1.7fr)_repeat(3,minmax(0,1fr))]">
+                {publicPaymentMethodPreferences.map((id) => (
                   <label key={id} className={`relative flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 transition focus-within:ring-4 focus-within:ring-[#ec911f]/25 ${id === "card" ? "col-span-2 lg:col-span-1" : ""} ${method === id ? "border-[#563a64] bg-[#ece5ee] shadow-[inset_0_0_0_1px_#563a64]" : "border-[#321d43]/15 bg-white hover:bg-[#f7f3ed]"} ${submitting ? "pointer-events-none opacity-60" : ""}`}>
                     <input type="radio" name="paymentMethod" value={id} checked={method === id} required className="size-4 shrink-0 accent-[#321d43]"
                       onChange={() => { setMethod(id); setMethodError(false); setProofFile(null); setProofError(null); setCopiedPaymentDetail(null); trackPaymentPreparation({ name: "AddPaymentInfo", packageId: recommendation.package.id, method: id }); }} />

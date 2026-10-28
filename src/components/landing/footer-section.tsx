@@ -101,7 +101,7 @@ function SocialItem({ social }: { social: (typeof socialLinks)[number] }) {
   );
 }
 
-function ContactIcon({ type }: { type: "whatsapp" | "phone" | "globe" | "location" }) {
+function ContactIcon({ type }: { type: "whatsapp" | "phone" | "globe" }) {
   const className = "h-[18px] w-[18px] shrink-0";
 
   if (type === "whatsapp") {
@@ -120,19 +120,10 @@ function ContactIcon({ type }: { type: "whatsapp" | "phone" | "globe" | "locatio
     );
   }
 
-  if (type === "globe") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M3.8 12h16.4M12 3.5c2.1 2.3 3.1 5.1 3.1 8.5S14.1 18.2 12 20.5C9.9 18.2 8.9 15.4 8.9 12S9.9 5.8 12 3.5Z" />
-      </svg>
-    );
-  }
-
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" strokeLinejoin="round" />
-      <circle cx="12" cy="10" r="2.2" />
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.8 12h16.4M12 3.5c2.1 2.3 3.1 5.1 3.1 8.5S14.1 18.2 12 20.5C9.9 18.2 8.9 15.4 8.9 12S9.9 5.8 12 3.5Z" />
     </svg>
   );
 }
@@ -271,8 +262,8 @@ export function FooterSection({ locale, copy, pagePath, whatsappMessage }: Foote
                 <span>{footer.online}</span>
               </div>
               <div className="flex h-10 items-center justify-center gap-2 rounded-[11px] bg-[#EEE9F4] px-2 text-[13px] font-black text-[#391B68]">
-                <ContactIcon type="location" />
-                <span>{footer.branch}</span>
+                <ContactIcon type="globe" />
+                <span>{footer.recordings}</span>
               </div>
             </div>
           </section>

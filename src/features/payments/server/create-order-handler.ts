@@ -11,7 +11,7 @@ import type { resolveOrderCustomer } from "./customer-context";
 import { LegalConsentRequiredError, LegalPoliciesUnavailableError, requireLegalConsent } from "./legal-consent";
 import { PromoRepositoryUnavailableError, PromoValidationError } from "../../promos/promo-repository";
 import { verifyProofReceipt } from "./proof-receipt";
-import { requiresPaymentProof } from "../validation";
+import { isPublicPaymentMethodPreference, requiresPaymentProof } from "../validation";
 import { buildBookingCreatedEvent, type NotificationEvent } from "./notification-events";
 
 type Dependencies = {
@@ -38,6 +38,8 @@ export function createOrderHandler(dependencies: Dependencies) {
     if (body.promoCode !== undefined && typeof body.promoCode !== "string") return error("promo_invalid", 400);
     if (body.programType !== undefined && typeof body.programType !== "string") return error("invalid_plan", 400);
     if (typeof body.attendance !== "string" || !isAttendanceMode(body.attendance)) return error("invalid_attendance", 400);
+    if (body.attendance !== "online") return error("invalid_attendance", 400);
+    if (!isPublicPaymentMethodPreference(body.paymentMethod)) return error("invalid_payment_method", 400);
     if (!isObject(body.customer) || Object.keys(body.customer).some((field) => !enrollmentFields.some((allowed) => field === allowed))) return error("invalid_customer", 400);
     const contact = validateEnrollment(body.customer, body.attendance);
     if (!contact.valid) return error("invalid_customer", 400, contact.errors);

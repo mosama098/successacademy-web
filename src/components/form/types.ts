@@ -11,7 +11,6 @@ export type FormState = {
   phone: string;
   email: string;
   learningGoal: string;
-  preferredLearningMode: string;
   preferredAssessmentTime: string;
   notes: string;
   consent: boolean;
@@ -25,7 +24,6 @@ export const initialState: FormState = {
   phone: "",
   email: "",
   learningGoal: "",
-  preferredLearningMode: "",
   preferredAssessmentTime: "",
   notes: "",
   consent: false,

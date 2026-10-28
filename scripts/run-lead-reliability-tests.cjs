@@ -171,7 +171,7 @@ test("Homepage and Placement persist their exact stable identities through the A
     const homepageId = "11111111-1111-4111-8111-111111111111";
     const homepage = await send({
       source: "website", submissionId: homepageId, fullName: "Test Homepage", phone: "01000000000",
-      email: "", learningGoal: "work", currentLevel: "", preferredLearningMode: "online",
+      email: "", learningGoal: "work", currentLevel: "",
       preferredAssessmentTime: "earliest", notes: "", consent: true, company: "",
       metadata: { locale: "en", pagePath: "/en" },
     });
@@ -183,6 +183,7 @@ test("Homepage and Placement persist their exact stable identities through the A
     assert.equal(homepage.status, 200);
     assert.equal(placement.status, 200);
     assert.equal(payloads[0].leadReference, homepageId);
+    assert.equal(payloads[0].preferredLearningMode, "online");
     assert.equal(payloads[1].leadReference, placementId);
     assert.match(homepage.headers.get("set-cookie") ?? "", /sa_placement_attempt=/);
     assert.match(placement.headers.get("set-cookie") ?? "", /sa_placement_attempt=/);
@@ -193,6 +194,16 @@ test("Homepage and Placement persist their exact stable identities through the A
     if (previousSecret === undefined) delete process.env.LEADS_WEBHOOK_SECRET;
     else process.env.LEADS_WEBHOOK_SECRET = previousSecret;
   }
+});
+
+test("B2C derives Online server-side while Corporate keeps all training modes", () => {
+  const route = read("app/api/leads/route.ts");
+  const form = read("src/components/form/lead-form.tsx");
+  const corporate = read("src/components/business/corporate-lead-form.tsx");
+  assert.match(route, /preferredLearningMode: "online"/);
+  assert.doesNotMatch(form, /name="preferredLearningMode"|learningModeOptions/);
+  assert.match(route, /new Set\(\["online", "on_site", "hybrid"\]\)/);
+  assert.match(corporate, /preferredTrainingMode/);
 });
 
 test("the API reports an unknown-outcome webhook timeout distinctly", async () => {

@@ -919,11 +919,31 @@ test("active homepage copy describes the immediate internal placement journey", 
   assert.match(en, /submit: "Register & Start Your Placement Test"/);
   assert.match(en, /preferredAssessmentTime: "Best Time to Contact You"/);
   assert.match(en, /assessment: "Placement Test"/);
-  assert.match(steps, /title: "ابدأ اختبار تحديد المستوى"/);
-  assert.match(steps, /title: "Start the Placement Test"/);
-  assert.match(steps, /ابدأ الاختبار داخل الموقع فورًا/);
-  assert.match(steps, /Start the test immediately on this website/);
+  assert.match(steps, /title: "سجّل وابدأ الاختبار"/);
+  assert.match(steps, /title: "Register and Start the Test"/);
+  assert.match(steps, /اختبار تحديد المستوى المجاني من غير انتظار/);
+  assert.match(steps, /free Placement Test without waiting/);
+  assert.match(steps, /اختار Group أو Private/);
+  assert.match(steps, /Choose Group or Private/);
+  assert.match(steps, /ابدأ Live على Zoom/);
+  assert.match(steps, /Start Live on Zoom/);
   assert.match(steps, /lg:grid-cols-4/);
+});
+
+test("homepage presents the complete Online Live product without a B2C mode choice", () => {
+  const ar = fs.readFileSync(path.join(root, "src/content/ar.ts"), "utf8");
+  const en = fs.readFileSync(path.join(root, "src/content/en.ts"), "utf8");
+  const landing = fs.readFileSync(path.join(root, "src/components/landing-page.tsx"), "utf8");
+  const formats = fs.readFileSync(path.join(root, "src/components/landing/online-learning-section.tsx"), "utf8");
+  const form = fs.readFileSync(path.join(root, "src/components/form/lead-form.tsx"), "utf8");
+
+  assert.match(landing, /<OnlineLearningSection locale=\{locale\}/);
+  assert.match(formats, /Group من 7–10 أو Private 1:1/);
+  assert.match(formats, /Group of 7–10 or Private 1:1/);
+  assert.match(formats, /Every Live session is recorded for review/);
+  assert.match(formats, /البرامج تبدأ من 2250 جنيه/);
+  assert.doesNotMatch(`${ar}\n${en}`, /Dokki|الدقي|Online & Dokki/);
+  assert.doesNotMatch(form, /preferredLearningMode|learningModeOptions/);
 });
 
 test("placement WhatsApp uses the centralized destination and encodes the dynamic result message", () => {
@@ -1684,7 +1704,7 @@ test("plans trust server placement context and never create a duplicate lead", (
   assert.doesNotMatch(`${planComponent}\n${checkoutComponent}`, /\/api\/leads/);
 });
 
-test("plans checkout validates and preserves attendance mode without backend writes", () => {
+test("plans checkout derives Online while historical attendance values remain readable", () => {
   const checkoutPage = fs.readFileSync(
     path.join(root, "app/[locale]/plans/checkout/page.tsx"),
     "utf8",
@@ -1693,19 +1713,23 @@ test("plans checkout validates and preserves attendance mode without backend wri
     path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
     "utf8",
   );
+  const paymentPage = fs.readFileSync(
+    path.join(root, "app/[locale]/plans/payment/page.tsx"),
+    "utf8",
+  );
 
   assert.equal(isAttendanceMode("online"), true);
   assert.equal(isAttendanceMode("branch"), true);
   assert.equal(isAttendanceMode("dokki"), false);
   assert.equal(isAttendanceMode(null), false);
-  assert.match(checkoutPage, /isAttendanceMode\(query\.attendance\)/);
-  assert.match(checkoutComponent, /url\.searchParams\.set\("attendance", mode\)/);
-  assert.match(checkoutComponent, /aria-pressed=\{selected\}/);
-  assert.match(checkoutComponent, /disabled=\{!attendanceMode\}/);
-  assert.match(checkoutComponent, /attendanceMode \? copy\.checkout\.continueToPayment : copy\.checkout\.attendanceRequired/);
+  assert.doesNotMatch(checkoutPage, /query\.attendance|isAttendanceMode/);
+  assert.doesNotMatch(checkoutComponent, /attendanceModes\.map|aria-pressed|chooseAttendance|editingAttendance/);
+  assert.match(checkoutComponent, /AttendanceIcon mode="online"/);
   assert.match(checkoutComponent, /copy\.checkout\.continueToPayment/);
   assert.match(checkoutComponent, /router\.push\(`\/\$\{locale\}\/plans\/payment\?/);
-  assert.match(checkoutComponent, /attendance: attendanceMode/);
+  assert.doesNotMatch(checkoutComponent, /attendance: attendanceMode|searchParams\.set\("attendance"/);
+  assert.match(paymentPage, /const attendance = "online" as const/);
+  assert.doesNotMatch(paymentPage, /isAttendanceMode\(query\.attendance\)/);
   assert.doesNotMatch(checkoutComponent, /fetch\s*\(/);
 });
 
@@ -1717,9 +1741,9 @@ test("plans checkout is a compact review step without sales or payment execution
   const copy = fs.readFileSync(path.join(root, "src/features/plans/copy.ts"), "utf8");
 
   assert.match(checkoutComponent, /lg:grid-cols-\[1\.08fr_0\.92fr\]/);
-  assert.match(checkoutComponent, /plannedPaymentMethods\.map/);
+  assert.match(checkoutComponent, /publicPaymentMethods\.map/);
   assert.doesNotMatch(checkoutComponent, /recommendation\.package\.savingEgp/);
-  assert.match(checkoutComponent, /xl:grid-cols-\[repeat\(5,minmax\(min-content,1fr\)\)\]/);
+  assert.match(checkoutComponent, /lg:grid-cols-4/);
   assert.match(checkoutComponent, /durationEquivalent/);
   assert.match(checkoutComponent, /whitespace-nowrap/);
   assert.match(checkoutComponent, /method\.id === "instapay"/);
@@ -1731,7 +1755,7 @@ test("plans checkout is a compact review step without sales or payment execution
   assert.doesNotMatch(checkoutComponent, /fetch\s*\(|\/api\/|payment intent|createOrder/i);
   assert.match(copy, /راجع خطتك قبل الحجز/);
   assert.match(copy, /اختار طريقة الدفع في الخطوة التالية/);
-  assert.match(copy, /اختر طريقة الحضور للمتابعة/);
+  assert.match(copy, /كل برامج الأفراد Live أونلاين على Zoom/);
   assert.match(copy, /سيتم تفعيل الدفع قريباً/);
   assert.doesNotMatch(copy, /لا توجد أي عملية دفع أو إنشاء طلب في هذه المرحلة/);
 });

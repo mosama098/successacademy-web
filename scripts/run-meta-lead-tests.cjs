@@ -233,7 +233,6 @@ function sourceBody(source, submissionId) {
     fullName: "Test Website",
     learningGoal: "work",
     currentLevel: "",
-    preferredLearningMode: "online",
     preferredAssessmentTime: "earliest",
     notes: "",
   };

@@ -5,6 +5,7 @@ import { FooterSection } from "@/components/landing/footer-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { JourneySection } from "@/components/landing/journey-section";
 import { Navbar } from "@/components/landing/navbar";
+import { OnlineLearningSection } from "@/components/landing/online-learning-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { RegistrationStepsSection } from "@/components/landing/registration-steps-section";
 import { SectionShell } from "@/components/landing/section-shell";
@@ -35,6 +36,7 @@ export function LandingPage({ locale }: LandingPageProps) {
       <PageTracker locale={locale} page="landing" />
       <Navbar locale={locale} copy={copy} />
       <HeroSection locale={locale} copy={copy} />
+      <OnlineLearningSection locale={locale} />
       <VideoPreviewSection locale={locale} />
       <ProblemSection locale={locale} />
       <TrainersSection locale={locale} />

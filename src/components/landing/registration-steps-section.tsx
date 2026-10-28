@@ -34,41 +34,41 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
     titleLead: "من أول التسجيل لحد ما تبدأ…",
     titleHighlight: "كل خطوة واضحة",
     description:
-      "سجّل بياناتك، ابدأ اختبار تحديد المستوى داخل الموقع فورًا، واعرف البداية الأنسب ليك.",
+      "من اختبار تحديد المستوى لاختيار Group أو Private، كل خطوة واضحة لحد ما تبدأ Live على Zoom.",
     ctaSupport: "جاهز تعرف أنسب بداية ليك؟",
     cta: "ابدأ اختبار تحديد المستوى",
     reassurance: "مش لازم تنتظر مكالمة علشان تبدأ الاختبار.",
     steps: [
       {
-        title: "سجّل بياناتك",
+        title: "سجّل وابدأ الاختبار",
         description: [
-          { text: "اكتب بياناتك علشان تبدأ اختبار تحديد المستوى من غير انتظار." },
+          { text: "سجّل بياناتك وابدأ اختبار تحديد المستوى المجاني من غير انتظار." },
         ],
         icon: "details",
       },
       {
-        title: "ابدأ اختبار تحديد المستوى",
+        title: "اعرف مستواك ومسارك",
         description: [
           {
-            text: "ابدأ الاختبار داخل الموقع فورًا واعرف نقاط قوتك والجوانب اللي محتاجة تطوير.",
+            text: "شوف نتيجتك ومستوى البداية والخطة المقترحة المناسبة لهدفك.",
           },
         ],
         icon: "assessment",
       },
       {
-        title: "اعرف مستواك والبداية الأنسب ليك",
+        title: "اختار Group أو Private",
         description: [
           {
-            text: "اعرف مستوى البداية المناسب ليك وشوف ملف مهاراتك بشكل واضح.",
+            text: "اختار طريقة الدراسة والباقة المناسبة، وبعدها كمّل الدفع.",
           },
         ],
         icon: "result",
       },
       {
-        title: "شوف البرنامج المناسب وكمل التسجيل",
+        title: "ابدأ Live على Zoom",
         description: [
           {
-            text: "انتقل للباقات بالمستوى المقترح واختار الخطة المناسبة لهدفك.",
+            text: "Success Manager بيتواصل معاك لترتيب الموعد المتاح المناسب، وبعدها تبدأ التدريب Live.",
           },
         ],
         icon: "start",
@@ -80,43 +80,43 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
     titleLead: "From Registration to Your Starting Plan —",
     titleHighlight: "Every Step Is Clear",
     description:
-      "Register, start the placement test immediately on this website, and discover the right starting point.",
+      "From your Placement Test to choosing Group or Private, every step is clear until you start Live on Zoom.",
     ctaSupport: "Ready to Find Your Best Starting Point?",
     cta: "Start the Placement Test",
     reassurance: "You do not need to wait for a call before starting the test.",
     steps: [
       {
-        title: "Register Your Details",
+        title: "Register and Start the Test",
         description: [
           {
-            text: "Enter your details to start the placement test without waiting.",
+            text: "Register your details and start the free Placement Test without waiting.",
           },
         ],
         icon: "details",
       },
       {
-        title: "Start the Placement Test",
+        title: "See Your Level and Path",
         description: [
           {
-            text: "Start the test immediately on this website and identify your strengths and improvement areas.",
+            text: "See your result, recommended starting level, and the learning path that fits your goal.",
           },
         ],
         icon: "assessment",
       },
       {
-        title: "Find Your Level and Starting Point",
+        title: "Choose Group or Private",
         description: [
           {
-            text: "See your recommended starting level and a clear profile of your skills.",
+            text: "Choose your learning format and package, then complete payment.",
           },
         ],
         icon: "result",
       },
       {
-        title: "See the Right Programme and Continue",
+        title: "Start Live on Zoom",
         description: [
           {
-            text: "Continue to Plans with your recommended level and choose the right path for your goal.",
+            text: "A Success Manager contacts you to arrange a suitable available schedule, then your Live training begins.",
           },
         ],
         icon: "start",

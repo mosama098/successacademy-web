@@ -3,7 +3,6 @@ import { SitePageShell } from "@/components/site-page-shell";
 import { CheckoutFoundation } from "@/features/plans/components/checkout-foundation";
 import {
   getPlanRecommendation,
-  isAttendanceMode,
   isLearningLevel,
   isLearningPackageId,
   resolveProgramType,
@@ -15,7 +14,7 @@ import { createPageMetadata } from "@/lib/page-metadata";
 
 type CheckoutPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ program?: string; start?: string; target?: string; package?: string; attendance?: string }>;
+  searchParams: Promise<{ program?: string; start?: string; target?: string; package?: string }>;
 };
 
 export async function generateMetadata({ params }: CheckoutPageProps) {
@@ -47,9 +46,8 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const validRecommendation = isLearningPackageId(query.package) && recommendation?.package.id === query.package
     ? recommendation
     : null;
-  const initialAttendanceMode = isAttendanceMode(query.attendance) ? query.attendance : null;
   const pagePath = validRecommendation
-    ? `plans/checkout?program=${validRecommendation.programType}&start=${validRecommendation.startLevel}&target=${validRecommendation.targetLevel}&package=${validRecommendation.package.id}${initialAttendanceMode ? `&attendance=${initialAttendanceMode}` : ""}`
+    ? `plans/checkout?program=${validRecommendation.programType}&start=${validRecommendation.startLevel}&target=${validRecommendation.targetLevel}&package=${validRecommendation.package.id}`
     : "plans/checkout";
 
   return (
@@ -65,7 +63,6 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         locale={currentLocale}
         recommendation={validRecommendation}
         hasExistingLead={Boolean(placementContext?.hasLeadReference)}
-        initialAttendanceMode={initialAttendanceMode}
       />
     </SitePageShell>
   );

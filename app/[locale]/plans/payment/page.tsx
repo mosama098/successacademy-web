@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { SitePageShell } from "@/components/site-page-shell";
 import { PaymentCheckout } from "@/features/payments/components/payment-checkout";
 import { paymentCopy } from "@/features/payments/copy";
 import { getLegalPolicyLinks } from "@/features/payments/server/legal-consent";
-import { isManualPaymentMethod } from "@/features/payments/validation";
-import { getPlanRecommendation, isAttendanceMode, isLearningLevel, isLearningPackageId, resolveProgramType } from "@/features/plans/config";
+import { getPlanRecommendation, isLearningLevel, isLearningPackageId, resolveProgramType } from "@/features/plans/config";
 import { getPlacementPlanContext } from "@/features/plans/server/placement-plan-context";
 import { locales, type Locale } from "@/lib/i18n";
 
@@ -30,11 +29,9 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   const recommendation = programType && (!placement || placement.startLevel === query.start) && isLearningLevel(query.start) && isLearningLevel(query.target)
     ? getPlanRecommendation(programType, query.start, query.target) : null;
   const validPlan = isLearningPackageId(query.package) && recommendation?.package.id === query.package ? recommendation : null;
-  const attendance = isAttendanceMode(query.attendance) ? query.attendance : null;
-  const initialMethod = isManualPaymentMethod(query.method) ? query.method : null;
+  const attendance = "online" as const;
+  const initialMethod = query.method === "instapay" || query.method === "wallet" ? query.method : null;
   const routeQuery = validPlan ? new URLSearchParams({ program: validPlan.programType, start: validPlan.startLevel, target: validPlan.targetLevel, package: validPlan.package.id }) : null;
-  if (routeQuery && !attendance) redirect(`/${locale}/plans/checkout?${routeQuery.toString()}`);
-  if (routeQuery && attendance) routeQuery.set("attendance", attendance);
   if (routeQuery && initialMethod) routeQuery.set("method", initialMethod);
   const copy = paymentCopy[currentLocale];
 

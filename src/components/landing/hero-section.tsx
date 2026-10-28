@@ -4,11 +4,11 @@ import { getWhatsAppHref } from "@/lib/utm";
 import { bookingHref, type LandingSectionProps } from "./types";
 
 const arHero = {
-  titleStart: "معظم الناس مش بتفشل في تعلّم الإنجليزية...",
-  titleSecond: "هي بس بتبدأ من",
-  titleAccent: "المكان الغلط",
+  titleStart: "اتعلم الإنجليزي Live أونلاين على Zoom",
+  titleSecond: "وابدأ من",
+  titleAccent: "مستواك الحقيقي",
   subtitle:
-    "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك.\nالمشكلة إنك محتاج تعرف مستواك الحقيقي، وهدفك من اللغة، والطريق المناسب ليك.",
+    "تدريب مباشر وتفاعلي، Group من 7–10 أو Private 1:1، وكل محاضرة Live بتتسجل علشان تراجعها وقت ما تحتاج.",
 };
 
 function HeroMotionStyles() {

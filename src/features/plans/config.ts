@@ -199,6 +199,10 @@ export const plannedPaymentMethods = [
   provider: "paytabs" | "easykash" | "manual";
 }>;
 
+// Keep the historical branch method in the domain model so old orders remain
+// readable, while new public B2C checkouts expose only current methods.
+export const publicPaymentMethods = plannedPaymentMethods.filter(({ id }) => id !== "branch");
+
 export function isLearningLevel(value: string | null | undefined): value is LearningLevel {
   return learningLevels.includes(value as LearningLevel);
 }

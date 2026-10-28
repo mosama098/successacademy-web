@@ -78,7 +78,6 @@ const plansFields = new Set([
 ]);
 
 const individualGoals = new Set(["work", "university", "travel_everyday", "general"]);
-const individualLearningModes = new Set(["online", "dokki"]);
 const individualAssessmentTimes = new Set(["earliest", "morning", "evening"]);
 const corporateEmployeeCounts = new Set(["1-10", "11-25", "26-50", "51-100", "100+"]);
 const corporateTrainingModes = new Set(["online", "on_site", "hybrid"]);
@@ -360,7 +359,6 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
   const email = readOptionalString(body, "email", 254, missing);
   const learningGoal = readRequiredString(body, "learningGoal", 32, missing);
   const currentLevel = readOptionalString(body, "currentLevel", 64, missing);
-  const preferredLearningMode = readRequiredString(body, "preferredLearningMode", 32, missing);
   const preferredAssessmentTime = readRequiredString(body, "preferredAssessmentTime", 32, missing);
   const notes = readOptionalString(body, "notes", 2_000, missing);
   const metadata = readMetadata(body.metadata, missing);
@@ -370,7 +368,6 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
   if (!normalizedPhone) addIssue(missing, "phone");
   if (email && !emailPattern.test(email.trim())) addIssue(missing, "email");
   if (!individualGoals.has(learningGoal)) addIssue(missing, "learningGoal");
-  if (!individualLearningModes.has(preferredLearningMode)) addIssue(missing, "preferredLearningMode");
   if (!individualAssessmentTimes.has(preferredAssessmentTime)) addIssue(missing, "preferredAssessmentTime");
   if (body.consent !== true) addIssue(missing, "consent");
 
@@ -390,7 +387,9 @@ function prepareIndividualLead(body: JsonObject, request: Request) {
       email: email.trim(),
       learningGoal,
       currentLevel,
-      preferredLearningMode,
+      // B2C training is Online Live. Keep the downstream webhook field stable
+      // without asking customers to select a mode that no longer varies.
+      preferredLearningMode: "online",
       preferredAssessmentTime,
       notes: notes.trim(),
       metadata: buildMetadata(metadata, request),

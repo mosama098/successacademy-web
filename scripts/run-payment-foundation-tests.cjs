@@ -41,7 +41,7 @@ const {
   verifyOrderAccessToken,
 } = require(path.join(root, "src/features/payments/server/order-access.ts"));
 const { getPlanRecommendation } = require(path.join(root, "src/features/plans/config.ts"));
-const { validateCustomerContact, paymentMethodPreferences, requiresPaymentProof, validatePaymentProof } = require(path.join(root, "src/features/payments/validation.ts"));
+const { validateCustomerContact, paymentMethodPreferences, publicPaymentMethodPreferences, requiresPaymentProof, validatePaymentProof } = require(path.join(root, "src/features/payments/validation.ts"));
 const { createOrderHandler } = require(path.join(root, "src/features/payments/server/create-order-handler.ts"));
 const { GoogleSheetsOrderRepository } = require(path.join(root, "src/features/payments/server/google-sheets-order-repository.ts"));
 const { OrderRepositoryUnavailableError } = require(path.join(root, "src/features/payments/server/order-repository.ts"));
@@ -353,6 +353,7 @@ test("requires all contact fields and validates Egyptian mobile numbers and emai
 
 test("all five methods save a preference without activating a provider or payment", async () => {
   assert.deepEqual([...paymentMethodPreferences].sort(), ["branch", "card", "installments", "instapay", "wallet"]);
+  assert.deepEqual([...publicPaymentMethodPreferences].sort(), ["card", "installments", "instapay", "wallet"]);
   for (const paymentMethod of paymentMethodPreferences) {
     const { service } = createFixture();
     const proofLink = requiresPaymentProof(paymentMethod) ? "https://drive.google.com/file/d/test-proof/view" : undefined;
@@ -547,7 +548,9 @@ test("API rejects contact, package, price, attendance, method and idempotency er
     [{ packageId: "fake" }, "invalid_plan"],
     [{ quotedPriceEgp: 1 }, "price_mismatch"],
     [{ attendance: "anywhere" }, "invalid_attendance"],
+    [{ attendance: "branch" }, "invalid_attendance"],
     [{ paymentMethod: "bitcoin" }, "invalid_payment_method"],
+    [{ paymentMethod: "branch" }, "invalid_payment_method"],
   ];
   for (const [body, code] of cases) {
     const { handler, repository } = createApi();
@@ -574,7 +577,7 @@ test("API rejects identity/status injection and locks the placement-derived star
 test("API returns conflict when a repeated key carries changed details", async () => {
   const { handler, repository } = createApi();
   await handler(request());
-  const conflict = await handler(request({ paymentMethod: "branch" }));
+  const conflict = await handler(request({ paymentMethod: "installments" }));
   assert.equal(conflict.status, 409);
   assert.equal((await conflict.json()).error, "idempotency_conflict");
   assert.equal(repository.orders.size, 1);
@@ -1155,7 +1158,7 @@ test("manual payment configuration uses the approved public business details and
   assert.equal(crypto.createHash("sha256").update(qr).digest("hex"), "17dfbe47dbf858dbc68aef0836409fe5c3bfd361144ab43ff2ecbfb774a84b78");
 });
 
-test("checkout shows exactly one compact method panel with dynamic final price and correct proof rules", () => {
+test("checkout exposes current public methods while retaining historical branch configuration", () => {
   for (const locale of ["ar", "en"]) {
     const render = paymentUiFixture(locale);
     const select = (value) => render().find((node) => node.props.name === "paymentMethod" && node.props.value === value).props.onChange();
@@ -1179,20 +1182,8 @@ test("checkout shows exactly one compact method panel with dynamic final price a
     assert.match(html, /name="paymentProof"/);
     assert.ok(!html.includes(manualPaymentConfig.instapay.address));
     assert.ok(!html.includes(manualPaymentConfig.instapay.qrAssetPath));
-
-    select("branch");
-    html = render().html;
-    assert.match(html, /data-manual-payment-panel="branch"/);
-    assert.ok(html.includes(locale === "ar" ? "54 شارع مصدق" : "54 Mossad Street"));
-    assert.ok(html.includes(manualPaymentConfig.branch.mapsUrl));
-    assert.ok(html.includes(manualPaymentConfig.branch.workingHours[locale]));
-    assert.ok(html.includes(manualPaymentConfig.branch.fridayClosed[locale]));
-    assert.ok(html.includes("72"));
-    assert.ok(html.includes(expectedPrice));
-    assert.doesNotMatch(html, /name="paymentProof"/);
-    assert.doesNotMatch(html, /إثبات التحويل|transfer proof/);
-    assert.ok(!html.includes(manualPaymentConfig.instapay.qrAssetPath));
-    assert.ok(!html.includes(manualPaymentConfig.wallet.number));
+    assert.doesNotMatch(html, /value="branch"/);
+    assert.doesNotMatch(html, /data-manual-payment-panel="branch"/);
   }
 });
 
@@ -1238,7 +1229,7 @@ test("copy actions are accessible and use subtle localized feedback", async () =
   }
 });
 
-test("switching to branch clears transfer proof state and cannot submit a stale proof", () => {
+test("switching away from a transfer method clears proof state and cannot submit stale proof", () => {
   const render = paymentUiFixture("en");
   const fields = render().find((node) => node.type?.name === "CustomerEnrollmentFields");
   for (const [field, value] of Object.entries(enrollment)) fields.props.onChange(field, value == null ? "" : String(value));
@@ -1246,10 +1237,10 @@ test("switching to branch clears transfer proof state and cannot submit a stale 
   render().find((node) => node.props.name === "paymentMethod" && node.props.value === "instapay").props.onChange();
   render().find((node) => node.props.name === "paymentProof").props.onChange({ target: { files: [{ name: "receipt.png", size: 1024, type: "image/png" }] } });
   assert.equal(render().find((node) => node.props.type === "submit").props.disabled, false);
-  render().find((node) => node.props.name === "paymentMethod" && node.props.value === "branch").props.onChange();
-  const branch = render();
-  assert.doesNotMatch(branch.html, /name="paymentProof"|receipt\.png/);
-  assert.equal(branch.find((node) => node.props.type === "submit").props.disabled, false);
+  render().find((node) => node.props.name === "paymentMethod" && node.props.value === "card").props.onChange();
+  const card = render();
+  assert.doesNotMatch(card.html, /name="paymentProof"|receipt\.png/);
+  assert.equal(card.find((node) => node.props.type === "submit").props.disabled, false);
   const source = fs.readFileSync(path.join(root, "src/features/payments/components/payment-checkout.tsx"), "utf8");
   assert.match(source, /if \(requiresPaymentProof\(method\) && proofFile\)/);
 });
@@ -1320,19 +1311,18 @@ test("booking requires name, phone, WhatsApp, email and age on client and server
   assert.equal(repository.bookings.size, 0);
 });
 
-test("branch bookings need no extra personal information and reject removed governorate and unnecessary fields", async () => {
+test("public orders reject branch attendance and removed unnecessary personal fields", async () => {
   for (const field of ["governorate", "gender", "address", "nationalId", "branch", "englishLevel", "previousExperience", "learningGoal"]) {
     const { handler } = createApi();
-    assert.equal((await handler(request({ attendance: "branch", customer: { ...enrollment, [field]: "unnecessary" } }))).status, 400, field);
+    assert.equal((await handler(request({ customer: { ...enrollment, [field]: "unnecessary" } }))).status, 400, field);
   }
   const { handler, repository } = createApi();
-  assert.equal((await handler(request({ attendance: "branch" }))).status, 201);
-  const registration = [...repository.bookings.values()][0].customer;
-  assert.equal(registration.address, undefined);
-  assert.equal(registration.gender, undefined);
-  assert.equal(registration.governorate, undefined);
-  assert.equal(registration.age, 25);
-  assert.equal(registration.attendance, "branch");
+  const response = await handler(request({ attendance: "branch" }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_attendance");
+  assert.equal(repository.orders.size, 0);
+  assert.equal(repository.bookings.size, 0);
+  assert.equal(validateEnrollment(enrollment, "branch").valid, true, "historical branch snapshots remain parseable");
 });
 
 test("age accepts whole years and Arabic digits but rejects malformed or missing values", async () => {
@@ -2184,7 +2174,7 @@ test("payment Apps Script writes only validated image bytes to its private confi
   assert.equal(script.request("upload_payment_proof", payload).error, "proof_storage_unavailable");
 });
 
-test("InstaPay and wallet require a signed upload receipt while branch requires no screenshot", async () => {
+test("InstaPay and wallet require signed receipts while public branch orders are rejected", async () => {
   const proofLink = "https://drive.google.com/file/d/test-proof/view";
   for (const method of ["instapay", "wallet"]) {
     const { handler, repository } = createApi();
@@ -2206,7 +2196,7 @@ test("InstaPay and wallet require a signed upload receipt while branch requires 
     const missing = createApi();
     assert.equal((await missing.handler(request({ paymentMethod: method }))).status, 400);
   }
-  for (const method of ["card", "installments", "branch"]) {
+  for (const method of ["card", "installments"]) {
     const { handler, repository } = createApi();
     const response = await handler(request({ paymentMethod: method, proofReceipt: createProofReceipt(proofLink, "instapay", context.idempotencyKey, secret) }));
     assert.equal(response.status, 400);
@@ -2214,9 +2204,10 @@ test("InstaPay and wallet require a signed upload receipt while branch requires 
     assert.equal(repository.orders.size, 0);
   }
   const branch = createApi();
-  assert.equal((await branch.handler(request({ paymentMethod: "branch" }))).status, 201);
-  const branchOrder = [...branch.repository.orders.values()][0];
-  assert.equal(bookingPaymentVerification(branchOrder), "Waiting Review");
+  const branchResponse = await branch.handler(request({ paymentMethod: "branch" }));
+  assert.equal(branchResponse.status, 400);
+  assert.equal((await branchResponse.json()).error, "invalid_payment_method");
+  assert.equal(branch.repository.orders.size, 0);
 });
 
 test("proof validation rejects arbitrary URLs and forged, tampered or expired receipts", async () => {

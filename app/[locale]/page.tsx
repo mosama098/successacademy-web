@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: PageProps) {
       ? "Success Academy | مش مجرد كورس... اتجاه"
       : "Success Academy | Not Just A Course... A Direction",
     description: isArabic
-      ? "اعرف مستواك مجانا وابدأ طريق واضح لتعلم الإنجليزية مع متابعة من Success Manager."
-      : "Get your free level check and start a clear English learning direction with Success Manager follow-up.",
+      ? "اتعلم الإنجليزي Live أونلاين على Zoom، في Group من 7–10 أو Private 1:1، وابدأ باختبار تحديد مستوى مجاني."
+      : "Learn English Live Online on Zoom in a group of 7–10 or Private 1:1, starting with a free Placement Test.",
   };
 }
 

@@ -6,9 +6,14 @@ export type CustomerField = keyof CustomerContact;
 export type CustomerErrors = Partial<Record<CustomerField, "required" | "invalid">>;
 
 export const paymentMethodPreferences = plannedPaymentMethods.map(({ id }) => id);
+export const publicPaymentMethodPreferences = paymentMethodPreferences.filter((id) => id !== "branch");
 
 export function isPaymentMethodPreference(value: unknown): value is PaymentMethodId {
   return typeof value === "string" && paymentMethodPreferences.some((id) => id === value);
+}
+
+export function isPublicPaymentMethodPreference(value: unknown): value is Exclude<PaymentMethodId, "branch"> {
+  return typeof value === "string" && publicPaymentMethodPreferences.some((id) => id === value);
 }
 
 export function isManualPaymentMethod(value: unknown): value is "instapay" | "wallet" | "branch" {

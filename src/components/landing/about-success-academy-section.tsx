@@ -32,8 +32,9 @@ function StatIcon({ index }: { index: number }) {
 
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <circle cx="12" cy="10" r="2.2" stroke="#EC911F" strokeWidth="1.8" />
+      <rect x="3.5" y="5" width="17" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m10 9 5 2.5-5 2.5V9Z" fill="#EC911F" />
+      <path d="M8 20h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

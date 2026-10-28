@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Locale } from "@/lib/i18n";
 import {
-  attendanceModes,
-  plannedPaymentMethods,
+  publicPaymentMethods,
   type AttendanceMode,
   type PaymentMethodId,
   type PlanRecommendation,
@@ -17,20 +16,16 @@ type CheckoutFoundationProps = {
   locale: Locale;
   recommendation: PlanRecommendation | null;
   hasExistingLead: boolean;
-  initialAttendanceMode: AttendanceMode | null;
 };
 
 export function CheckoutFoundation({
   locale,
   recommendation,
-  initialAttendanceMode,
 }: CheckoutFoundationProps) {
   const copy = plansCopy[locale];
   const router = useRouter();
   const isArabic = locale === "ar";
   const priceFormatter = new Intl.NumberFormat(isArabic ? "ar-EG" : "en-EG");
-  const [attendanceMode, setAttendanceMode] = useState<AttendanceMode | null>(initialAttendanceMode);
-  const [editingAttendance, setEditingAttendance] = useState(!initialAttendanceMode);
 
   if (!recommendation) {
     return (
@@ -53,14 +48,6 @@ export function CheckoutFoundation({
   const backHref = `/${locale}/plans?${backQuery.toString()}`;
   const estimatedDuration = copy.plan.estimatedDuration(recommendation.package.estimatedWeeks);
   const [durationPrimary, durationEquivalent] = estimatedDuration.split(" / ");
-
-  function chooseAttendance(mode: AttendanceMode) {
-    setAttendanceMode(mode);
-    setEditingAttendance(false);
-    const url = new URL(window.location.href);
-    url.searchParams.set("attendance", mode);
-    window.history.replaceState(window.history.state, "", url);
-  }
 
   return (
     <div className="bg-[#f7f3ed] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-9">
@@ -120,60 +107,24 @@ export function CheckoutFoundation({
 
           <div className="space-y-4 lg:col-start-1 lg:row-start-1" dir={isArabic ? "rtl" : "ltr"}>
             <section className="rounded-[22px] border border-[#321d43]/10 bg-white p-4 shadow-[0_14px_38px_rgba(50,29,67,0.065)] sm:p-5" aria-labelledby="attendance-heading">
-              <div>
-                <h2 id="attendance-heading" className="text-[22px] font-black leading-tight text-[#34253e]">{copy.checkout.attendanceTitle}</h2>
-                {(!attendanceMode || editingAttendance) ? <p className="mt-1 text-sm font-semibold leading-6 text-[#756979]">{copy.checkout.attendanceBody}</p> : null}
-              </div>
-
-              {attendanceMode && !editingAttendance ? (
-                <div className="mt-3 flex min-h-16 items-center justify-between gap-3 rounded-[17px] border border-[#321d43]/10 bg-[#f3eef4] px-4 py-3" aria-live="polite">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-white text-[#563a64] shadow-sm">
-                      <AttendanceIcon mode={attendanceMode} />
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-[#796a7d]">{copy.checkout.attendanceSelected}</p>
-                      <p className="text-base font-black text-[#321d43]">{copy.checkout.attendanceOptions[attendanceMode].title}</p>
-                    </div>
-                  </div>
-                  <button type="button" onClick={() => setEditingAttendance(true)} className="min-h-10 shrink-0 rounded-full border border-[#321d43]/14 bg-white px-4 text-sm font-black text-[#321d43] transition hover:bg-[#ece5ee] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20">
-                    {copy.checkout.attendanceChange}
-                  </button>
+              <h2 id="attendance-heading" className="text-[22px] font-black leading-tight text-[#34253e]">{copy.checkout.attendanceTitle}</h2>
+              <div className="mt-3 flex min-h-16 items-center gap-3 rounded-[17px] border border-[#321d43]/10 bg-[#f3eef4] px-4 py-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-white text-[#563a64] shadow-sm">
+                  <AttendanceIcon mode="online" />
+                </span>
+                <div>
+                  <p className="text-base font-black text-[#321d43]">{copy.checkout.attendanceOptions.online.title}</p>
+                  <p className="mt-0.5 text-sm font-semibold leading-6 text-[#756979]">{copy.checkout.attendanceOptions.online.description}</p>
                 </div>
-              ) : (
-                <fieldset className="mt-3">
-                  <legend className="sr-only">{copy.checkout.attendanceTitle}</legend>
-                  <div className="grid grid-cols-2 gap-3">
-                    {attendanceModes.map((mode) => {
-                      const selected = attendanceMode === mode;
-                      const option = copy.checkout.attendanceOptions[mode];
-                      return (
-                        <button
-                          key={mode}
-                          type="button"
-                          aria-pressed={selected}
-                          onClick={() => chooseAttendance(mode)}
-                          className={`flex min-h-13 items-center justify-center gap-2.5 rounded-[16px] border px-3 py-2 text-start transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/22 ${selected ? "border-[#321d43] bg-[#321d43] text-white" : "border-[#321d43]/10 bg-[#f7f3ed] text-[#34253e] hover:border-[#321d43]/28 hover:bg-[#fdfbf8]"}`}
-                        >
-                          <span className={`grid size-9 shrink-0 place-items-center rounded-[12px] ${selected ? "bg-white/10 text-[#f5b35d]" : "bg-[#ece5ee] text-[#563a64]"}`}>
-                            <AttendanceIcon mode={mode} />
-                          </span>
-                          <span className="text-sm font-black sm:text-base">{option.title}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!attendanceMode ? <p className="mt-2 text-sm font-bold text-[#9b5d19]" role="status">{copy.checkout.attendanceRequired}</p> : null}
-                </fieldset>
-              )}
+              </div>
             </section>
 
             <section className="rounded-[22px] border border-[#321d43]/10 bg-white p-4 shadow-[0_14px_38px_rgba(50,29,67,0.065)] sm:p-5" aria-labelledby="payment-methods-heading">
               <h2 id="payment-methods-heading" className="text-[22px] font-black leading-tight text-[#34253e]">{copy.checkout.methodsTitle}</h2>
               <p className="mt-1 text-sm font-semibold leading-6 text-[#756979]">{copy.checkout.methodsBody}</p>
-              <div className="mt-3 grid grid-cols-2 gap-2.5 lg:grid-cols-3 xl:grid-cols-[repeat(5,minmax(min-content,1fr))]">
-                {plannedPaymentMethods.map((method) => (
-                  <div key={method.id} className={`flex min-h-14 min-w-0 items-center gap-1.5 rounded-[15px] border border-[#321d43]/9 bg-[#f7f3ed] px-2 py-2 ${method.id === "branch" ? "col-span-2 lg:col-span-1" : ""}`}>
+              <div className="mt-3 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                {publicPaymentMethods.map((method) => (
+                  <div key={method.id} className="flex min-h-14 min-w-0 items-center gap-1.5 rounded-[15px] border border-[#321d43]/9 bg-[#f7f3ed] px-2 py-2">
                     <span className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-[#ece5ee] text-[#563a64]">
                       <PaymentIcon id={method.id} />
                     </span>
@@ -186,15 +137,13 @@ export function CheckoutFoundation({
             <div className="rounded-[22px] border border-[#321d43]/10 bg-white p-4 shadow-[0_14px_38px_rgba(50,29,67,0.065)] sm:p-5">
               <button
                 type="button"
-                disabled={!attendanceMode}
                 onClick={() => {
-                  if (!attendanceMode) return;
-                  const query = new URLSearchParams({ program: recommendation.programType, start: recommendation.startLevel, target: recommendation.targetLevel, package: recommendation.package.id, attendance: attendanceMode });
+                  const query = new URLSearchParams({ program: recommendation.programType, start: recommendation.startLevel, target: recommendation.targetLevel, package: recommendation.package.id });
                   router.push(`/${locale}/plans/payment?${query.toString()}`);
                 }}
-                className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 text-base font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25 ${attendanceMode ? "bg-[#ec911f] text-white shadow-[0_10px_24px_rgba(236,145,31,0.22)] hover:bg-[#d97f13] active:scale-[0.99]" : "cursor-not-allowed bg-[#ded8df] text-[#766d78]"}`}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ec911f] px-5 text-base font-black text-white shadow-[0_10px_24px_rgba(236,145,31,0.22)] transition hover:bg-[#d97f13] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25"
               >
-                {attendanceMode ? copy.checkout.continueToPayment : copy.checkout.attendanceRequired}
+                {copy.checkout.continueToPayment}
                 <ArrowIcon reverse={!isArabic} />
               </button>
               <Link href={backHref} className="mx-auto mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-black text-[#563a64] underline decoration-[#563a64]/25 underline-offset-4 transition hover:text-[#321d43] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20">

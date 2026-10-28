@@ -9,7 +9,7 @@ import {
   getPlanRecommendation,
   getTargetForPackage,
   learningLevels,
-  plannedPaymentMethods,
+  publicPaymentMethods,
   type LearningLevel,
   type LearningPackage,
   type LearningPackageId,
@@ -215,9 +215,9 @@ export function RecommendedPlanPage({
             <h2 className="text-[25px] font-black leading-tight text-[#34253e] sm:text-3xl">{copy.payment.title}</h2>
             <p className="mt-1.5 max-w-lg text-[13px] font-semibold leading-6 text-[#6d6271] sm:text-sm">{copy.payment.description}</p>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:mt-0 lg:grid-cols-5">
-            {plannedPaymentMethods.map((method) => (
-              <div key={method.id} className={`flex min-h-[64px] items-center gap-2.5 rounded-[17px] border border-white/90 bg-white/82 px-3 py-2 text-start shadow-[0_7px_18px_rgba(50,29,67,0.04)] lg:flex-col lg:justify-center lg:text-center ${method.id === "branch" ? "col-span-2 sm:col-span-1" : ""}`}>
+          <div className="mt-4 grid grid-cols-2 gap-2 lg:mt-0 lg:grid-cols-4">
+            {publicPaymentMethods.map((method) => (
+              <div key={method.id} className="flex min-h-[64px] items-center gap-2.5 rounded-[17px] border border-white/90 bg-white/82 px-3 py-2 text-start shadow-[0_7px_18px_rgba(50,29,67,0.04)] lg:flex-col lg:justify-center lg:text-center">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-[#321d43] text-[#f2ad57]"><PaymentIcon id={method.id} /></span>
                 <p className="text-[12px] font-black leading-4 text-[#3d2a47]">{copy.paymentMethods[method.id].title}</p>
               </div>

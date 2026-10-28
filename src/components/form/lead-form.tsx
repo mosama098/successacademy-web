@@ -48,7 +48,6 @@ const validationOrder: FieldName[] = [
   "phone",
   "email",
   "learningGoal",
-  "preferredLearningMode",
   "preferredAssessmentTime",
   "consent",
 ];
@@ -110,10 +109,6 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
 
     if (field === "learningGoal" && !value) {
       return copy.errors.learningGoal;
-    }
-
-    if (field === "preferredLearningMode" && !value) {
-      return copy.errors.preferredLearningMode;
     }
 
     if (field === "preferredAssessmentTime" && !value) {
@@ -335,8 +330,8 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                 />
               </div>
 
-              <div className="lg:grid lg:grid-cols-5 lg:gap-x-3">
-                <div className="min-w-0 lg:col-span-3 lg:self-start">
+              <div className="lg:grid lg:grid-cols-2 lg:gap-x-3">
+                <div className="min-w-0 lg:self-start">
                   <ChoiceGroup
                     id="learning-goal"
                     name="learningGoal"
@@ -355,28 +350,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
                   />
                 </div>
 
-                <div className="min-w-0 lg:col-span-2 lg:self-start">
-                  <ChoiceGroup
-                    id="learning-method"
-                    name="preferredLearningMode"
-                    label={copy.labels.preferredLearningMode}
-                    icon="learning"
-                    options={copy.learningModeOptions}
-                    value={form.preferredLearningMode}
-                    error={errors.preferredLearningMode}
-                    required
-                    layout="method"
-                    setFirstRef={(element) =>
-                      setFieldRef("preferredLearningMode", element)
-                    }
-                    onBlur={() => markTouched("preferredLearningMode")}
-                    onChange={(value) =>
-                      updateField("preferredLearningMode", value)
-                    }
-                  />
-                </div>
-
-                <div className="min-w-0 lg:col-span-3 lg:self-start">
+                <div className="min-w-0 lg:self-start">
                   <ChoiceGroup
                     id="assessment-time"
                     name="preferredAssessmentTime"

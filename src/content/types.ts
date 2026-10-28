@@ -65,7 +65,6 @@ export type LandingContent = {
       phone: string;
       email: string;
       learningGoal: string;
-      preferredLearningMode: string;
       preferredAssessmentTime: string;
       notes: string;
       consent: string;
@@ -77,14 +76,12 @@ export type LandingContent = {
       notes: string;
     };
     learningGoalOptions: Option[];
-    learningModeOptions: Option[];
     assessmentTimeOptions: Option[];
     errors: {
       fullName: string;
       phone: string;
       email: string;
       learningGoal: string;
-      preferredLearningMode: string;
       preferredAssessmentTime: string;
       consent: string;
     };
@@ -124,7 +121,7 @@ export type LandingContent = {
     whatsapp: string;
     call: string;
     online: string;
-    branch: string;
+    recordings: string;
     quickLinksTitle: string;
     quickLinks: {
       why: string;

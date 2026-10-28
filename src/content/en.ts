@@ -11,9 +11,9 @@ export const enContent: LandingContent = {
   },
   hero: {
     eyebrow: "Success Academy | Not Just A Course... A Direction",
-    title: "Most people don’t fail at learning English...\nthey learn it the wrong way.",
+    title: "Learn English Live Online on Zoom\nand start from your real level.",
     subtitle:
-      "If you have started more than once and stopped, the problem is probably not your ability. It is joining a course without diagnosis, without a clear goal, and without follow-up that pushes you to actually use the language.",
+      "Interactive Live training in a group of 7–10 or Private 1:1, with every Live session recorded for review whenever you need it.",
     primaryCta: "Get Your Free Level Check",
     whatsappCta: "Talk to a Success Manager",
     badge: "Programs start from 2250 EGP",
@@ -29,7 +29,7 @@ export const enContent: LandingContent = {
   cta: {
     title: "Start with a free placement test before choosing any programme",
     description:
-      "Register your details, start the placement test, and find the right starting point.",
+      "Register, discover your level, and start a complete Live Online experience on Zoom.",
     primary: "Start Your Placement Test",
     secondary: "Talk to a Success Manager",
   },
@@ -49,24 +49,24 @@ export const enContent: LandingContent = {
         answer: "No. You start from your real level, whether you are a complete beginner or already have some basics and want to improve.",
       },
       {
-        question: "Is the Training Online or In Person?",
-        answer: "You can study online or attend at our Dokki branch and choose the option that suits you best.",
+        question: "Are the Classes Live or Recorded?",
+        answer: "All teaching is delivered Live on Zoom with your trainer. Every Live session is also recorded and remains available on your account for later review.",
       },
       {
-        question: "What Makes Success Academy Different?",
-        answer: "Practical training, interactive activities, real conversations, Success Manager follow-up, and clear feedback on your progress.",
+        question: "How Does Online Training Work?",
+        answer: "You join your trainer Live on Zoom, participate in conversations, activities, and practical exercises from anywhere, with ongoing Success Manager follow-up.",
       },
       {
         question: "Who Are the Trainers?",
         answer: "Our team includes more than 30 trainers with over five years of training experience and CELTA or TEFL qualifications.",
       },
       {
-        question: "How Many Students Are in Each Group?",
-        answer: "Groups are kept limited so you can participate, practise, and receive meaningful follow-up.",
+        question: "Should I Choose Group or Private 1:1?",
+        answer: "Group programmes have 7–10 learners, interactive activities, and a lower price. Private 1:1 gives you more personalised attention and a pace focused on your level and goals.",
       },
       {
-        question: "How Long Is Each Level?",
-        answer: "Each level includes 30 training hours across 10 sessions, with each session lasting three hours.",
+        question: "What If I Miss or Want to Review a Session?",
+        answer: "Every Live session is recorded and remains available on your account so you can revisit the lesson whenever you need to review it.",
       },
       {
         question: "How Much Do the Programmes Cost?",
@@ -81,7 +81,7 @@ export const enContent: LandingContent = {
     stats: [
       { value: "2015", label: "Since We Started" },
       { value: "100K+", label: "Learners Trusted Us" },
-      { value: "Online & Dokki", label: "Learn in the Way That Suits You" },
+      { value: "Live on Zoom", label: "Learn From Anywhere" },
     ],
     slogan: "Not Just A Course... A Direction",
   },
@@ -100,7 +100,6 @@ export const enContent: LandingContent = {
       phone: "Mobile or WhatsApp Number",
       email: "Email Address",
       learningGoal: "Your English Goal",
-      preferredLearningMode: "How Would You Prefer to Learn?",
       preferredAssessmentTime: "Best Time to Contact You",
       notes: "Additional Notes",
       consent: "I agree to be contacted by the Success Academy team about the placement test.",
@@ -117,10 +116,6 @@ export const enContent: LandingContent = {
       { value: "travel_everyday", label: "Travel and Everyday Life" },
       { value: "general", label: "General English Improvement" },
     ],
-    learningModeOptions: [
-      { value: "online", label: "Online" },
-      { value: "dokki", label: "Dokki Branch" },
-    ],
     assessmentTimeOptions: [
       { value: "earliest", label: "As Soon as Possible" },
       { value: "morning", label: "Morning" },
@@ -131,7 +126,6 @@ export const enContent: LandingContent = {
       phone: "Please enter a valid mobile number, such as 01012345678 or +966501234567.",
       email: "Enter a valid email address",
       learningGoal: "Choose your English goal",
-      preferredLearningMode: "Choose a learning method",
       preferredAssessmentTime: "Choose the best time to contact you",
       consent: "Consent is required to submit the request",
     },
@@ -167,12 +161,12 @@ export const enContent: LandingContent = {
   },
   footer: {
     slogan: "Not Just A Course... A Direction",
-    description: "Practical training, clear follow-up, and a path that matches your goal.",
+    description: "Live Online English training on Zoom, interactive practice, and follow-up that helps you keep moving.",
     rights: "© Success Academy — All Rights Reserved",
     whatsapp: "Contact Us on WhatsApp",
     call: "Call Us",
-    online: "Online",
-    branch: "Dokki Branch",
+    online: "Live on Zoom",
+    recordings: "Sessions Available for Review",
     quickLinksTitle: "Website",
     quickLinks: {
       why: "Why Success Academy?",
