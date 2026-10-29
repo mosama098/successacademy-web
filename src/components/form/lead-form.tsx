@@ -26,6 +26,7 @@ import {
   getOrCreateLeadSubmissionId,
   submitLead,
 } from "@/features/leads/client/lead-submission";
+import { writeCheckoutContactPrefill } from "@/features/customers/client/checkout-contact-prefill";
 
 type FieldName = Exclude<keyof FormState, "company">;
 type FocusableField = HTMLInputElement | HTMLTextAreaElement;
@@ -195,6 +196,7 @@ export function LeadForm({ locale, copy }: LeadFormProps) {
       });
       if (result.kind !== "success") throw new Error(`lead_${result.kind}`);
 
+      writeCheckoutContactPrefill({ name: form.fullName, phone: normalizedPhone, email: form.email });
       clearLeadSubmissionId(submissionStorageKey);
       submissionId.current = null;
       setStatus("success");

@@ -791,7 +791,7 @@ test("result keeps final CEFR, uses qualitative skills, and renders both safe CT
   assert.match(result, /copy\.qualitativeLabels\[evidence\.estimatedBand\]/);
   assert.match(result, /<AnimatedSkillIcon skill=\{skill\}/);
   assert.doesNotMatch(result, />\{evidence\.estimatedBand\}</);
-  assert.match(result, /href=\{`\/\$\{locale\}\/plans\?level=\$\{result\.placement\}&source=placement`\}/);
+  assert.match(result, /href=\{`\/\$\{locale\}\/plans\?level=\$\{result\.placement\}&source=placement_result`\}/);
   assert.match(result, /copy\.homepageCta/);
   assert.equal(placementCopy.ar.homepageCta, "ابدأ خطوتك الجاية");
   assert.equal(placementCopy.en.homepageCta, "Start Your Next Step");
@@ -1733,13 +1733,19 @@ test("plans checkout derives Online while historical attendance values remain re
   assert.doesNotMatch(checkoutComponent, /fetch\s*\(/);
 });
 
-test("plans checkout is a compact review step without sales or payment execution panels", () => {
+test("legacy plans checkout fallback remains inert when a compatibility link is invalid", () => {
+  const checkoutPage = fs.readFileSync(
+    path.join(root, "app/[locale]/plans/checkout/page.tsx"),
+    "utf8",
+  );
   const checkoutComponent = fs.readFileSync(
     path.join(root, "src/features/plans/components/checkout-foundation.tsx"),
     "utf8",
   );
   const copy = fs.readFileSync(path.join(root, "src/features/plans/copy.ts"), "utf8");
 
+  assert.match(checkoutPage, /redirect\(`\/\$\{currentLocale\}\/plans\/payment\?\$\{paymentQuery\.toString\(\)\}`\)/);
+  assert.match(checkoutPage, /recommendation=\{null\}/);
   assert.match(checkoutComponent, /lg:grid-cols-\[1\.08fr_0\.92fr\]/);
   assert.match(checkoutComponent, /publicPaymentMethods\.map/);
   assert.doesNotMatch(checkoutComponent, /recommendation\.package\.savingEgp/);
@@ -1801,7 +1807,7 @@ test("customer routes use one global mobile WhatsApp CTA with contextual bilingu
   assert.doesNotMatch(floatingWhatsApp, /flex justify-center bg-\[#f7f3ed\]/);
   assert.match(plansPage, /whatsappContext="plans"/);
   assert.match(checkoutPage, /whatsappContext="package_review"/);
-  assert.match(checkoutPage, /packageName: validRecommendation\?\.package\.name\[currentLocale\]/);
+  assert.match(checkoutPage, /redirect\(`\/\$\{currentLocale\}\/plans\/payment\?\$\{paymentQuery\.toString\(\)\}`\)/);
   assert.match(paymentPage, /whatsappContext="payment"/);
   assert.match(successPage, /whatsappContext="payment_status"/);
   assert.match(successPage, /bookingDisplayReference\(order\)/);

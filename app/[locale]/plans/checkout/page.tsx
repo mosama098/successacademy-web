@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SitePageShell } from "@/components/site-page-shell";
 import { CheckoutFoundation } from "@/features/plans/components/checkout-foundation";
 import {
@@ -50,18 +50,28 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     ? `plans/checkout?program=${validRecommendation.programType}&start=${validRecommendation.startLevel}&target=${validRecommendation.targetLevel}&package=${validRecommendation.package.id}`
     : "plans/checkout";
 
+  if (validRecommendation) {
+    const paymentQuery = new URLSearchParams({
+      program: validRecommendation.programType,
+      start: validRecommendation.startLevel,
+      target: validRecommendation.targetLevel,
+      package: validRecommendation.package.id,
+    });
+    redirect(`/${currentLocale}/plans/payment?${paymentQuery.toString()}`);
+  }
+
   return (
     <SitePageShell
       locale={currentLocale}
       page="plans_checkout"
       pagePath={pagePath}
       whatsappContext="package_review"
-      whatsappDetails={{ packageName: validRecommendation?.package.name[currentLocale] }}
+      whatsappDetails={{}}
       whatsappSource="plans_checkout_floating_help"
     >
       <CheckoutFoundation
         locale={currentLocale}
-        recommendation={validRecommendation}
+        recommendation={null}
         hasExistingLead={Boolean(placementContext?.hasLeadReference)}
       />
     </SitePageShell>

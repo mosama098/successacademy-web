@@ -977,6 +977,9 @@ function paymentUiFixture(locale) {
   const previousTsx = require.extensions[".tsx"];
   const filename = path.join(root, "src/features/payments/components/payment-checkout.tsx");
   Module._load = function uiTestLoad(request, parent, isMain) {
+    if (request === "@/lib/phone") {
+      return previousLoad.call(this, path.join(root, "src/lib/phone.ts"), parent, isMain);
+    }
     if (parent?.filename === filename) {
       if (request === "react") return { ...React,
         useState(initial) {
@@ -1097,7 +1100,7 @@ test("payment UI keeps the summary-first section order and the submit action las
     const render = paymentUiFixture(locale);
     const ui = render();
     const sections = [...ui.html.matchAll(/data-payment-section="([^"]+)"/g)].map((match) => match[1]);
-    assert.deepEqual(sections, ["summary", "customer", "promo", "methods", "security", "consent", "action"]);
+    assert.deepEqual(sections, ["summary", "customer", "promo", "methods", "security", "after-payment", "consent", "action"]);
     assert.ok(ui.html.indexOf('id="mini-order-summary"') < ui.html.indexOf('name="name"'));
     const submit = ui.find((node) => node.props.type === "submit");
     assert.equal(submit.props.disabled, true);
@@ -1105,7 +1108,7 @@ test("payment UI keeps the summary-first section order and the submit action las
     for (const href of Object.values(testPolicies)) assert.ok(ui.html.includes(`href="${href}"`));
     ui.find((node) => node.props.name === "paymentMethod" && node.props.value === "instapay").props.onChange();
     const manualSections = [...render().html.matchAll(/data-payment-section="([^"]+)"/g)].map((match) => match[1]);
-    assert.deepEqual(manualSections, ["summary", "customer", "promo", "methods", "instructions", "proof", "security", "consent", "action"]);
+    assert.deepEqual(manualSections, ["summary", "customer", "promo", "methods", "instructions", "proof", "security", "after-payment", "consent", "action"]);
   }
 });
 

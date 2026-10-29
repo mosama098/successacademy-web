@@ -430,7 +430,7 @@ function PackageCard({ locale, copy, learningPackage, startLevel, recommended, p
 
 function getCheckoutHref(locale: Locale, recommendation: PlanRecommendation) {
   const query = new URLSearchParams({ program: recommendation.programType, start: recommendation.startLevel, target: recommendation.targetLevel, package: recommendation.package.id });
-  return `/${locale}/plans/checkout?${query.toString()}`;
+  return `/${locale}/plans/payment?${query.toString()}`;
 }
 
 function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) { return <div className="max-w-[720px]">{eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}<h2 className={`${eyebrow ? "mt-3" : ""} text-balance text-[26px] font-black leading-tight text-[#34253e] sm:text-[33px]`}>{title}</h2>{description ? <p className="mt-1.5 text-[14px] font-semibold leading-6 text-[#716675] sm:text-[15px] sm:leading-7">{description}</p> : null}</div>; }

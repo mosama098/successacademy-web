@@ -91,6 +91,12 @@ export function PaymentSuccess({ locale, orderId }: { locale: Locale; orderId: s
           <div className="min-w-0"><dt className="text-sm text-[#563A64]">{copy.status}</dt><dd className="mt-1 font-bold">{presentation.badge}</dd></div>
         </dl>
         <div className="border-t border-[#ECE5EE] bg-[#ECE5EE]/40 px-5 py-4 sm:px-6"><h2 className="font-bold text-[#321D43]">{copy.next}</h2><p className="mt-1 text-sm leading-6 text-[#563A64]">{presentation.next}</p></div>
+        {presentation.state === "paid" ? <ol data-paid-journey className="grid gap-2 border-t border-[#ECE5EE] p-4 sm:grid-cols-4 sm:p-5">
+          {copy.paidSteps.map((step, index) => <li key={step} className="flex min-w-0 items-center gap-2 rounded-xl bg-[#F7F3ED] p-3 text-sm font-bold leading-5 text-[#321D43] sm:flex-col sm:items-start">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#EC911F] text-xs font-black text-white" aria-hidden="true">{index + 1}</span>
+            <span>{step}</span>
+          </li>)}
+        </ol> : null}
       </article> : null}
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-sm font-bold text-[#563A64]">

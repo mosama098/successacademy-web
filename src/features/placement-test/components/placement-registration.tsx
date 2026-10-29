@@ -8,6 +8,7 @@ import {
   getOrCreateLeadSubmissionId,
   submitLead,
 } from "@/features/leads/client/lead-submission";
+import { writeCheckoutContactPrefill } from "@/features/customers/client/checkout-contact-prefill";
 import { trackFormStart, trackFormSubmit, trackPlacementTestEvent } from "@/lib/tracking";
 import { getLeadMetadata } from "@/lib/utm";
 import { placementCopy } from "../copy";
@@ -86,6 +87,7 @@ export function PlacementRegistration({ locale }: PlacementRegistrationProps) {
         return;
       }
 
+      writeCheckoutContactPrefill({ name: fullName, phone, email });
       clearLeadSubmissionId(submissionStorageKey);
       submissionId.current = null;
       trackFormSubmit(

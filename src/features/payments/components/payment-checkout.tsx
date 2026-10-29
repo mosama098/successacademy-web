@@ -17,6 +17,7 @@ import { validateEnrollment } from "../../customers/validation";
 import { enrollmentFields, type EnrollmentForm, type EnrollmentErrors } from "../../customers/types";
 import { CustomerEnrollmentFields } from "./customer-enrollment-fields";
 import { installmentProviders } from "../installment-providers";
+import { readCheckoutContactPrefill } from "../../customers/client/checkout-contact-prefill";
 
 type Props = { locale: Locale; recommendation: PlanRecommendation; attendance: AttendanceMode; legalLinks: LegalPolicyLinks; initialMethod?: ManualPaymentMethod | null };
 type ErrorKind = keyof typeof paymentCopy.en.errors;
@@ -51,17 +52,24 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
   const idempotencyRef = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const formatter = new Intl.NumberFormat(isArabic ? "ar-EG" : "en-EG");
-  const routeQuery = new URLSearchParams({
-    program: recommendation.programType,
-    start: recommendation.startLevel, target: recommendation.targetLevel,
-    package: recommendation.package.id, attendance,
-  });
-  const reviewHref = `/${locale}/plans/checkout?${routeQuery}`;
+  const reviewHref = `/${locale}/plans`;
   const finalPrice = promoPricing?.finalPrice ?? recommendation.package.priceEgp;
 
   useEffect(() => {
     trackPaymentPreparation({ name: "ViewCheckout", packageId: recommendation.package.id });
   }, [recommendation.package.id]);
+
+  useEffect(() => {
+    const prefill = readCheckoutContactPrefill();
+    if (!prefill) return;
+    setContact((current) => ({
+      ...current,
+      name: prefill.name,
+      phone: prefill.phone,
+      whatsapp: prefill.phone,
+      email: prefill.email,
+    }));
+  }, []);
 
   function getIdempotencyKey() {
     if (idempotencyRef.current) return idempotencyRef.current;
@@ -250,6 +258,7 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
                 <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                   <div className="flex items-center gap-2"><dt className="text-[#563a64]">{planCopy.program.selectorLabel}</dt><dd className="font-bold">{planCopy.program.options[recommendation.programType]}</dd></div>
                   <div className="flex items-center gap-2"><dt className="text-[#563a64]">{copy.path}</dt><dd className="font-bold" dir="ltr">{recommendation.startLevel} → {recommendation.targetLevel}</dd></div>
+                  <div className="flex items-center gap-2"><dt className="text-[#563a64]">{planCopy.checkout.levelsLabel}</dt><dd className="font-bold">{recommendation.requiredLevels} {copy.levels}</dd></div>
                   <div className="flex items-center gap-2"><dt className="text-[#563a64]">{copy.attendance}</dt><dd className="font-bold">{copy.attendanceOptions[attendance]}</dd></div>
                 </dl>
                 <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold"><span>{recommendation.requiredHours} {copy.hours}</span><span>{recommendation.package.sessions} {copy.sessions}</span><span>{planCopy.program.sessionDuration(recommendation.package.sessionDurationHours)}</span></p>
@@ -334,7 +343,12 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
 
             <section data-payment-section="security" className="mt-4 flex items-start gap-3 rounded-2xl bg-[#f7f3ed] p-3 text-[#563a64]" aria-labelledby="payment-security">
               <span className="mt-0.5 shrink-0 text-[#321d43]" aria-hidden="true"><LockIcon /></span>
-              <div><h2 id="payment-security" className="text-sm font-black text-[#321d43]">{copy.security.title}</h2><p className="mt-1 text-sm leading-6">{method === "card" ? copy.security.cardBody : method === "installments" ? copy.security.installmentsBody : requiresPaymentProof(method) ? copy.security.proofBody : copy.security.body}</p></div>
+              <div><h2 id="payment-security" className="text-sm font-black text-[#321d43]">{method === "card" || method === "installments" ? copy.security.electronicTitle : copy.security.title}</h2><p className="mt-1 text-sm leading-6">{method === "card" ? copy.security.cardBody : method === "installments" ? copy.security.installmentsBody : requiresPaymentProof(method) ? copy.security.proofBody : copy.security.body}</p></div>
+            </section>
+
+            <section data-payment-section="after-payment" className="mt-3 rounded-2xl border border-[#563a64]/12 bg-[#ece5ee]/45 p-3 text-[#563a64]" aria-labelledby="after-payment-title">
+              <h2 id="after-payment-title" className="text-sm font-black text-[#321d43]">{copy.afterPayment.title}</h2>
+              <p className="mt-1 text-sm leading-6">{copy.afterPayment.body}</p>
             </section>
 
             <div data-payment-section="consent" className="mt-3 flex items-start gap-2.5 text-sm leading-6 text-[#563a64]">
@@ -351,7 +365,13 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
             {error ? <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold leading-6 text-red-800">{copy.errors[error]}</p> : null}
             <button data-payment-section="action" type="submit" disabled={!canSubmit || submitting || applyingPromo} className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ec911f] px-5 py-3 text-base font-black text-white shadow-[0_8px_20px_rgba(236,145,31,0.16)] transition hover:bg-[#d97f13] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none">
               {submitting ? <span aria-hidden="true" className="size-4 rounded-full border-2 border-white/40 border-t-white motion-safe:animate-spin" /> : null}
-              {submitting ? (method === "installments" ? copy.installmentSubmission[submissionPhase] : copy.submission[submissionPhase]) : copy.continue}
+              {submitting
+                ? (method === "installments" ? copy.installmentSubmission[submissionPhase] : copy.submission[submissionPhase])
+                : method === "card" || method === "installments"
+                  ? copy.actions.electronic
+                  : method === "instapay" || method === "wallet"
+                    ? copy.actions.manual
+                    : copy.continue}
             </button>
           </div>
         </form>

@@ -10,6 +10,7 @@ import {
   getOrCreateLeadSubmissionId,
   submitLead,
 } from "@/features/leads/client/lead-submission";
+import { writeCheckoutContactPrefill } from "@/features/customers/client/checkout-contact-prefill";
 import { trackFormSubmit } from "@/lib/tracking";
 import { getLeadMetadata } from "@/lib/utm";
 import { plansCopy } from "../copy";
@@ -92,6 +93,7 @@ export function PlansLeadGate({ locale }: { locale: Locale }) {
       });
       if (result.kind !== "success") throw new Error(`plans_lead_${result.kind}`);
 
+      writeCheckoutContactPrefill({ name: form.fullName, phone: form.phone, email: form.email });
       if (!trackedSuccess.current) {
         trackedSuccess.current = true;
         trackFormSubmit(
