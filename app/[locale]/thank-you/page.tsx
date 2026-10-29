@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: PageProps) {
     description: isArabic
       ? "وصلنا بياناتك وتقدر تبدأ اختبار تحديد المستوى أو تستكشف الباقات والخطوة المناسبة."
       : "We received your details. You can start the placement test or explore plans and your next step.",
+    robots: { index: false, follow: false },
   };
 }
 

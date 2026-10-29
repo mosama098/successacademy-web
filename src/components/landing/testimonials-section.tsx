@@ -58,7 +58,7 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     headingLead: "مش كلام تسويق…",
     headingHighlight: "دي تجارب ناس بدأت زيك",
     description:
-      "طلاب دخلوا بأهداف مختلفة، لكن اتفقوا على فرق واحد: نظام واضح، متابعة حقيقية، وتطور حسّوه في استخدامهم للإنجليزي.",
+      "تجارب حقيقية بتوضح إزاي التدريب الأونلاين، المشاركة، والمتابعة ساعدت طلاب بدأوا بأهداف مختلفة.",
     videoLabel: "تجارب طلاب حقيقية",
     soundOn: "تشغيل الصوت",
     soundOff: "كتم الصوت",
@@ -69,13 +69,13 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     privacy:
       "تم اختصار بعض الرسائل مع الحفاظ على معناها، وإخفاء البيانات الشخصية حفاظًا على خصوصية الطلاب.",
     featured: {
-      category: [{ text: "تطور حقيقي" }],
+      category: [{ text: "تجربة أونلاين" }],
       quote: [
         {
-          text: "والله التطور ده إنتوا السبب فيه بجد… اعتمادي الأساسي كان على الكورس.",
+          text: "دي كانت أول مرة أخد كورس أونلاين، وكانت من أحلى التجارب… وكانوا معانا في كل خطوة.",
         },
       ],
-      source: [{ text: "طالبة في " }, { text: "Success Academy", ltr: true }],
+      source: [{ text: "طالبة – " }, { text: "Online Programme", ltr: true }],
     },
     supporting: [
       {
@@ -114,16 +114,13 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
         ],
       },
       {
-        category: [{ text: "تجربة أونلاين" }],
+        category: [{ text: "تطور حقيقي" }],
         quote: [
           {
-            text: "دي كانت أول مرة أخد كورس أونلاين، وكانت من أحلى التجارب… وكانوا معانا في كل خطوة.",
+            text: "والله التطور ده إنتوا السبب فيه بجد… اعتمادي الأساسي كان على الكورس.",
           },
         ],
-        source: [
-          { text: "طالبة – " },
-          { text: "Online Programme", ltr: true },
-        ],
+        source: [{ text: "طالبة في " }, { text: "Success Academy", ltr: true }],
       },
       {
         category: [{ text: "تعلم عملي" }],
@@ -141,7 +138,7 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     headingLead: "Not Marketing Claims —",
     headingHighlight: "Real Experiences From Students Like You",
     description:
-      "Students joined with different goals, but experienced the same difference: a clear system, real follow-up, and progress they could genuinely feel.",
+      "Real experiences showing how Online learning, participation, and follow-up supported students with different goals.",
     videoLabel: "Real Student Stories",
     soundOn: "Turn Sound On",
     soundOff: "Mute",
@@ -152,13 +149,13 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
     privacy:
       "Some messages have been shortened without changing their meaning, and personal details have been hidden to protect student privacy.",
     featured: {
-      category: [{ text: "Real Progress" }],
+      category: [{ text: "Online Experience" }],
       quote: [
         {
-          text: "You are genuinely the reason behind this progress. I relied mainly on the course.",
+          text: "This was my first online course, and it became one of my best experiences. The team supported us at every step.",
         },
       ],
-      source: [{ text: "Success Academy Student" }],
+      source: [{ text: "Online Programme Student" }],
     },
     supporting: [
       {
@@ -189,13 +186,13 @@ const testimonialsContent: Record<"ar" | "en", TestimonialsContent> = {
         source: [{ text: "Online Programme Student" }],
       },
       {
-        category: [{ text: "Online Experience" }],
+        category: [{ text: "Real Progress" }],
         quote: [
           {
-            text: "This was my first online course, and it became one of my best experiences. The team supported us at every step.",
+            text: "You are genuinely the reason behind this progress. I relied mainly on the course.",
           },
         ],
-        source: [{ text: "Online Programme Student" }],
+        source: [{ text: "Success Academy Student" }],
       },
       {
         category: [{ text: "Practical Learning" }],

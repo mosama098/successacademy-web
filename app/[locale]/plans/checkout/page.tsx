@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: CheckoutPageProps) {
     title: copy.checkout.metaTitle,
     description: copy.checkout.metaDescription,
     path: `/${locale}/plans/checkout`,
+    index: false,
   });
 }
 

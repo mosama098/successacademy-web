@@ -191,7 +191,7 @@ const ar: SitePagesContent = {
     heroSecondaryCta: "تحدث مع فريقنا",
     heroTrust: [
       "تقييم مستوى قبل البداية",
-      "أونلاين أو داخل مقر الشركة",
+      "أونلاين أو داخل مقر الشركة أو Hybrid",
       "تقارير متابعة للإدارة",
     ],
     benefitsTitle: "تدريب مبني على احتياج فريقك",
@@ -200,7 +200,7 @@ const ar: SitePagesContent = {
     benefits: [
       "برامج مخصصة حسب احتياج الشركة",
       "تقييم مستوى قبل البداية",
-      "تدريب أونلاين أو داخل المقر",
+      "أونلاين أو داخل مقر العميل أو Hybrid",
       "مواعيد مرنة",
       "تقارير متابعة للإدارة",
       "مدربون بخبرة عملية",
@@ -381,7 +381,7 @@ const en: SitePagesContent = {
     heroSecondaryCta: "Talk to Our Team",
     heroTrust: [
       "Pre-training level assessment",
-      "Online or on-site delivery",
+      "Online, on-site at your premises, or hybrid",
       "Progress reports for management",
     ],
     benefitsTitle: "Training Built Around Your Team",
@@ -390,7 +390,7 @@ const en: SitePagesContent = {
     benefits: [
       "Programmes tailored to company needs",
       "Pre-training level assessment",
-      "Online or on-site training",
+      "Online, on-site at your premises, or hybrid delivery",
       "Flexible scheduling",
       "Progress reports for management",
       "Trainers with practical experience",

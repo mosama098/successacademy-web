@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/blog/blog-article";
 import { SitePageShell } from "@/components/site-page-shell";
 import { getBlogArticle, getPublishedBlogArticles } from "@/content/blog";
-import { locales, type Locale } from "@/lib/i18n";
+import { alternateLocale, locales, type Locale } from "@/lib/i18n";
 import { createPageMetadata } from "@/lib/page-metadata";
 
 type ArticlePageProps = {
@@ -23,7 +23,8 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const { locale, slug } = await params;
   if (!locales.includes(locale as Locale)) return {};
 
-  const article = await getBlogArticle(locale as Locale, slug);
+  const currentLocale = locale as Locale;
+  const [article, alternateArticle] = await Promise.all([getBlogArticle(currentLocale, slug), getBlogArticle(alternateLocale[currentLocale], slug)]);
   if (!article) return {};
 
   return createPageMetadata({
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     path: `/${locale}/blog/${article.slug}`,
     type: "article",
     image: article.image,
+    languageAlternates: Boolean(alternateArticle),
   });
 }
 

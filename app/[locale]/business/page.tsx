@@ -15,8 +15,9 @@ export async function generateMetadata({ params }: BusinessPageProps) {
 
   const copy = sitePagesContent[locale as Locale].business;
   return createPageMetadata({
-    title: `${copy.badge} | Success Academy`,
-    description: copy.heroDescription,
+    locale: locale as Locale,
+    title: locale === "ar" ? "تدريب إنجليزي للشركات | أونلاين وداخل مقر الشركة | Success Academy" : "Corporate English Training | Online, On-site & Hybrid | Success Academy",
+    description: locale === "ar" ? "برامج إنجليزي للشركات أونلاين أو داخل مقر العميل أو بنظام Hybrid، مع تقييم مستوى وتقارير متابعة للإدارة." : "Corporate English training delivered Online, on-site at your premises, or in a hybrid format, with level assessment and management progress reports.",
     path: `/${locale}/business`,
   });
 }

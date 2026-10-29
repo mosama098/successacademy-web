@@ -50,7 +50,7 @@ export const enContent: LandingContent = {
       },
       {
         question: "Are the Classes Live or Recorded?",
-        answer: "All teaching is delivered Live on Zoom with your trainer. Every Live session is also recorded and remains available on your account for later review.",
+        answer: "All teaching happens Live on Zoom with your trainer in real time; this is not a prerecorded course. The recording is of that same Live class and remains available on your account for later review.",
       },
       {
         question: "How Does Online Training Work?",
@@ -62,11 +62,19 @@ export const enContent: LandingContent = {
       },
       {
         question: "Should I Choose Group or Private 1:1?",
-        answer: "Group programmes have 7–10 learners, interactive activities, and a lower price. Private 1:1 gives you more personalised attention and a pace focused on your level and goals.",
+        answer: "Both are delivered Live Online on Zoom. Group programmes have 7–10 learners with conversations and interactive practice, while Private 1:1 gives you individual attention and practice focused on your level and goals.",
+      },
+      {
+        question: "Will I Actually Get a Chance to Speak?",
+        answer: "Yes. Group sessions include live participation, conversations, and interactive practice with your trainer and 7–10 learners. Private 1:1 gives you focused individual practice with your trainer.",
       },
       {
         question: "What If I Miss or Want to Review a Session?",
-        answer: "Every Live session is recorded and remains available on your account so you can revisit the lesson whenever you need to review it.",
+        answer: "A recording of the same Live session remains available on your account for review. If you miss a session, your Success Manager can help you understand the appropriate next step; the recording is not presented as a complete replacement for live attendance and participation.",
+      },
+      {
+        question: "When Do I Choose My Class Schedule?",
+        answer: "You do not choose a schedule during payment. After payment is confirmed, your Success Manager contacts you to arrange a suitable option from the available schedules and complete your programme setup.",
       },
       {
         question: "How Much Do the Programmes Cost?",
