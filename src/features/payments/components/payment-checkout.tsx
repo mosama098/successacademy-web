@@ -54,10 +54,17 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
   const formatter = new Intl.NumberFormat(isArabic ? "ar-EG" : "en-EG");
   const reviewHref = `/${locale}/plans`;
   const finalPrice = promoPricing?.finalPrice ?? recommendation.package.priceEgp;
+  const trackingContext = {
+    locale,
+    programType: recommendation.programType,
+    packageId: recommendation.package.id,
+    startLevel: recommendation.startLevel,
+    targetLevel: recommendation.targetLevel,
+  } as const;
 
   useEffect(() => {
-    trackPaymentPreparation({ name: "ViewCheckout", packageId: recommendation.package.id });
-  }, [recommendation.package.id]);
+    trackPaymentPreparation({ name: "ViewCheckout", ...trackingContext });
+  }, [locale, recommendation.package.id, recommendation.programType, recommendation.startLevel, recommendation.targetLevel]);
 
   useEffect(() => {
     const prefill = readCheckoutContactPrefill();
@@ -138,7 +145,7 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
     submittingRef.current = true;
     setSubmitting(true);
     setSubmissionPhase("creating");
-    trackPaymentPreparation({ name: "InitiateCheckout", packageId: recommendation.package.id });
+    trackPaymentPreparation({ name: "InitiateCheckout", ...trackingContext });
     try {
       const idempotencyKey = getIdempotencyKey();
       let proofReceipt: string | null = null;
@@ -309,7 +316,7 @@ export function PaymentCheckout({ locale, recommendation, attendance, legalLinks
                 {publicPaymentMethodPreferences.map((id) => (
                   <label key={id} className={`relative flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 transition focus-within:ring-4 focus-within:ring-[#ec911f]/25 ${id === "card" ? "col-span-2 lg:col-span-1" : ""} ${method === id ? "border-[#563a64] bg-[#ece5ee] shadow-[inset_0_0_0_1px_#563a64]" : "border-[#321d43]/15 bg-white hover:bg-[#f7f3ed]"} ${submitting ? "pointer-events-none opacity-60" : ""}`}>
                     <input type="radio" name="paymentMethod" value={id} checked={method === id} required className="size-4 shrink-0 accent-[#321d43]"
-                      onChange={() => { setMethod(id); setMethodError(false); setProofFile(null); setProofError(null); setCopiedPaymentDetail(null); trackPaymentPreparation({ name: "AddPaymentInfo", packageId: recommendation.package.id, method: id }); }} />
+                      onChange={() => { setMethod(id); setMethodError(false); setProofFile(null); setProofError(null); setCopiedPaymentDetail(null); trackPaymentPreparation({ name: "AddPaymentInfo", ...trackingContext, method: id }); }} />
                     <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5"><span className="text-sm font-bold leading-6 text-[#321d43]">{copy.methods[id].title}</span>
                       {copy.methods[id].detail ? <span className="text-xs leading-5 text-[#563a64]" dir="ltr">{copy.methods[id].detail}</span> : null}
                     </span>

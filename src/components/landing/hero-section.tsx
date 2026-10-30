@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { CtaLink } from "@/components/ui/cta-link";
 import { getWhatsAppHref } from "@/lib/utm";
@@ -112,9 +113,13 @@ function HeroVisual() {
       <span className="hero-star absolute bottom-[24%] left-[10%] h-2 w-2 rounded-full bg-[#E32F54]/80 shadow-[0_0_22px_rgba(227,47,84,0.72)]" style={{ animationDelay: "1600ms" }} />
       <span className="hero-star absolute bottom-[34%] right-[8%] h-1.5 w-1.5 rounded-full bg-white/70 shadow-[0_0_18px_rgba(255,255,255,0.65)]" style={{ animationDelay: "2400ms" }} />
 
-      <img
+      <Image
         src="/hero-model.png"
         alt=""
+        width={930}
+        height={1024}
+        priority
+        sizes="(max-width: 639px) 94vw, (max-width: 1023px) 560px, 44vw"
         className="absolute bottom-0 left-1/2 h-[clamp(280px,70vw,340px)] w-auto max-w-[94%] -translate-x-1/2 object-contain object-bottom drop-shadow-[0_34px_40px_rgba(13,5,28,0.44)] sm:h-[500px] sm:max-w-[108%] lg:bottom-[-4px] lg:left-[clamp(16px,3vw,64px)] lg:h-[clamp(430px,56vh,620px)] lg:max-w-[calc(100%-clamp(16px,3vw,64px))] lg:translate-x-0"
       />
     </div>

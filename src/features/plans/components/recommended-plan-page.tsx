@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import type { Locale } from "@/lib/i18n";
+import { trackFunnelEvent } from "@/lib/tracking";
 import {
   getAvailableTargets,
   getLearningPackages,
@@ -38,6 +39,7 @@ export function RecommendedPlanPage({
   const isArabic = locale === "ar";
   const startSectionRef = useRef<HTMLDivElement>(null);
   const stickyBoundaryRef = useRef<HTMLDivElement>(null);
+  const plansViewTrackedRef = useRef(false);
   const [programType, setProgramType] = useState<ProgramType>(initialProgramType);
   const [startLevel, setStartLevel] = useState<LearningLevel | null>(initialStartLevel);
   const [targetLevel, setTargetLevel] = useState<LearningLevel | null>(() => {
@@ -60,6 +62,18 @@ export function RecommendedPlanPage({
   );
 
   useEffect(() => {
+    if (plansViewTrackedRef.current) return;
+    plansViewTrackedRef.current = true;
+    trackFunnelEvent("plans_view", {
+      locale,
+      source: fromAssessment ? "placement_result" : "plans",
+      programType: initialProgramType,
+      startLevel: initialStartLevel ?? undefined,
+      targetLevel: initialTargetLevel ?? undefined,
+    });
+  }, [fromAssessment, initialProgramType, initialStartLevel, initialTargetLevel, locale]);
+
+  useEffect(() => {
     const boundary = stickyBoundaryRef.current;
     if (!boundary || !recommendation || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
@@ -77,7 +91,15 @@ export function RecommendedPlanPage({
   }
 
   function chooseProgramType(value: ProgramType) {
+    if (value === programType) return;
     setProgramType(value);
+    trackFunnelEvent("program_select", {
+      locale,
+      source: "plans",
+      programType: value,
+      startLevel: startLevel ?? undefined,
+      targetLevel: targetLevel ?? undefined,
+    });
     const url = new URL(window.location.href);
     url.searchParams.set("program", value);
     window.history.replaceState(window.history.state, "", url);
@@ -252,7 +274,7 @@ export function RecommendedPlanPage({
               <p className="truncate text-xs font-black text-[#5d4a66]">{recommendation.package.name[locale]}</p>
               <p className="mt-0.5 text-lg font-black text-[#321d43]">{priceFormatter.format(recommendation.package.priceEgp)} <span className="text-[11px]">{copy.common.currency}</span></p>
             </div>
-            <Link href={checkoutHref!} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#ec911f] px-4 text-sm font-black !text-white shadow-[0_10px_24px_rgba(236,145,31,0.22)] transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25">
+            <Link href={checkoutHref!} onClick={() => trackPackageSelection(locale, recommendation, "plans_sticky")} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#ec911f] px-4 text-sm font-black !text-white shadow-[0_10px_24px_rgba(236,145,31,0.22)] transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/25">
               {copy.plan.primaryCta}<ArrowIcon rtl={isArabic} />
             </Link>
           </div>
@@ -383,7 +405,7 @@ function PlanReveal({ locale, copy, recommendation, checkoutHref, priceFormatter
         <div className="border-t border-white/10 pt-2 lg:border-s lg:border-t-0 lg:ps-7 lg:pt-0">
           <p className="text-xs font-bold text-white/52">{copy.plan.priceLabel}</p>
           <p className="mt-1 text-[34px] font-black leading-none text-white sm:text-[42px]">{priceFormatter.format(recommendation.package.priceEgp)} <span className="text-sm text-white/62">{copy.common.currency}</span></p>
-          <Link href={checkoutHref} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#ec911f] px-5 font-black !text-white shadow-[0_13px_28px_rgba(236,145,31,0.22)] transition hover:-translate-y-0.5 hover:bg-[#dc8517] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#f7c486]/30 motion-reduce:transform-none">{copy.plan.primaryCta}<ArrowIcon rtl={isArabic} /></Link>
+          <Link href={checkoutHref} onClick={() => trackPackageSelection(locale, recommendation, "plans_recommendation")} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#ec911f] px-5 font-black !text-white shadow-[0_13px_28px_rgba(236,145,31,0.22)] transition hover:-translate-y-0.5 hover:bg-[#dc8517] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#f7c486]/30 motion-reduce:transform-none">{copy.plan.primaryCta}<ArrowIcon rtl={isArabic} /></Link>
         </div>
       </div>
     </article>
@@ -392,7 +414,8 @@ function PlanReveal({ locale, copy, recommendation, checkoutHref, priceFormatter
 
 function PackageCard({ locale, copy, learningPackage, startLevel, recommended, priceFormatter, onChooseStart }: { locale: Locale; copy: PlansCopy; learningPackage: LearningPackage; startLevel: LearningLevel | null; recommended: boolean; priceFormatter: Intl.NumberFormat; onChooseStart: () => void }) {
   const target = getTargetForPackage(startLevel, learningPackage.id as LearningPackageId);
-  const checkoutHref = startLevel && target ? getCheckoutHref(locale, getPlanRecommendation(learningPackage.programType, startLevel, target)!) : null;
+  const packageRecommendation = startLevel && target ? getPlanRecommendation(learningPackage.programType, startLevel, target) : null;
+  const checkoutHref = packageRecommendation ? getCheckoutHref(locale, packageRecommendation) : null;
   const surface = recommended
     ? "border-[#563a64] bg-[#321d43] text-white shadow-[0_24px_54px_rgba(50,29,67,0.19)]"
     : "border-[#321d43]/9 bg-white text-[#34253e] shadow-[0_12px_32px_rgba(50,29,67,0.06)]";
@@ -423,7 +446,7 @@ function PackageCard({ locale, copy, learningPackage, startLevel, recommended, p
         <PackageStat label={copy.plan.durationLabel} value={copy.plan.estimatedDuration(learningPackage.estimatedWeeks)} dark={recommended} />
       </dl>
 
-      {checkoutHref ? <Link href={checkoutHref} className={`mt-auto inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/22 ${recommended ? "bg-[#ec911f] !text-white hover:bg-[#dc8517]" : "border border-[#321d43]/16 bg-[#f5f0f6] text-[#321d43] hover:border-[#321d43]/34 hover:bg-[#ece4ef]"}`}>{recommended ? copy.comparison.selectedPackage : copy.comparison.selectPackage}</Link> : startLevel ? <span className={`mt-auto inline-flex min-h-11 items-center justify-center rounded-full px-4 text-center text-xs font-black ${recommended ? "bg-white/[0.08] text-white/46" : "bg-[#f2eef3] text-[#897c8c]"}`}>{copy.comparison.unavailableForStart}</span> : <button type="button" onClick={onChooseStart} className="mt-auto inline-flex min-h-11 items-center justify-center rounded-full border border-[#321d43]/16 px-4 text-sm font-black text-[#321d43] transition hover:bg-[#f3eef5] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20">{copy.comparison.chooseStartFirst}</button>}
+      {checkoutHref && packageRecommendation ? <Link href={checkoutHref} onClick={() => trackPackageSelection(locale, packageRecommendation, "plans_package_grid")} className={`mt-auto inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/22 ${recommended ? "bg-[#ec911f] !text-white hover:bg-[#dc8517]" : "border border-[#321d43]/16 bg-[#f5f0f6] text-[#321d43] hover:border-[#321d43]/34 hover:bg-[#ece4ef]"}`}>{recommended ? copy.comparison.selectedPackage : copy.comparison.selectPackage}</Link> : startLevel ? <span className={`mt-auto inline-flex min-h-11 items-center justify-center rounded-full px-4 text-center text-xs font-black ${recommended ? "bg-white/[0.08] text-white/46" : "bg-[#f2eef3] text-[#897c8c]"}`}>{copy.comparison.unavailableForStart}</span> : <button type="button" onClick={onChooseStart} className="mt-auto inline-flex min-h-11 items-center justify-center rounded-full border border-[#321d43]/16 px-4 text-sm font-black text-[#321d43] transition hover:bg-[#f3eef5] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ec911f]/20">{copy.comparison.chooseStartFirst}</button>}
     </article>
   );
 }
@@ -431,6 +454,17 @@ function PackageCard({ locale, copy, learningPackage, startLevel, recommended, p
 function getCheckoutHref(locale: Locale, recommendation: PlanRecommendation) {
   const query = new URLSearchParams({ program: recommendation.programType, start: recommendation.startLevel, target: recommendation.targetLevel, package: recommendation.package.id });
   return `/${locale}/plans/payment?${query.toString()}`;
+}
+
+function trackPackageSelection(locale: Locale, recommendation: PlanRecommendation, source: string) {
+  trackFunnelEvent("package_select", {
+    locale,
+    source,
+    programType: recommendation.programType,
+    packageId: recommendation.package.id,
+    startLevel: recommendation.startLevel,
+    targetLevel: recommendation.targetLevel,
+  });
 }
 
 function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) { return <div className="max-w-[720px]">{eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}<h2 className={`${eyebrow ? "mt-3" : ""} text-balance text-[26px] font-black leading-tight text-[#34253e] sm:text-[33px]`}>{title}</h2>{description ? <p className="mt-1.5 text-[14px] font-semibold leading-6 text-[#716675] sm:text-[15px] sm:leading-7">{description}</p> : null}</div>; }

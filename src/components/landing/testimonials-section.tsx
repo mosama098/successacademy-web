@@ -274,6 +274,7 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
   const content = testimonialsContent[locale];
   const isArabic = locale === "ar";
   const testimonials = [content.featured, ...content.supporting];
+  const sectionRef = useRef<HTMLElement>(null);
   const playerRef = useRef<WistiaPlayerElement | null>(null);
   const videoFrameRef = useRef<HTMLDivElement>(null);
   const sliderStageRef = useRef<HTMLDivElement>(null);
@@ -289,6 +290,26 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
   const [isSwiping, setIsSwiping] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [shouldLoadWistia, setShouldLoadWistia] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setShouldLoadWistia(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldLoadWistia(true);
+        observer.disconnect();
+      },
+      { rootMargin: "700px 0px" },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -431,7 +452,7 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
       isVisibleRef.current = false;
       isPlayerReadyRef.current = false;
     };
-  }, []);
+  }, [shouldLoadWistia]);
 
   const toggleSound = () => {
     const player = playerRef.current;
@@ -505,21 +526,24 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
 
   return (
     <section
+      ref={sectionRef}
       id="student-stories"
       className="relative overflow-hidden bg-[#391B68] px-5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-14 text-white sm:px-6 sm:pt-16 md:py-16 lg:px-8 lg:py-12"
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <Script
-        id="wistia-aurora-player"
-        src="https://fast.wistia.com/player.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        id={`wistia-media-${wistiaMediaId}`}
-        src={`https://fast.wistia.com/embed/${wistiaMediaId}.js`}
-        strategy="afterInteractive"
-        type="module"
-      />
+      {shouldLoadWistia ? <>
+        <Script
+          id="wistia-aurora-player"
+          src="https://fast.wistia.com/player.js"
+          strategy="afterInteractive"
+        />
+        <Script
+          id={`wistia-media-${wistiaMediaId}`}
+          src={`https://fast.wistia.com/embed/${wistiaMediaId}.js`}
+          strategy="afterInteractive"
+          type="module"
+        />
+      </> : null}
 
       <div
         className="pointer-events-none absolute start-[8%] top-[28%] h-52 w-52 rounded-full bg-[#EC911F]/[0.08] blur-[72px]"
@@ -566,7 +590,7 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
             ref={videoFrameRef}
             className="relative aspect-[9/16] overflow-hidden rounded-[28px] border border-[#EC911F]/30 bg-[#24103f] shadow-[0_26px_65px_rgba(10,3,22,0.38)]"
             style={{
-              backgroundImage: `url("${wistiaSwatch}")`,
+              backgroundImage: shouldLoadWistia ? `url("${wistiaSwatch}")` : undefined,
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
               backgroundSize: "contain",
@@ -577,7 +601,7 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
               aria-hidden="true"
             />
 
-            {createElement("wistia-player", {
+            {shouldLoadWistia ? createElement("wistia-player", {
               ref: (node: WistiaPlayerElement | null) => {
                 playerRef.current = node;
               },
@@ -600,7 +624,7 @@ export function TestimonialsSection({ locale }: LocalizedSectionProps) {
                 height: "100%",
                 width: "100%",
               },
-            })}
+            }) : null}
 
             <span className="pointer-events-none absolute inset-x-4 top-4 z-30 inline-flex w-fit rounded-full border border-white/15 bg-[#24103f]/80 px-3 py-2 text-[11px] font-black text-white shadow-sm backdrop-blur sm:text-[12px]">
               {content.videoLabel}

@@ -3,6 +3,25 @@
 export type TrackingPayload = Record<string, string | number | boolean | null | undefined>;
 type FormSubmitTrackingOptions = { metaEventId?: string };
 
+export type FunnelEventName =
+  | "plans_view"
+  | "program_select"
+  | "package_select"
+  | "payment_view"
+  | "payment_method_select"
+  | "payment_initiated";
+
+const funnelDimensionKeys = new Set([
+  "locale",
+  "source",
+  "programType",
+  "packageId",
+  "startLevel",
+  "targetLevel",
+  "paymentMethod",
+  "placementLevel",
+]);
+
 declare global {
   interface Window {
     dataLayer?: TrackingPayload[];
@@ -85,6 +104,22 @@ export function trackFaqOpen(payload: TrackingPayload = {}) {
   googleEvent("faq_open", payload);
   metaEvent("FAQOpen", payload);
   tiktokEvent("FAQOpen", payload);
+}
+
+export function safeFunnelPayload(payload: TrackingPayload = {}) {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key, value]) =>
+      funnelDimensionKeys.has(key)
+      && (typeof value === "string" || typeof value === "number" || typeof value === "boolean"),
+    ),
+  );
+}
+
+export function trackFunnelEvent(name: FunnelEventName, payload: TrackingPayload = {}) {
+  const safePayload = safeFunnelPayload(payload);
+  googleEvent(name, safePayload);
+  metaEvent(name, safePayload);
+  tiktokEvent(name, safePayload);
 }
 
 export function trackPlacementTestEvent(
