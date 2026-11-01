@@ -16,9 +16,10 @@ export function isAllowedBrowserRequest(
       : requestUrl.origin;
 
     if (requestOrigin.origin === allowedOrigin) return true;
+    if (isMatchingLoopbackOrigin(requestOrigin, requestUrl)) return true;
     if (environment === "production") return false;
 
-    return isMatchingLoopbackOrigin(requestOrigin, requestUrl);
+    return false;
   } catch {
     return false;
   }

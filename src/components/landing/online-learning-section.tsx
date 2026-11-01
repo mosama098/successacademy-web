@@ -4,7 +4,7 @@ import { bookingHref, type LocalizedSectionProps } from "./types";
 const onlineLearningContent = {
   ar: {
     facts: [
-      "شرح Live بالكامل على Zoom",
+      "شرح Live وتفاعلي مع المدرب",
       "Group من 7–10 أو Private 1:1",
       "كل محاضرة Live بتتسجل للمراجعة",
       "اختبار تحديد مستوى مجاني",
@@ -29,7 +29,7 @@ const onlineLearningContent = {
   },
   en: {
     facts: [
-      "100% Live teaching on Zoom",
+      "Interactive Live teaching with your trainer",
       "Group of 7–10 or Private 1:1",
       "Every Live session is recorded for review",
       "Free Placement Test",

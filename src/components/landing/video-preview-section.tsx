@@ -23,9 +23,9 @@ const journeyContent = {
       {
         image: "/journey/training.png",
         focal: "object-[45%_50%]",
-        label: "Live على Zoom",
+        label: "تدريب Live تفاعلي",
         heading: "كل الشرح مباشر مع المدرب",
-        description: "كل التدريب Live أونلاين على Zoom، بتشارك وتسأل وتتفاعل لحظة بلحظة.",
+        description: "كل التدريب Live مع المدرب، بتشارك وتسأل وتتفاعل لحظة بلحظة.",
       },
       {
         image: "/journey/practice.png",
@@ -60,9 +60,9 @@ const journeyContent = {
       {
         image: "/journey/training.png",
         focal: "object-[45%_50%]",
-        label: "Live on Zoom",
+        label: "Interactive Live Training",
         heading: "Every lesson is live with your trainer",
-        description: "All training is delivered Live Online on Zoom, so you can ask, participate, and interact in real time.",
+        description: "All training is Live with your trainer, so you can ask, participate, and interact in real time.",
       },
       {
         image: "/journey/practice.png",

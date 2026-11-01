@@ -11,9 +11,9 @@ export const enContent: LandingContent = {
   },
   hero: {
     eyebrow: "Success Academy | Not Just A Course... A Direction",
-    title: "Learn English Live Online on Zoom\nand start from your real level.",
+    title: "Most people don’t fail at learning English...\nthey learn it the wrong way.",
     subtitle:
-      "Interactive Live training in a group of 7–10 or Private 1:1, with every Live session recorded for review whenever you need it.",
+      "If you have started more than once and stopped, the problem is probably not your ability. It is joining a course without diagnosis, without a clear goal, and without follow-up that pushes you to actually use the language.",
     primaryCta: "Get Your Free Level Check",
     whatsappCta: "Talk to a Success Manager",
     badge: "Programs start from 2250 EGP",
@@ -29,7 +29,7 @@ export const enContent: LandingContent = {
   cta: {
     title: "Start with a free placement test before choosing any programme",
     description:
-      "Register, discover your level, and start a complete Live Online experience on Zoom.",
+      "Register your details, start the placement test, and find the right starting point.",
     primary: "Start Your Placement Test",
     secondary: "Talk to a Success Manager",
   },
@@ -54,7 +54,7 @@ export const enContent: LandingContent = {
       },
       {
         question: "How Does Online Training Work?",
-        answer: "You join your trainer Live on Zoom, participate in conversations, activities, and practical exercises from anywhere, with ongoing Success Manager follow-up.",
+        answer: "You join your trainer Live, participate in conversations, activities, and practical exercises from anywhere, with ongoing Success Manager follow-up.",
       },
       {
         question: "Who Are the Trainers?",
@@ -62,7 +62,7 @@ export const enContent: LandingContent = {
       },
       {
         question: "Should I Choose Group or Private 1:1?",
-        answer: "Both are delivered Live Online on Zoom. Group programmes have 7–10 learners with conversations and interactive practice, while Private 1:1 gives you individual attention and practice focused on your level and goals.",
+        answer: "Both are interactive Live Online programmes. Group programmes have 7–10 learners with conversations and interactive practice, while Private 1:1 gives you individual attention and practice focused on your level and goals.",
       },
       {
         question: "Will I Actually Get a Chance to Speak?",
@@ -89,7 +89,7 @@ export const enContent: LandingContent = {
     stats: [
       { value: "2015", label: "Since We Started" },
       { value: "100K+", label: "Learners Trusted Us" },
-      { value: "Live on Zoom", label: "Learn From Anywhere" },
+      { value: "Live Classes", label: "Learn From Anywhere" },
     ],
     slogan: "Not Just A Course... A Direction",
   },
@@ -169,11 +169,11 @@ export const enContent: LandingContent = {
   },
   footer: {
     slogan: "Not Just A Course... A Direction",
-    description: "Live Online English training on Zoom, interactive practice, and follow-up that helps you keep moving.",
+    description: "Live, interactive English training with follow-up that helps you keep moving.",
     rights: "© Success Academy — All Rights Reserved",
     whatsapp: "Contact Us on WhatsApp",
     call: "Call Us",
-    online: "Live on Zoom",
+    online: "Live Online Training",
     recordings: "Sessions Available for Review",
     quickLinksTitle: "Website",
     quickLinks: {

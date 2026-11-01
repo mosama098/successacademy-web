@@ -925,8 +925,8 @@ test("active homepage copy describes the immediate internal placement journey", 
   assert.match(steps, /free Placement Test without waiting/);
   assert.match(steps, /اختار Group أو Private/);
   assert.match(steps, /Choose Group or Private/);
-  assert.match(steps, /ابدأ Live على Zoom/);
-  assert.match(steps, /Start Live on Zoom/);
+  assert.match(steps, /ابدأ التدريب الـLive/);
+  assert.match(steps, /Start Your Live Training/);
   assert.match(steps, /lg:grid-cols-4/);
 });
 
@@ -1761,7 +1761,7 @@ test("legacy plans checkout fallback remains inert when a compatibility link is 
   assert.doesNotMatch(checkoutComponent, /fetch\s*\(|\/api\/|payment intent|createOrder/i);
   assert.match(copy, /راجع خطتك قبل الحجز/);
   assert.match(copy, /اختار طريقة الدفع في الخطوة التالية/);
-  assert.match(copy, /كل برامج الأفراد Live أونلاين على Zoom/);
+  assert.match(copy, /كل برامج الأفراد Live وتفاعلية أونلاين/);
   assert.match(copy, /سيتم تفعيل الدفع قريباً/);
   assert.doesNotMatch(copy, /لا توجد أي عملية دفع أو إنشاء طلب في هذه المرحلة/);
 });

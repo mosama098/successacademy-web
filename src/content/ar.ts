@@ -11,9 +11,9 @@ export const arContent: LandingContent = {
   },
   hero: {
     eyebrow: "Success Academy | Not Just A Course... A Direction",
-    title: "اتعلم الإنجليزي Live أونلاين على Zoom\nوابدأ من مستواك الحقيقي.",
+    title: "معظم الناس مش بتفشل في تعلّم الإنجليزية...\nهي بتتعلمها بالطريقة الغلط.",
     subtitle:
-      "تدريب مباشر وتفاعلي، Group من 7–10 أو Private 1:1، وكل محاضرة Live بتتسجل علشان تراجعها وقت ما تحتاج.",
+      "لو بدأت كذا مرة ووقفت، غالبًا المشكلة مش في قدرتك. المشكلة إنك بتدخل كورس من غير تشخيص، من غير هدف واضح، ومن غير متابعة تخليك تستخدم اللغة فعلاً.",
     primaryCta: "اعرف مستواك مجانًا",
     whatsappCta: "تحدث مع Success Manager",
     badge: "البرامج تبدأ من 2250 جنيه",
@@ -28,7 +28,7 @@ export const arContent: LandingContent = {
   },
   cta: {
     title: "ابدأ باختبار تحديد المستوى قبل ما تختار أي برنامج",
-    description: "سجّل بياناتك، اعرف مستواك، وابدأ تجربة Live أونلاين كاملة على Zoom.",
+    description: "سجّل بياناتك، ابدأ اختبار تحديد المستوى، واعرف البداية الأنسب ليك.",
     primary: "ابدأ تحديد مستواك",
     secondary: "تحدث مع Success Manager",
   },
@@ -53,7 +53,7 @@ export const arContent: LandingContent = {
       },
       {
         question: "التدريب الأونلاين بيتم إزاي؟",
-        answer: "بتحضر Live على Zoom، وتشارك مع المدرب في المحادثات والأنشطة والممارسة العملية من أي مكان، ومعاك متابعة من Success Manager.",
+        answer: "بتحضر Live مع المدرب، وتشارك في المحادثات والأنشطة والممارسة العملية من أي مكان، ومعاك متابعة من Success Manager.",
       },
       {
         question: "مين المدربين؟",
@@ -61,7 +61,7 @@ export const arContent: LandingContent = {
       },
       {
         question: "أختار Group ولا Private 1:1؟",
-        answer: "الاتنين Live أونلاين على Zoom. الـGroup بيضم من 7–10 متدربين وفيه تفاعل ومحادثات وأنشطة جماعية، وPrivate 1:1 بيديك اهتمام شخصي وممارسة مركزة على مستواك وهدفك.",
+        answer: "الاتنين Live وتفاعليين أونلاين. الـGroup بيضم من 7–10 متدربين وفيه تفاعل ومحادثات وأنشطة جماعية، وPrivate 1:1 بيديك اهتمام شخصي وممارسة مركزة على مستواك وهدفك.",
       },
       {
         question: "هل هتكون عندي فرصة أتكلم وأشارك؟",
@@ -88,7 +88,7 @@ export const arContent: LandingContent = {
     stats: [
       { value: "2015", label: "منذ البداية" },
       { value: "+100K", label: "متدرب وثقوا فينا" },
-      { value: "Live على Zoom", label: "اتعلم من أي مكان" },
+      { value: "محاضرات Live", label: "اتعلم من أي مكان" },
     ],
     slogan: "Not Just A Course... A Direction",
   },
@@ -168,11 +168,11 @@ export const arContent: LandingContent = {
   },
   footer: {
     slogan: "Not Just A Course... A Direction",
-    description: "تدريب إنجليزي Live أونلاين على Zoom، ممارسة تفاعلية، ومتابعة تساعدك تكمل.",
+    description: "تدريب إنجليزي Live وتفاعلي، ومتابعة تساعدك تكمل.",
     rights: "© Success Academy — جميع الحقوق محفوظة",
     whatsapp: "تواصل على واتساب",
     call: "اتصل بنا",
-    online: "Live على Zoom",
+    online: "تدريب Live أونلاين",
     recordings: "المحاضرات متاحة للمراجعة",
     quickLinksTitle: "الموقع",
     quickLinks: {

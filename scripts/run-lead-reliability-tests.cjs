@@ -5,13 +5,19 @@ const ts = require("typescript");
 
 const root = path.resolve(__dirname, "..");
 const originalLoad = require("node:module")._load;
+let createStoredAttemptFailure = null;
 require("node:module")._load = function leadReliabilityLoad(request, parent, isMain) {
   if (request === "server-only") return {};
   if (request === "@/features/placement-test/server/attempt-service") {
     return { getExistingAttempt: async () => null };
   }
   if (request === "@/features/placement-test/server/storage") {
-    return { createStoredAttempt: async () => ({ token: "test-placement-token", attempt: {} }) };
+    return {
+      createStoredAttempt: async () => {
+        if (createStoredAttemptFailure) throw createStoredAttemptFailure;
+        return { token: "test-placement-token", attempt: {} };
+      },
+    };
   }
   if (request.startsWith("@/")) {
     const base = path.join(root, "src", request.slice(2));
@@ -193,6 +199,61 @@ test("Homepage and Placement persist their exact stable identities through the A
     else process.env.LEADS_WEBHOOK_URL = previousUrl;
     if (previousSecret === undefined) delete process.env.LEADS_WEBHOOK_SECRET;
     else process.env.LEADS_WEBHOOK_SECRET = previousSecret;
+  }
+});
+
+test("an accepted Homepage lead stays successful when placement attempt storage fails", async () => {
+  const { POST } = require(path.join(root, "app/api/leads/route.ts"));
+  const previousFetch = global.fetch;
+  const previousUrl = process.env.LEADS_WEBHOOK_URL;
+  const previousSecret = process.env.LEADS_WEBHOOK_SECRET;
+  const previousMetaToken = process.env.META_CAPI_ACCESS_TOKEN;
+  const previousMetaDataset = process.env.META_CAPI_DATASET_ID;
+  let webhookCalls = 0;
+  process.env.LEADS_WEBHOOK_URL = "https://example.test/leads";
+  process.env.LEADS_WEBHOOK_SECRET = "test-secret";
+  delete process.env.META_CAPI_ACCESS_TOKEN;
+  delete process.env.META_CAPI_DATASET_ID;
+  global.fetch = async (_url, options) => {
+    webhookCalls += 1;
+    const payload = JSON.parse(options.body);
+    assert.equal(payload.preferredLearningMode, "online");
+    return Response.json({ success: true });
+  };
+  createStoredAttemptFailure = new Error("test placement storage failure");
+
+  try {
+    const submissionId = "66666666-6666-4666-8666-666666666666";
+    const response = await POST(new Request("http://localhost/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "website", submissionId, fullName: "Test Accepted Lead", phone: "01000000000",
+        email: "", learningGoal: "work", currentLevel: "",
+        preferredAssessmentTime: "earliest", notes: "", consent: true, company: "",
+        metadata: { locale: "en", pagePath: "/en" },
+      }),
+    }));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      placementAttempt: false,
+      metaLeadEventId: `lead:${submissionId}`,
+    });
+    assert.equal(webhookCalls, 1);
+    assert.match(response.headers.get("set-cookie") ?? "", /sa_lead_registered=v1/);
+    assert.doesNotMatch(response.headers.get("set-cookie") ?? "", /sa_placement_attempt=/);
+  } finally {
+    createStoredAttemptFailure = null;
+    global.fetch = previousFetch;
+    if (previousUrl === undefined) delete process.env.LEADS_WEBHOOK_URL;
+    else process.env.LEADS_WEBHOOK_URL = previousUrl;
+    if (previousSecret === undefined) delete process.env.LEADS_WEBHOOK_SECRET;
+    else process.env.LEADS_WEBHOOK_SECRET = previousSecret;
+    if (previousMetaToken === undefined) delete process.env.META_CAPI_ACCESS_TOKEN;
+    else process.env.META_CAPI_ACCESS_TOKEN = previousMetaToken;
+    if (previousMetaDataset === undefined) delete process.env.META_CAPI_DATASET_ID;
+    else process.env.META_CAPI_DATASET_ID = previousMetaDataset;
   }
 });
 

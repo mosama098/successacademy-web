@@ -17,6 +17,38 @@ test("English homepage metadata targets a Live Online English Course", () => {
   assert.match(read("app/[locale]/page.tsx"), /Live Online English Course & Free Placement Test/);
 });
 
+test("Homepage Hero restores diagnosis-led positioning without leading with Zoom", () => {
+  const hero = read("src/components/landing/hero-section.tsx");
+  const ar = read("src/content/ar.ts");
+  const en = read("src/content/en.ts");
+  assert.match(hero, /معظم الناس مش بتفشل في تعلّم الإنجليزية/);
+  assert.match(hero, /بالطريقة الغلط/);
+  assert.match(ar, /من غير تشخيص، من غير هدف واضح، ومن غير متابعة/);
+  assert.match(en, /Most people don’t fail at learning English/);
+  assert.match(en, /without diagnosis, without a clear goal, and without follow-up/);
+  assert.doesNotMatch(hero, /Zoom|Live \+ Recorded/);
+});
+
+test("B2C copy keeps product facts while limiting Zoom to contextual explanations", () => {
+  const ar = read("src/content/ar.ts");
+  const en = read("src/content/en.ts");
+  const formats = read("src/components/landing/online-learning-section.tsx");
+  const journey = read("src/components/landing/video-preview-section.tsx");
+  const steps = read("src/components/landing/registration-steps-section.tsx");
+  const plans = read("src/features/plans/copy.ts");
+  const publicCopy = `${ar}\n${en}\n${formats}\n${journey}\n${steps}\n${plans}`;
+  assert.doesNotMatch(publicCopy, /Live \+ Recorded/);
+  assert.match(publicCopy, /7–10/);
+  assert.match(publicCopy, /Private 1:1/);
+  assert.match(publicCopy, /تفاعلي|interactive/i);
+  assert.match(publicCopy, /متاح على حسابك|available on your account/i);
+  assert.match(publicCopy, /Success Manager/);
+  assert.equal((formats.match(/Zoom/g) ?? []).length, 2);
+  assert.equal((ar.match(/Zoom/g) ?? []).length, 1);
+  assert.equal((en.match(/Zoom/g) ?? []).length, 1);
+  assert.doesNotMatch(`${journey}\n${steps}\n${plans}`, /Zoom/);
+});
+
 test("Corporate metadata and copy preserve Online, client-premises on-site and hybrid", () => {
   const page = read("app/[locale]/business/page.tsx");
   const copy = read("src/content/site-pages.ts");

@@ -8,8 +8,8 @@ export function buildHomepageStructuredData(locale: Locale, siteUrl = getSiteUrl
   const provider = { "@type": "EducationalOrganization", "@id": `${siteUrl}/#organization`, name: "Success Academy", url: siteUrl };
   return { "@context": "https://schema.org", "@graph": [
     { ...provider, logo: `${siteUrl}/logo.png`, foundingDate: "2015", ...(socialProfiles.length ? { sameAs: socialProfiles } : {}) },
-    { "@type": "Course", name: locale === "ar" ? "برنامج الإنجليزي Group Live Online" : "Group Live Online English Programme", description: locale === "ar" ? "برنامج إنجليزي Live Online على Zoom لمجموعة من 7–10 متدربين." : "A Live Online English programme on Zoom for a group of 7–10 learners.", inLanguage: locale, courseMode: "online", provider },
-    { "@type": "Course", name: locale === "ar" ? "برنامج الإنجليزي Private 1:1 Live Online" : "Private 1:1 Live Online English Programme", description: locale === "ar" ? "برنامج إنجليزي فردي Live Online على Zoom بين متدرب واحد ومدرب واحد." : "A Live Online English programme on Zoom for one learner with one trainer.", inLanguage: locale, courseMode: "online", provider },
+    { "@type": "Course", name: locale === "ar" ? "برنامج الإنجليزي Group Live Online" : "Group Live Online English Programme", description: locale === "ar" ? "برنامج إنجليزي Live وتفاعلي أونلاين لمجموعة من 7–10 متدربين." : "An interactive Live Online English programme for a group of 7–10 learners.", inLanguage: locale, courseMode: "online", provider },
+    { "@type": "Course", name: locale === "ar" ? "برنامج الإنجليزي Private 1:1 Live Online" : "Private 1:1 Live Online English Programme", description: locale === "ar" ? "برنامج إنجليزي فردي Live أونلاين بين متدرب واحد ومدرب واحد." : "A Live Online English programme for one learner with one trainer.", inLanguage: locale, courseMode: "online", provider },
   ] };
 }
 

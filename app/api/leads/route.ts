@@ -262,10 +262,13 @@ export async function POST(request: Request) {
         setLeadRegistrationCookie(placementResponse);
         return placementResponse;
       } catch {
-        return NextResponse.json(
-          { ok: false, error: "submission_unavailable" },
-          { status: 500 },
-        );
+        const acceptedResponse = NextResponse.json({
+          ok: true,
+          placementAttempt: false,
+          metaLeadEventId: metaLeadEventIdValue,
+        });
+        setLeadRegistrationCookie(acceptedResponse);
+        return acceptedResponse;
       }
     }
 

@@ -34,7 +34,7 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
     titleLead: "من أول التسجيل لحد ما تبدأ…",
     titleHighlight: "كل خطوة واضحة",
     description:
-      "من اختبار تحديد المستوى لاختيار Group أو Private، كل خطوة واضحة لحد ما تبدأ Live على Zoom.",
+      "من اختبار تحديد المستوى لاختيار Group أو Private، كل خطوة واضحة لحد ما تبدأ تدريبك الـLive.",
     ctaSupport: "جاهز تعرف أنسب بداية ليك؟",
     cta: "ابدأ اختبار تحديد المستوى",
     reassurance: "مش لازم تنتظر مكالمة علشان تبدأ الاختبار.",
@@ -65,7 +65,7 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
         icon: "result",
       },
       {
-        title: "ابدأ Live على Zoom",
+        title: "ابدأ التدريب الـLive",
         description: [
           {
             text: "Success Manager بيتواصل معاك لترتيب الموعد المتاح المناسب، وبعدها تبدأ التدريب Live.",
@@ -80,7 +80,7 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
     titleLead: "From Registration to Your Starting Plan —",
     titleHighlight: "Every Step Is Clear",
     description:
-      "From your Placement Test to choosing Group or Private, every step is clear until you start Live on Zoom.",
+      "From your Placement Test to choosing Group or Private, every step is clear until your Live training begins.",
     ctaSupport: "Ready to Find Your Best Starting Point?",
     cta: "Start the Placement Test",
     reassurance: "You do not need to wait for a call before starting the test.",
@@ -113,7 +113,7 @@ const registrationContent: Record<"ar" | "en", RegistrationContent> = {
         icon: "result",
       },
       {
-        title: "Start Live on Zoom",
+        title: "Start Your Live Training",
         description: [
           {
             text: "A Success Manager contacts you to arrange a suitable available schedule, then your Live training begins.",

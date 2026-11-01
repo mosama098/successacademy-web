@@ -165,7 +165,7 @@ test("failure and honeypot paths do not establish registration", () => {
   assert.match(submission, /result\.skipped === true\) return \{ kind: "skipped" \}/);
 });
 
-test("lead origin validation stays strict in production and permits matching loopback development origins", () => {
+test("lead origin validation stays strict while permitting same-port local owner review", () => {
   const previousSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   process.env.NEXT_PUBLIC_SITE_URL = "https://eg.successacademy.training";
 
@@ -175,8 +175,9 @@ test("lead origin validation stays strict in production and permits matching loo
 
   try {
     assert.equal(isAllowedBrowserRequest(request("https://eg.successacademy.training"), "production"), true);
-    assert.equal(isAllowedBrowserRequest(request("http://localhost:3100"), "production"), false);
-    assert.equal(isAllowedBrowserRequest(request("http://127.0.0.1:3100"), "production"), false);
+    assert.equal(isAllowedBrowserRequest(request("http://localhost:3100"), "production"), true);
+    assert.equal(isAllowedBrowserRequest(request("http://127.0.0.1:3100"), "production"), true);
+    assert.equal(isAllowedBrowserRequest(request("http://localhost:3101"), "production"), false);
     assert.equal(isAllowedBrowserRequest(request("https://unrelated.example"), "production"), false);
 
     assert.equal(isAllowedBrowserRequest(request("https://eg.successacademy.training"), "development"), true);
