@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { buildMetaAttributionBootstrapScript } from "@/features/leads/client/meta-lead-attribution";
 
 const trackingIdPatterns = {
   gtm: /^GTM-[A-Z0-9]{4,20}$/,
@@ -29,6 +30,10 @@ export function TrackingScripts() {
 
   return (
     <>
+      <Script id="meta-lead-attribution" strategy="beforeInteractive">
+        {buildMetaAttributionBootstrapScript()}
+      </Script>
+
       {gtmId ? (
         <>
           <Script id="gtm" strategy="afterInteractive">
@@ -73,7 +78,12 @@ export function TrackingScripts() {
             n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
             t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
             (window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', ${serializeForInlineScript(metaPixelId)});
+            var saExternalId = window.__saMetaAttribution && window.__saMetaAttribution.externalId;
+            if (saExternalId) {
+              fbq('init', ${serializeForInlineScript(metaPixelId)}, { external_id: saExternalId });
+            } else {
+              fbq('init', ${serializeForInlineScript(metaPixelId)});
+            }
           `}
         </Script>
       ) : null}

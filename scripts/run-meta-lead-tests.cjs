@@ -3,8 +3,10 @@ const { createHash } = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const ts = require("typescript");
+const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
+const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const originalLoad = require("node:module")._load;
 let existingAttempt = null;
 require("node:module")._load = function metaLeadLoad(request, parent, isMain) {
@@ -43,6 +45,7 @@ const {
   metaLeadEventId,
   readMetaLeadCookies,
 } = require(path.join(root, "src/features/leads/server/meta-lead-capi.ts"));
+const attributionPath = path.join(root, "src/features/leads/client/meta-lead-attribution.ts");
 const { submitLead } = require(path.join(root, "src/features/leads/client/lead-submission.ts"));
 const { trackFormSubmit } = require(path.join(root, "src/lib/tracking.ts"));
 const { POST } = require(path.join(root, "app/api/leads/route.ts"));
@@ -66,6 +69,7 @@ const baseInput = {
   clientUserAgent: "Meta Lead Test Agent",
   fbp: "fb.1.1700000000000.123456789",
   fbc: "fb.1.1700000000000.test_click_id",
+  externalId: uuid("e"),
   occurredAt: "2026-10-24T12:00:00.000Z",
 };
 
@@ -106,7 +110,7 @@ test("email and Egyptian phone are normalized then SHA-256 hashed", async () => 
   assert.deepEqual(event.user_data.ph, [hash("201000000000")]);
 });
 
-test("valid IP, user agent, fbp and fbc are sent without hashing", async () => {
+test("valid IP, user agent, fbp, fbc and external_id keep their approved representations", async () => {
   let userData;
   await deliverMetaLeadFailOpen(baseInput, {
     env: baseEnv,
@@ -119,6 +123,7 @@ test("valid IP, user agent, fbp and fbc are sent without hashing", async () => {
   assert.equal(userData.client_user_agent, baseInput.clientUserAgent);
   assert.equal(userData.fbp, baseInput.fbp);
   assert.equal(userData.fbc, baseInput.fbc);
+  assert.deepEqual(userData.external_id, [baseInput.externalId]);
 });
 
 test("invalid optional IP, UA and Meta cookies are omitted without failing", async () => {
@@ -129,6 +134,7 @@ test("invalid optional IP, UA and Meta cookies are omitted without failing", asy
     clientUserAgent: "bad\nagent",
     fbp: "not-valid",
     fbc: "https://evil.test",
+    externalId: "not-a-visitor-id",
   }, {
     env: baseEnv,
     fetchImpl: async (_url, options) => {
@@ -141,6 +147,7 @@ test("invalid optional IP, UA and Meta cookies are omitted without failing", asy
   assert.equal("client_user_agent" in userData, false);
   assert.equal("fbp" in userData, false);
   assert.equal("fbc" in userData, false);
+  assert.equal("external_id" in userData, false);
 });
 
 test("cookie parsing accepts only bounded Meta cookie values", () => {
@@ -150,6 +157,138 @@ test("cookie parsing accepts only bounded Meta cookie values", () => {
   );
   assert.deepEqual(readMetaLeadCookies("_fbp=bad; _fbc=https://evil.test"), {});
   assert.deepEqual(readMetaLeadCookies(null), {});
+});
+
+function createStorage(initial = {}) {
+  const values = new Map(Object.entries(initial));
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+    values,
+  };
+}
+
+function loadFreshAttribution() {
+  delete require.cache[require.resolve(attributionPath)];
+  return require(attributionPath);
+}
+
+async function withWindow(value, run) {
+  const previousWindow = global.window;
+  global.window = value;
+  try {
+    return await run();
+  } finally {
+    global.window = previousWindow;
+  }
+}
+
+test("real fbclid capture preserves its original timestamp across internal navigation", async () => {
+  const storage = createStorage();
+  const visitorId = uuid("2");
+  const fbclid = "IwAR1234567890_real-click-id";
+  await withWindow({
+    location: { search: `?fbclid=${fbclid}` },
+    localStorage: storage,
+    crypto: { randomUUID: () => visitorId },
+  }, async () => {
+    const { getMetaLeadSignals } = loadFreshAttribution();
+    const first = getMetaLeadSignals(1_700_000_000_000);
+    global.window.location.search = "?utm_source=internal";
+    const later = getMetaLeadSignals(1_700_000_500_000);
+    assert.equal(first.fbc, `fb.1.1700000000000.${fbclid}`);
+    assert.equal(later.fbc, first.fbc);
+    assert.equal(later.externalId, visitorId);
+  });
+});
+
+test("organic and malformed click traffic never receives an invented fbc", async () => {
+  for (const search of ["", "?fbclid=bad value", "?gclid=google-click", "?ttclid=tiktok-click"]) {
+    await withWindow({
+      location: { search },
+      localStorage: createStorage(),
+      crypto: { randomUUID: () => uuid("3") },
+    }, async () => {
+      const { getMetaLeadSignals } = loadFreshAttribution();
+      assert.equal("fbc" in getMetaLeadSignals(1_700_000_000_000), false);
+    });
+  }
+});
+
+test("visitor identity is stable, non-PII, rotates after expiry, and differs by browser", async () => {
+  const firstStorage = createStorage();
+  const firstId = uuid("4");
+  const rotatedId = uuid("5");
+  let generated = 0;
+  await withWindow({
+    location: { search: "" },
+    localStorage: firstStorage,
+    crypto: { randomUUID: () => generated++ === 0 ? firstId : rotatedId },
+  }, async () => {
+    const { getMetaLeadSignals } = loadFreshAttribution();
+    assert.equal(getMetaLeadSignals(1_700_000_000_000).externalId, firstId);
+    assert.equal(getMetaLeadSignals(1_700_000_001_000).externalId, firstId);
+    assert.equal(getMetaLeadSignals(1_708_000_000_001).externalId, rotatedId);
+  });
+
+  const secondId = uuid("6");
+  await withWindow({
+    location: { search: "" },
+    localStorage: createStorage(),
+    crypto: { randomUUID: () => secondId },
+  }, async () => {
+    const { getMetaLeadSignals } = loadFreshAttribution();
+    const signal = getMetaLeadSignals(1_700_000_000_000);
+    assert.equal(signal.externalId, secondId);
+    assert.notEqual(signal.externalId, firstId);
+    for (const pii of ["test@example.com", "01000000000", baseInput.submissionId]) {
+      assert.equal(signal.externalId.includes(pii), false);
+    }
+  });
+});
+
+test("malformed visitor storage regenerates and unavailable storage remains fail-open", async () => {
+  const regenerated = uuid("7");
+  await withWindow({
+    location: { search: "" },
+    localStorage: createStorage({ sa_meta_visitor_v1: JSON.stringify({ id: "email@example.com", createdAt: 1_700_000_000_000 }) }),
+    crypto: { randomUUID: () => regenerated },
+  }, async () => {
+    const { getMetaLeadSignals } = loadFreshAttribution();
+    assert.equal(getMetaLeadSignals(1_700_000_000_000).externalId, regenerated);
+  });
+
+  const unavailableId = uuid("8");
+  const unavailableWindow = {
+    location: { search: "" },
+    crypto: { randomUUID: () => unavailableId },
+  };
+  Object.defineProperty(unavailableWindow, "localStorage", { get: () => { throw new Error("blocked"); } });
+  await withWindow(unavailableWindow, async () => {
+    const { getMetaLeadSignals } = loadFreshAttribution();
+    assert.equal(getMetaLeadSignals(1_700_000_000_000).externalId, unavailableId);
+    assert.equal(getMetaLeadSignals(1_700_000_001_000).externalId, unavailableId);
+  });
+});
+
+test("bootstrap captures attribution before Pixel init using the same raw external_id", () => {
+  const { buildMetaAttributionBootstrapScript } = loadFreshAttribution();
+  const storage = createStorage();
+  const externalId = uuid("9");
+  const window = {
+    location: { search: "?fbclid=IwAR_bootstrap_click_12345" },
+    localStorage: storage,
+    crypto: { randomUUID: () => externalId },
+  };
+  vm.runInNewContext(buildMetaAttributionBootstrapScript(), { window, URLSearchParams, Date, JSON, RegExp, Number });
+  assert.equal(window.__saMetaAttribution.externalId, externalId);
+  assert.match(window.__saMetaAttribution.fbc, /^fb\.1\.\d{13}\.IwAR_bootstrap_click_12345$/);
+
+  const tracking = read("src/components/tracking-scripts.tsx");
+  assert.match(tracking, /strategy="beforeInteractive"/);
+  assert.match(tracking, /\{ external_id: saExternalId \}/);
+  assert.equal((tracking.match(/fbevents\.js/g) ?? []).length, 1);
 });
 
 test("unsafe external page paths fall back to a known same-origin source URL", async () => {
@@ -226,6 +365,10 @@ function sourceBody(source, submissionId) {
     email: "test@example.com",
     consent: true,
     company: "",
+    meta: {
+      externalId: uuid("e"),
+      fbc: "fb.1.1700000000000.client_fallback_click",
+    },
     metadata: { locale: "en", pagePath: source === "website" ? "/en" : `/en/${source}` },
   };
   if (source === "website") return {
@@ -286,7 +429,7 @@ async function runRoute(body, options = {}) {
         "Content-Type": "application/json",
         "User-Agent": "Route Meta Lead Test",
         "X-Real-IP": ip,
-        Cookie: `_fbp=${baseInput.fbp}; _fbc=${baseInput.fbc}; sa_placement_attempt=test-token`,
+        Cookie: options.cookie ?? `_fbp=${baseInput.fbp}; _fbc=${baseInput.fbc}; sa_placement_attempt=test-token`,
       },
       body: JSON.stringify(body),
     }));
@@ -322,6 +465,11 @@ for (const [source, digit] of [
     assert.equal(calls.meta.length, 1);
     assert.equal(calls.meta[0].data[0].event_id, json.metaLeadEventId);
     assert.equal(calls.meta[0].data[0].event_name, "Lead");
+    assert.equal(calls.meta[0].data[0].user_data.fbc, baseInput.fbc);
+    assert.deepEqual(calls.meta[0].data[0].user_data.external_id, [uuid("e")]);
+    assert.equal("meta" in calls.webhook[0], false);
+    assert.equal("externalId" in calls.webhook[0], false);
+    assert.equal("fbc" in calls.webhook[0], false);
     if (source === "corporate_training") {
       assert.equal("submissionId" in calls.webhook[0], false);
       assert.equal("leadReference" in calls.webhook[0], false);
@@ -329,6 +477,36 @@ for (const [source, digit] of [
     }
   });
 }
+
+test("valid _fbc cookie wins over a valid client fallback", async () => {
+  const result = await runRoute(sourceBody("plans_pricing", uuid("1")));
+  assert.equal(result.calls.meta[0].data[0].user_data.fbc, baseInput.fbc);
+});
+
+test("missing _fbc uses only a valid client-derived fallback", async () => {
+  const body = sourceBody("plans_pricing", uuid("2"));
+  const result = await runRoute(body, { cookie: `_fbp=${baseInput.fbp}` });
+  assert.equal(result.calls.meta[0].data[0].user_data.fbc, body.meta.fbc);
+
+  body.meta.fbc = "fb.1.invalid.forged";
+  const invalid = await runRoute(body, { cookie: `_fbp=${baseInput.fbp}` });
+  assert.equal("fbc" in invalid.calls.meta[0].data[0].user_data, false);
+});
+
+test("missing cookie and missing click attribution omits fbc", async () => {
+  const body = sourceBody("plans_pricing", uuid("3"));
+  delete body.meta.fbc;
+  const result = await runRoute(body, { cookie: "" });
+  assert.equal("fbc" in result.calls.meta[0].data[0].user_data, false);
+});
+
+test("submissionId is never reused as external_id", async () => {
+  const submissionId = uuid("4");
+  const body = sourceBody("website", submissionId);
+  const result = await runRoute(body, { cookie: "" });
+  assert.notEqual(result.calls.meta[0].data[0].user_data.external_id[0], submissionId);
+  assert.equal(result.calls.meta[0].data[0].event_id, `lead:${submissionId}`);
+});
 
 test("webhook rejection sends no Meta event and returns no event identity", async () => {
   const result = await runRoute(sourceBody("plans_pricing", uuid("7")), {
@@ -384,6 +562,26 @@ test("client keeps the accepted event ID even after stable identity cleanup", as
   assert.deepEqual(result, { kind: "success", metaLeadEventId: eventId });
 });
 
+test("central submitLead adds Meta-only signals and storage failure cannot block submission", async () => {
+  const externalId = uuid("f");
+  const unavailableWindow = {
+    location: { search: "?fbclid=IwAR_submit_click_123456" },
+    crypto: { randomUUID: () => externalId },
+  };
+  Object.defineProperty(unavailableWindow, "localStorage", { get: () => { throw new Error("blocked"); } });
+
+  await withWindow(unavailableWindow, async () => {
+    let body;
+    const result = await submitLead({ source: "website", submissionId: uuid("d") }, async (_url, options) => {
+      body = JSON.parse(options.body);
+      return Response.json({ ok: true, metaLeadEventId: `lead:${uuid("d")}` });
+    });
+    assert.equal(result.kind, "success");
+    assert.equal(body.meta.externalId, externalId);
+    assert.match(body.meta.fbc, /^fb\.1\.\d{13}\.IwAR_submit_click_123456$/);
+  });
+});
+
 test("browser Pixel uses Meta eventID while Google and TikTok remain intact", () => {
   const calls = { fbq: [], gtag: [], ttq: [], dataLayer: [] };
   const previousWindow = global.window;
@@ -406,6 +604,14 @@ test("browser Pixel uses Meta eventID while Google and TikTok remain intact", ()
   } finally {
     global.window = previousWindow;
   }
+});
+
+test("Purchase CAPI remains isolated from Lead matching signals", () => {
+  const purchase = read("src/features/payments/server/meta-capi.ts");
+  const purchaseContract = read("src/features/payments/server/meta-purchase.ts");
+  assert.doesNotMatch(purchase, /external_id|metaExternalId|metaFbc/);
+  assert.match(purchase, /event_name: event\.eventName/);
+  assert.match(purchaseContract, /eventName: "Purchase"/);
 });
 
 (async () => {

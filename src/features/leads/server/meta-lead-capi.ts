@@ -7,6 +7,8 @@ const META_GRAPH_API_VERSION = "v26.0";
 const META_LEAD_TIMEOUT_MS = 5_000;
 const submissionIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const metaCookiePattern = /^fb\.[12]\.\d{10,16}\.[A-Za-z0-9_-]{1,200}$/;
+const metaFbcPattern = /^fb\.1\.\d{10,16}\.[A-Za-z0-9._~-]{10,500}$/;
+const externalIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type MetaLeadSource =
   | "website"
@@ -25,6 +27,7 @@ export type MetaLeadInput = {
   clientUserAgent?: string | null;
   fbp?: string | null;
   fbc?: string | null;
+  externalId?: string | null;
   occurredAt: string;
 };
 
@@ -56,9 +59,8 @@ export function readMetaLeadCookies(cookieHeader: string | null) {
     const name = entry.slice(0, separator).trim();
     if (name !== "_fbp" && name !== "_fbc") continue;
     const value = entry.slice(separator + 1).trim();
-    if (!metaCookiePattern.test(value)) continue;
-    if (name === "_fbp") cookies.fbp = value;
-    if (name === "_fbc") cookies.fbc = value;
+    if (name === "_fbp" && metaCookiePattern.test(value)) cookies.fbp = value;
+    if (name === "_fbc" && normalizeMetaFbc(value)) cookies.fbc = value;
   }
 
   return cookies;
@@ -92,7 +94,8 @@ export class MetaLeadCapiClient {
     const clientIp = normalizeClientIp(input.clientIp);
     const clientUserAgent = normalizeUserAgent(input.clientUserAgent);
     const fbp = normalizeMetaCookie(input.fbp);
-    const fbc = normalizeMetaCookie(input.fbc);
+    const fbc = normalizeMetaFbc(input.fbc);
+    const externalId = normalizeMetaExternalId(input.externalId);
 
     if (email) userData.em = [sha256(email)];
     if (phone) userData.ph = [sha256(phone)];
@@ -100,6 +103,7 @@ export class MetaLeadCapiClient {
     if (clientUserAgent) userData.client_user_agent = clientUserAgent;
     if (fbp) userData.fbp = fbp;
     if (fbc) userData.fbc = fbc;
+    if (externalId) userData.external_id = [externalId];
     if (!userData.em && !userData.ph) {
       return { outcome: "failed", diagnosticCode: "customer_identity_missing", httpStatus: null };
     }
@@ -238,6 +242,16 @@ function normalizeUserAgent(value: string | null | undefined) {
 function normalizeMetaCookie(value: string | null | undefined) {
   const candidate = value?.trim() ?? "";
   return metaCookiePattern.test(candidate) ? candidate : "";
+}
+
+export function normalizeMetaFbc(value: unknown) {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return metaFbcPattern.test(candidate) ? candidate : "";
+}
+
+export function normalizeMetaExternalId(value: unknown) {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return externalIdPattern.test(candidate) ? candidate.toLowerCase() : "";
 }
 
 function sha256(value: string) {

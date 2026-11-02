@@ -5,6 +5,8 @@ import { setLeadRegistrationCookie } from "@/features/leads/server/registration-
 import {
   deliverMetaLeadFailOpen,
   metaLeadEventId,
+  normalizeMetaExternalId,
+  normalizeMetaFbc,
   readMetaLeadCookies,
 } from "@/features/leads/server/meta-lead-capi";
 import { readAttemptToken, setAttemptCookie } from "@/features/placement-test/server/cookie";
@@ -37,6 +39,7 @@ const individualFields = new Set([
   "consent",
   "company",
   "metadata",
+  "meta",
 ]);
 
 const corporateFields = new Set([
@@ -53,6 +56,7 @@ const corporateFields = new Set([
   "consent",
   "company",
   "metadata",
+  "meta",
 ]);
 
 const placementFields = new Set([
@@ -64,6 +68,7 @@ const placementFields = new Set([
   "consent",
   "company",
   "metadata",
+  "meta",
 ]);
 
 const plansFields = new Set([
@@ -75,6 +80,7 @@ const plansFields = new Set([
   "consent",
   "company",
   "metadata",
+  "meta",
 ]);
 
 const individualGoals = new Set(["work", "university", "travel_everyday", "general"]);
@@ -177,6 +183,7 @@ export async function POST(request: Request) {
         : prepareIndividualLead(body, request);
 
   if (!result.ok) return validationError(result.missing);
+  const clientMeta = readClientMetaLeadSignals(body.meta);
 
   if (isPlacement) {
     const existingToken = readAttemptToken(request.headers.get("cookie"));
@@ -240,7 +247,8 @@ export async function POST(request: Request) {
       clientIp: clientIp === "unknown" ? null : clientIp,
       clientUserAgent: request.headers.get("user-agent"),
       fbp: metaCookies.fbp,
-      fbc: metaCookies.fbc,
+      fbc: metaCookies.fbc ?? clientMeta.fbc,
+      externalId: clientMeta.externalId,
       occurredAt: new Date().toISOString(),
     });
 
@@ -550,6 +558,16 @@ function readMetadata(value: unknown, issues: string[]): LeadMetadata | undefine
   }
 
   return metadata;
+}
+
+function readClientMetaLeadSignals(value: unknown) {
+  if (!isPlainObject(value)) return {};
+  const fbc = normalizeMetaFbc(value.fbc);
+  const externalId = normalizeMetaExternalId(value.externalId);
+  return {
+    ...(fbc ? { fbc } : {}),
+    ...(externalId ? { externalId } : {}),
+  };
 }
 
 function buildMetadata(metadata: LeadMetadata | undefined, request: Request) {

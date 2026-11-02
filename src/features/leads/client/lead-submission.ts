@@ -1,5 +1,7 @@
 "use client";
 
+import { getMetaLeadSignals } from "./meta-lead-attribution";
+
 export const LEAD_SUBMISSION_TIMEOUT_MS = 60_000;
 const submissionIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const volatileSubmissionIds = new Map<string, string>();
@@ -17,12 +19,13 @@ export async function submitLead(
   payload: Record<string, unknown>,
   fetchImpl: typeof fetch = fetch,
 ): Promise<LeadSubmissionOutcome> {
+  const meta = getMetaLeadSignals();
   let response: Response;
   try {
     response = await fetchImpl("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(Object.keys(meta).length > 0 ? { ...payload, meta } : payload),
       signal: AbortSignal.timeout(LEAD_SUBMISSION_TIMEOUT_MS),
     });
   } catch (failure) {
